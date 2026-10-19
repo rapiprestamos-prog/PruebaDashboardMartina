@@ -1,0 +1,31 @@
+DASHBOARD M&A · ACCESO DIRECTO (lee las carpetas de OneDrive solo, sin elegir nada)
+==================================================================================
+
+Sitio en línea: https://rapiprestamos-prog.github.io/PruebaDashboardMartina/
+
+QUÉ ES
+  Los archivos de la carpeta "Dashboard" son LANZADORES: al abrirlos traen la última versión
+  desde GitHub. Abiertos con el acceso directo, el dashboard encuentra solo las carpetas
+  PruebaDashboard, Contabilidad y Legal dentro del OneDrive de la PC (no hay que elegirlas).
+
+INSTALAR EN UNA PC (una sola vez)
+  1. Copia la carpeta "Dashboard" (con todos sus archivos) a la PC o a OneDrive.
+     Puede ir en cualquier lugar; las carpetas de datos se buscan solas en OneDrive.
+  2. Abre esa carpeta, clic en la barra de dirección del explorador y copia la ruta.
+  3. Escritorio → clic derecho → Nuevo → Acceso directo → pega esto (cambia RUTA por la ruta copiada):
+     "C:\Program Files\Google\Chrome\Application\chrome.exe" --user-data-dir="%LOCALAPPDATA%\DashboardMA" --allow-file-access-from-files "RUTA\index.html"
+     Nombre: Dashboard M&A → Finalizar.
+  4. Doble clic al ícono → entras con tu usuario del dashboard → cada módulo muestra su carpeta.
+     Deja el ratón sobre "Carpeta: …" en el encabezado para ver la ruta que encontró.
+
+REGLAS PARA QUE ENCUENTRE LAS CARPETAS
+  - Nombres: PruebaDashboard (o Pantera), Contabilidad y Legal.
+  - Adentro deben tener carpetas de año (2026…) y de mes (AGOSTO…).
+  - Busca en "OneDrive", "OneDrive - <empresa>" y las bibliotecas de SharePoint sincronizadas
+    de la carpeta del usuario de Windows. Si se mueven dentro de OneDrive, las vuelve a encontrar.
+
+NOTAS
+  - Si Windows no encuentra Chrome, usa: "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+  - Si sale el aviso "El navegador ya estaba abierto…", cierra todas las ventanas de ese Chrome y vuelve a abrir el ícono.
+  - Con el ícono las carpetas se LEEN. Para GUARDAR (Reportes específicos, Documentos, Redacción) usa el sitio en línea.
+  - El link de GitHub abierto en un Chrome normal pide elegir la carpeta: es una regla de seguridad de Chrome.

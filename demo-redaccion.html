@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente Legal — Demo de redacción y revisión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f9; --surface:#fff; --surface-2:#f0f3f8; --surface-3:#e7ecf3; --border:#dde3ec;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#8792a4;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --warn:#9a6b0f; --grid:#edf1f6;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+.hidden{display:none!important}
+a{color:var(--navy)}
+
+/* ---------- Cabecera ---------- */
+.hdr{position:relative;overflow:hidden;margin:14px 16px 0;border-radius:16px;padding:18px 24px;color:#fff;
+  background:radial-gradient(120% 160% at 12% 0%,#2b5a86 0%,#1b3a5c 40%,#0f2440 80%);box-shadow:var(--shadow);display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.hdr img{height:54px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.hdr .sep{width:1px;align-self:stretch;background:linear-gradient(180deg,transparent,rgba(227,194,122,.7),transparent)}
+.hdr .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+a.kback{text-decoration:none;display:inline-block}
+a.kback:hover{color:#fff}
+.hdr h1{margin:2px 0 0;font-size:22px;font-weight:800}
+.hdr .sub{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:2px}
+.mart{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:600;color:var(--gold)}
+.hdr .der{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:rgba(227,194,122,.2);color:var(--gold);border:1px solid rgba(227,194,122,.45)}
+.hbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.16)}
+.aviso{margin:10px 16px 0;padding:8px 14px;border-radius:10px;background:#fdf6e6;border:1px solid #f0dcaa;color:#6b4d12;font-size:12.5px}
+
+/* ---------- Pestañas ---------- */
+.tabs{display:flex;gap:4px;margin:12px 16px 0;padding:4px;background:var(--navy-d);border-radius:12px;overflow-x:auto}
+.tab{border:0;background:transparent;color:rgba(255,255,255,.75);padding:9px 15px;border-radius:9px;font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.tab:hover{background:rgba(255,255,255,.08);color:#fff}
+.tab[aria-selected="true"]{background:var(--gold);color:var(--navy-d)}
+main{padding:12px 16px 40px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--border)}
+.ph h2{margin:0;font-size:16px;font-weight:800}
+.ph p{margin:0;color:var(--text-2);font-size:12.5px}
+.ph .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.pri:hover{filter:brightness(1.12)}
+.btn.ok{background:var(--good);border-color:var(--good);color:#fff}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.lnk{background:none;border:0;padding:0;color:var(--navy);text-decoration:underline;cursor:pointer;font-size:13px;font-weight:500}
+.lnk:hover{color:var(--teal)}
+.lnk.bad{color:var(--bad)}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-size:11.5px;color:var(--text-2);font-weight:700;padding:9px 12px;border-bottom:2px solid var(--border);background:var(--surface-2);white-space:nowrap}
+table.t td{padding:10px 12px;border-bottom:1px solid var(--grid);vertical-align:top}
+table.t td.acc{white-space:nowrap}
+table.t td.acc .lnk{margin-right:10px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);white-space:nowrap}
+.tag.ok{background:#e9f6ef;border-color:#bfe3cf;color:var(--good)}
+.tag.off{background:#f4f4f5;color:var(--muted)}
+.tag.warn{background:#fdf6e6;border-color:#f0dcaa;color:#6b4d12}
+.tag.bad{background:#fbeceb;border-color:#efc4c0;color:var(--bad)}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* ---------- Casos ---------- */
+.casos{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:900px){.casos{grid-template-columns:1fr}}
+.arbol{padding:8px 0}
+.ar-h{padding:8px 14px;font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.ar-ruta{padding:4px 14px 10px;font-size:12px;color:var(--text-2)}
+.ar-ruta code{background:var(--surface-2);padding:2px 6px;border-radius:6px}
+.caso{display:block;width:100%;text-align:left;border:0;border-left:3px solid transparent;background:none;padding:10px 14px;cursor:pointer}
+.caso:hover{background:var(--surface-2)}
+.caso.sel{background:#eaf0f7;border-left-color:var(--navy)}
+.caso b{display:block;font-size:13px}
+.caso span{font-size:11.5px;color:var(--muted)}
+.cuerpo{padding:14px 16px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:1100px){.cols2{grid-template-columns:1fr}}
+.box{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.box h3{margin:0;padding:10px 14px;font-size:13px;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.fi{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:5px;color:#fff;font-size:9.5px;font-weight:800;margin-right:8px;vertical-align:middle}
+.fi.pdf{background:#b03a32}.fi.docx{background:#2b579a}.fi.xlsx{background:#1d6f42}
+dl.datos{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0}
+dl.datos dt,dl.datos dd{padding:7px 14px;border-bottom:1px solid var(--grid);margin:0;font-size:12.8px}
+dl.datos dt{color:var(--text-2);font-weight:600}
+dl.datos dd small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+
+/* ---------- Modal ---------- */
+.fondo{position:fixed;inset:0;background:rgba(15,28,46,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal{width:100%;max-width:980px;max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(15,23,42,.35)}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--navy);color:#fff}
+.mh h3{margin:0;font-size:17px;font-weight:800}
+.mh button{background:none;border:0;color:#fff;font-size:20px;cursor:pointer;padding:2px 8px;border-radius:8px}
+.mh button:hover{background:rgba(255,255,255,.12)}
+.mb{padding:16px 20px;overflow:auto}
+.mf{display:flex;justify-content:flex-end;gap:10px;padding:12px 20px;border-top:1px solid var(--border);background:var(--surface-2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+@media (max-width:700px){.grid2{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--text)}
+label.f small{font-weight:500;color:var(--teal);font-size:11px}
+.inp{padding:9px 11px;border-radius:9px;border:1px solid var(--border);color:var(--text);background:var(--surface);outline:none;width:100%}
+.inp:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,58,92,.12)}
+.inp.lleno{background:#f3faf6;border-color:#bfe3cf}
+.sec{margin:16px 0 6px;font-size:14.5px;font-weight:800}
+.ayuda{margin:0 0 12px;color:var(--text-2);font-size:12.5px}
+
+/* ---------- Editor ---------- */
+.ed-wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
+@media (max-width:1100px){.ed-wrap{grid-template-columns:1fr}}
+.tool{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);position:sticky;top:0;z-index:5}
+.tb{min-width:32px;height:32px;padding:0 8px;border-radius:7px;border:1px solid transparent;background:none;cursor:pointer;font-weight:700;color:var(--text)}
+.tb:hover{background:var(--surface);border-color:var(--border)}
+.tsep{width:1px;height:22px;background:var(--border);margin:0 4px}
+.hoja-fondo{background:#e4e9f0;padding:24px;max-height:72vh;overflow:auto}
+.hoja{background:#fff;max-width:820px;margin:0 auto;padding:64px 72px;min-height:900px;box-shadow:0 2px 14px rgba(15,23,42,.14);font-family:Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.6;color:#111;outline:none}
+.hoja h1,.hoja h2{font-size:16px;text-align:center;margin:0 0 18px}
+.hoja p{margin:0 0 12px;text-align:justify}
+.campo{background:#fff4cc;border:1px dashed #e0b84a;border-radius:4px;padding:0 3px;font-weight:600}
+.falta{background:#fbeceb;border-bottom:1px solid var(--bad);color:var(--bad);padding:0 6px}
+mark.ort{background:#fde2e1;border-bottom:2px wavy var(--bad);color:inherit;cursor:pointer;padding:0}
+mark.ort.act{outline:2px solid var(--bad)}
+mark.val{background:#fff1c2;border-bottom:2px solid #d9a400;color:inherit;padding:0}
+.lado .box+.box{margin-top:12px}
+.rv-item{padding:10px 14px;border-bottom:1px solid var(--grid);font-size:12.8px}
+.rv-item:last-child{border-bottom:0}
+.rv-item b.mal{color:var(--bad);text-decoration:line-through}
+.rv-item b.bien{color:var(--good)}
+.rv-item .ctx{color:var(--text-2);font-size:12px;margin:3px 0 6px}
+.rv-item .acts{display:flex;gap:8px}
+.rv-vacio{padding:14px;color:var(--text-2);font-size:12.8px}
+.resumen{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--border)}
+.pop{display:flex;gap:6px;align-items:center;padding:8px 12px;background:#fdf6e6;border-bottom:1px solid #f0dcaa;flex-wrap:wrap}
+.pop .inp{width:220px;padding:6px 9px}
+
+/* ---------- Cómo funciona ---------- */
+.doc{max-width:1000px;margin:0 auto}
+.doc .panel{padding:22px 26px;margin-bottom:12px}
+.doc h2{margin:0 0 6px;font-size:18px;font-weight:800}
+.doc h3{margin:18px 0 6px;font-size:14.5px}
+.doc p,.doc li{color:var(--text-2);line-height:1.6;font-size:13.5px}
+.flujo{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:14px 0 14px}
+.linea{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:10px}
+@media (max-width:1000px){.linea{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.portada{border-top:4px solid var(--gold)}
+.portada .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-d);font-weight:800}
+.indice{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.indice a{font-size:12.5px;font-weight:700;color:var(--navy);text-decoration:none;padding:6px 12px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border)}
+.indice a:hover{background:#eaf0f7}
+.destacado{background:#fdf6e6;border-left:4px solid var(--gold-d);border-radius:8px;padding:14px 16px;font-size:13.5px;line-height:1.6;color:#4a3a12}
+.tarjetas{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:10px}
+.tj{border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--surface-2)}
+.tj b{font-size:13.5px}
+.tj p{margin:6px 0 0;font-size:12.8px;line-height:1.55}
+ol.mat{margin:10px 0 0;padding-left:22px}
+ol.mat li{margin-bottom:7px;color:var(--text-2);font-size:13.5px;line-height:1.55}
+.doc .panel{scroll-margin-top:12px}
+@media (max-width:1000px){.flujo{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.paso{border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface-2);position:relative}
+.paso .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:800}
+.paso b{display:block;margin:8px 0 4px;font-size:13px}
+.paso p{margin:0;font-size:12px;line-height:1.45}
+.check li{margin-bottom:6px}
+pre.prompt{white-space:pre-wrap;background:var(--navy-d);color:#e6ecf5;border-radius:12px;padding:16px 18px;font-size:12.5px;line-height:1.55;font-family:ui-monospace,Consolas,monospace}
+.copiar{float:right}
+@media print{
+  body *{visibility:hidden}
+  .hoja,.hoja *{visibility:visible}
+  .hoja{position:absolute;left:0;top:0;box-shadow:none;padding:0;min-height:0;max-width:none}
+  .campo,.falta,mark{background:none!important;border:0!important}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <img src="data:image/png;base64,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" alt="M&amp;A Capital Inc">
+  <div class="sep"></div>
+  <div>
+    <a class="k kback" href="index.html" title="Volver al inicio del dashboard">← M&amp;A Capital · Inicio · Agente Legal · Demostración</a>
+    <h1>Redacción y revisión de documentos</h1>
+    <div class="sub">Casos leídos de la carpeta <b>Legal</b> (SharePoint sincronizado con OneDrive) · plantillas · revisión ortográfica</div>
+  </div>
+  <div class="der"><a class="hbtn" href="index.html" style="text-decoration:none" title="Volver al inicio del dashboard">← Inicio</a><button class="hbtn" id="btnPropuesta">📋 Ver propuesta</button><span class="chip">Usuaria: Omayra · Legal</span><button class="hbtn" id="btnReset" title="Vuelve la demo a su estado inicial">↺ Reiniciar demo</button></div>
+</div>
+<div class="aviso">⚠ <b>Demostración.</b> Todos los casos, nombres, montos y documentos son <b>inventados</b> para mostrar el funcionamiento. En el sistema real se leen las carpetas de Legal y los modelos aprobados por M&amp;A Capital.</div>
+
+<nav class="tabs" role="tablist">
+  <button class="tab" data-t="casos" aria-selected="true">📁 Casos (carpeta Legal)</button>
+  <button class="tab" data-t="docs" aria-selected="false">📄 Documentos guardados</button>
+  <button class="tab" data-t="plant" aria-selected="false">🧩 Plantillas</button>
+  <button class="tab" data-t="revisar" aria-selected="false">🔎 Lectura y corrección</button>
+  <button class="tab" data-t="como" aria-selected="false">📋 Propuesta y cómo funciona</button>
+</nav>
+
+<main>
+  <!-- ============ CASOS ============ -->
+  <section id="v-casos">
+    <div class="casos">
+      <div class="panel">
+        <div class="ar-h">Carpeta sincronizada</div>
+        <div class="ar-ruta"><code>SharePoint › Legal › Casos 2026</code><br><span class="muted small">Cada subcarpeta es un caso. Nada se sube a mano.</span></div>
+        <div class="arbol" id="listaCasos"></div>
+      </div>
+      <div class="panel" id="detCaso"></div>
+    </div>
+  </section>
+
+  <!-- ============ DOCUMENTOS ============ -->
+  <section id="v-docs" class="hidden">
+    <div class="panel">
+      <div class="ph"><h2>Documentos guardados</h2><p>Cada documento se guarda como Word en la carpeta <b>Legal › Documentos</b> de SharePoint.</p>
+        <div class="r"><button class="btn ok" id="btnNuevoDoc">＋ Nuevo documento</button></div></div>
+      <div style="overflow:auto"><table class="t"><thead><tr><th>Documento</th><th>Plantilla</th><th>Caso</th><th>Revisión</th><th>Última modificación</th><th></th></tr></thead><tbody id="tbDocs"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ PLANTILLAS ============ -->
+  <section id="v-plant" class="hidden">
+    <div class="panel">
+      <div class="ph"><button class="btn ok" id="btnNuevaPl">＋ Nueva plantilla</button><button class="btn" id="btnDesdeWord">⬆ Crear desde un Word (modelo)</button>
+        <p>Los campos se escriben entre llaves dobles, por ejemplo <b>{{Finca}}</b>. Puedes pegar texto copiado de Word.</p>
+        <input type="file" id="fileModelo" accept=".docx" class="hidden"></div>
+      <div style="overflow:auto"><table class="t"><thead><tr><th>Plantilla</th><th>Tipo</th><th>Campos</th><th>Modelo original</th><th>Estado</th><th>Última modificación</th><th></th></tr></thead><tbody id="tbPl"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ EDITOR (documento o plantilla) ============ -->
+  <section id="v-editor" class="hidden">
+    <div class="panel" style="margin-bottom:12px">
+      <div class="ph">
+        <button class="btn" id="edVolver">← Volver</button>
+        <input class="inp" id="edTitulo" style="flex:1;min-width:240px;font-weight:700">
+        <input class="inp hidden" id="edTipo" style="width:200px" placeholder="Tipo (ej. Arrendamiento)">
+        <span class="tag" id="edEstado"></span>
+      </div>
+    </div>
+    <div class="ed-wrap">
+      <div class="panel" style="overflow:hidden">
+        <div class="tool">
+          <button class="tb" data-c="bold" title="Negrita"><b>B</b></button>
+          <button class="tb" data-c="italic" title="Cursiva"><i>I</i></button>
+          <button class="tb" data-c="underline" title="Subrayado"><u>U</u></button>
+          <span class="tsep"></span>
+          <button class="tb" data-c="justifyLeft" title="Izquierda">⇤</button>
+          <button class="tb" data-c="justifyCenter" title="Centrar">↔</button>
+          <button class="tb" data-c="justifyRight" title="Derecha">⇥</button>
+          <button class="tb" data-c="justifyFull" title="Justificar">≡</button>
+          <span class="tsep"></span>
+          <button class="tb" data-c="insertUnorderedList">• Lista</button>
+          <button class="tb" data-c="insertOrderedList">1. Lista</button>
+          <span class="tsep"></span>
+          <button class="tb" data-c="undo" title="Deshacer">↶</button>
+          <button class="tb" data-c="redo" title="Rehacer">↷</button>
+          <span class="tsep"></span>
+          <button class="tb solo-pl" id="tbCampo" title="Convierte el texto seleccionado en un campo, o inserta uno nuevo">＋ Campo</button>
+          <span style="flex:1"></span>
+          <button class="btn sm solo-doc" id="edOrto">🔎 Revisar ortografía</button>
+          <button class="btn sm solo-doc" id="edValidar">✓ Validar</button>
+          <button class="btn sm" id="edWord">⬇ Word</button>
+          <button class="btn sm" id="edPdf">🖨 PDF</button>
+          <button class="btn sm ok" id="edGuardar">Guardar</button>
+        </div>
+        <div class="pop hidden" id="popCampo"><span class="small"><b>Nombre del campo:</b></span><input class="inp" id="popNombre" list="dlCampos" placeholder="Ej. Comprador"><datalist id="dlCampos"></datalist><button class="btn sm pri" id="popOk">Insertar</button><button class="btn sm" id="popNo">Cancelar</button><span class="small muted">Si seleccionaste texto, se reemplaza por el campo.</span></div>
+        <div class="hoja-fondo"><div class="hoja" id="hoja" contenteditable="true" spellcheck="true" lang="es"></div></div>
+      </div>
+      <div class="lado">
+        <div class="box panel solo-doc"><h3>🔎 Revisión</h3><div id="rvResumen" class="resumen hidden"></div><div id="rvLista"><div class="rv-vacio">Pulsa <b>Revisar ortografía</b> para buscar faltas, o <b>Validar</b> para revisar campos sin llenar y montos en letras.<br><br>Mientras escribes, el navegador también subraya en rojo las palabras que no reconoce.</div></div></div>
+        <div class="box panel solo-pl"><h3>🧩 Campos de la plantilla</h3><div id="plCampos" class="rv-vacio"></div></div>
+        <div class="box panel solo-doc"><h3>📁 Datos usados del caso</h3><div id="edDatos" class="rv-vacio"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LECTURA Y CORRECCIÓN ============ -->
+  <section id="v-revisar" class="hidden">
+    <div class="panel" style="margin-bottom:12px">
+      <div class="ph"><h2>Lectura y corrección de documentos</h2>
+        <p>Abre un documento que ya existe (de la carpeta del caso o un Word tuyo): el sistema lo lee, marca faltas de ortografía, campos sin llenar y montos que no coinciden. Corriges y descargas el Word limpio.</p></div>
+      <div class="cuerpo" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <select class="inp" id="rvArchivo" style="max-width:520px"></select>
+        <button class="btn pri" id="rvAbrir">Leer y revisar</button>
+        <span class="muted">o</span>
+        <button class="btn" id="rvSubir">⬆ Subir un Word (.docx)</button>
+        <input type="file" id="rvFile" accept=".docx" class="hidden">
+      </div>
+    </div>
+    <div class="panel"><div class="rv-vacio" id="rvVacio">Elige un documento y pulsa <b>Leer y revisar</b>.</div></div>
+  </section>
+
+  <!-- ============ CÓMO FUNCIONA ============ -->
+  <section id="v-como" class="hidden"><div class="doc" id="docComo"></div></section>
+</main>
+
+<!-- ============ MODAL ============ -->
+<div class="fondo hidden" id="fondo"><div class="modal" role="dialog" aria-modal="true">
+  <div class="mh"><h3 id="mTitulo"></h3><button id="mCerrar" aria-label="Cerrar">✕</button></div>
+  <div class="mb" id="mCuerpo"></div>
+  <div class="mf" id="mPie"></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js" defer></script>
+<script>
+/* =====================================================================
+   Datos de ejemplo (inventados para la demostración)
+   ===================================================================== */
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const hoyTxt=()=>{const d=new Date();return d.getDate()+" de "+MESES[d.getMonth()]+" de "+d.getFullYear();};
+const ahora=()=>{const d=new Date();const p=n=>String(n).padStart(2,"0");return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;};
+
+const CASOS=[
+ {id:"2026-014",nombre:"Compraventa Local 3 – Plaza Marbella",tipo:"Compraventa de inmueble",resp:"Omayra",
+  archivos:[
+   {n:"Certificado Registro Público – Finca 30521.pdf",t:"pdf",f:"02/10/2026"},
+   {n:"Cédula – Carlos Méndez.pdf",t:"pdf",f:"02/10/2026"},
+   {n:"Pacto social – Inversiones Delta.pdf",t:"pdf",f:"29/09/2026"},
+   {n:"Avalúo Local 3.pdf",t:"pdf",f:"25/09/2026"},
+   {n:"Borrador promesa de compraventa v2.docx",t:"docx",f:"07/10/2026",texto:"borradorPromesa"}],
+  datos:{
+   "Vendedor":["Inversiones Delta, S.A.","Pacto social – Inversiones Delta.pdf"],
+   "RUC vendedor":["155612345-2-2015","Pacto social – Inversiones Delta.pdf"],
+   "Representante vendedor":["Ana Lucía Ríos Castillo","Pacto social – Inversiones Delta.pdf"],
+   "Cédula representante":["8-512-1049","Pacto social – Inversiones Delta.pdf"],
+   "Comprador":["Carlos Andrés Méndez Pérez","Cédula – Carlos Méndez.pdf"],
+   "Cédula comprador":["8-765-4321","Cédula – Carlos Méndez.pdf"],
+   "Finca":["30521","Certificado Registro Público – Finca 30521.pdf"],
+   "Ubicación":["Local 3, P.H. Plaza Marbella, corregimiento de Bella Vista, ciudad de Panamá","Certificado Registro Público – Finca 30521.pdf"],
+   "Precio":["185,000.00","Avalúo Local 3.pdf"],
+   "Abono":["18,500.00","Borrador promesa de compraventa v2.docx"],
+   "Plazo":["noventa (90) días","Borrador promesa de compraventa v2.docx"]}},
+ {id:"2026-017",nombre:"Arrendamiento Oficina 12B – Tecnova",tipo:"Arrendamiento comercial",resp:"Omayra",
+  archivos:[
+   {n:"Certificado Registro Público – Finca 41877.pdf",t:"pdf",f:"20/09/2026"},
+   {n:"Aviso de operación – Tecnova.pdf",t:"pdf",f:"18/09/2026"},
+   {n:"Contrato arrendamiento 2024 (anterior).docx",t:"docx",f:"15/01/2024",texto:"contratoViejo"},
+   {n:"Tabla de cánones 2026.xlsx",t:"xlsx",f:"01/10/2026"}],
+  datos:{
+   "Arrendador":["Torre Pacífica Holdings, S.A.","Certificado Registro Público – Finca 41877.pdf"],
+   "RUC arrendador":["2045533-1-2018","Certificado Registro Público – Finca 41877.pdf"],
+   "Arrendatario":["Tecnova Soluciones, S.A.","Aviso de operación – Tecnova.pdf"],
+   "RUC arrendatario":["155700881-2-2021","Aviso de operación – Tecnova.pdf"],
+   "Representante arrendatario":["Julio César Batista","Aviso de operación – Tecnova.pdf"],
+   "Inmueble":["Oficina 12B, Torre Pacífica, avenida Balboa, ciudad de Panamá","Certificado Registro Público – Finca 41877.pdf"],
+   "Finca":["41877","Certificado Registro Público – Finca 41877.pdf"],
+   "Canon mensual":["3,850.00","Tabla de cánones 2026.xlsx"],
+   "Depósito":["7,700.00","Tabla de cánones 2026.xlsx"],
+   "Plazo":["tres (3) años","Contrato arrendamiento 2024 (anterior).docx"],
+   "Día de pago":["cinco (5)","Contrato arrendamiento 2024 (anterior).docx"]}},
+ {id:"2026-021",nombre:"Confidencialidad – Proyecto Andino",tipo:"Acuerdo de confidencialidad",resp:"Omayra",
+  archivos:[
+   {n:"Carta de intención – Grupo Andino.pdf",t:"pdf",f:"05/10/2026"},
+   {n:"Correo – alcance del proyecto.pdf",t:"pdf",f:"06/10/2026"}],
+  datos:{
+   "Parte reveladora":["M&A Capital Inc.","Carta de intención – Grupo Andino.pdf"],
+   "Parte receptora":["Grupo Andino Inversiones, S.A.","Carta de intención – Grupo Andino.pdf"],
+   "Propósito":["evaluar la posible adquisición de participación en un portafolio de inmuebles comerciales","Correo – alcance del proyecto.pdf"],
+   "Vigencia":["dos (2) años","Carta de intención – Grupo Andino.pdf"]}},
+ {id:"2026-023",nombre:"Poder especial – firma de escritura",tipo:"Poder",resp:"Omayra",
+  archivos:[
+   {n:"Cédula – Roberto Saldaña.pdf",t:"pdf",f:"09/10/2026"},
+   {n:"Cédula – Daniela Herrera.pdf",t:"pdf",f:"09/10/2026"},
+   {n:"Instrucciones del cliente.docx",t:"docx",f:"10/10/2026",texto:"instrucciones"}],
+  datos:{
+   "Poderdante":["Roberto Saldaña Quintero","Cédula – Roberto Saldaña.pdf"],
+   "Cédula poderdante":["4-201-883","Cédula – Roberto Saldaña.pdf"],
+   "Apoderado":["Daniela Herrera Ábrego","Cédula – Daniela Herrera.pdf"],
+   "Cédula apoderado":["8-844-1207","Cédula – Daniela Herrera.pdf"],
+   "Facultades":["firmar la escritura pública de compraventa de la Finca 30521, recibir el precio y otorgar recibos","Instrucciones del cliente.docx"]}}
+];
+
+/* Textos de archivos de los casos (para la pestaña de lectura y corrección) — con errores a propósito */
+const TEXTOS={
+ borradorPromesa:`<h2>PROMESA DE COMPRAVENTA</h2>
+<p>Entre los suscritos, INVERSIONES DELTA, S.A., sociedad inscrita con RUC 155612345-2-2015, representada por ANA LUCÍA RÍOS CASTILLO, en adelante LA PROMITENTE VENDEDORA, y CARLOS ANDRÉS MÉNDEZ PÉREZ, con cedula de identidad personal No. 8-765-4321, en adelante EL PROMITENTE COMPRADOR, se celebra la presente promesa de compraventa de acuerdo con las siguientes clausulas:</p>
+<p>PRIMERA: LA PROMITENTE VENDEDORA promete vender a EL PROMITENTE COMPRADOR la Finca No. 30521, ubicada en Local 3, P.H. Plaza Marbella, corregimiento de Bella Vista, ciudad de Panamá.</p>
+<p>SEGUNDA: El precio de venta es la suma de CIENTO OCHENTA Y CINCO MIL DÓLARES CON 00/100 (US$185,000.00), de los cuales EL PROMITENTE COMPRADOR entrega en este acto un abono de DIECIOCHO MIL QUINIENTOS DÓLARES CON 00/100 (US$18,000.00).</p>
+<p>TERCERA: El saldo se pagara en un plazo de noventa (90) dias contados a partir de la firma, segun lo acordado por las partes.</p>
+<p>CUARTA: Si EL PROMITENTE COMPRADOR no cumple con el pago del saldo, LA PROMITENTE VENDEDORA podra dar por terminado el el contrato y retener el abono como indemnizacion.</p>
+<p>QUINTA: Los gastos notariales y de registro seran pagados por {{Quién paga gastos}}.</p>
+<p>Firmado en la ciudad de Panamá, a los ____ días del mes de octubre de 2026.</p>`,
+ contratoViejo:`<h2>CONTRATO DE ARRENDAMIENTO</h2>
+<p>Entre TORRE PACÍFICA HOLDINGS, S.A., en adelante EL ARRENDADOR, y TECNOVA SOLUCIONES, S.A., en adelante EL ARRENDATARIO, se celebra el presente contrato de arrendamiento de la Oficina 12B, Torre Pacífica.</p>
+<p>PRIMERA: El canon mensual es de TRES MIL QUINIENTOS DÓLARES CON 00/100 (US$3,500.00), pagadero a mas tardar el día cinco (5) de cada mes.</p>
+<p>SEGUNDA: El plazo del contrato es de tres (3) años. Ademas, EL ARRENDATARIO entrega un deposito de garantia equivalente a dos meses de canon.</p>
+<p>TERCERA: EL ARRENDATARIO no podra subarrendar el inmueble sin autorizacion escrita de EL ARRENDADOR.</p>`,
+ instrucciones:`<p>Instrucciones del cliente para el poder:</p>
+<p>El señor Roberto Saldaña necesita que la licenciada Daniela Herrera firme por el la escritura de compraventa, ya que estara fuera del pais en la fecha de la firma. Tambien debe poder recibir el precio y dar recibos.</p>
+<p>Despues de la firma, el poder queda sin efecto.</p>`
+};
+
+const PLANTILLAS_BASE=[
+ {id:"p1",nombre:"Promesa de compraventa de inmueble",tipo:"Compraventa",modelo:"Promesa_compraventa_modelo.docx",activa:true,mod:"30/09/2026 15:41",por:"SISTEMA",
+  html:`<h2>PROMESA DE COMPRAVENTA</h2>
+<p>En la ciudad de Panamá, a los {{Fecha}}, comparecen por una parte {{Vendedor}}, sociedad con RUC {{RUC vendedor}}, representada en este acto por {{Representante vendedor}}, con cédula de identidad personal No. {{Cédula representante}}, en adelante LA PROMITENTE VENDEDORA; y por la otra {{Comprador}}, con cédula de identidad personal No. {{Cédula comprador}}, en adelante EL PROMITENTE COMPRADOR, quienes acuerdan celebrar la presente promesa de compraventa de acuerdo con las siguientes cláusulas:</p>
+<p><b>PRIMERA (Objeto):</b> LA PROMITENTE VENDEDORA promete vender a EL PROMITENTE COMPRADOR la Finca No. {{Finca}}, ubicada en {{Ubicación}}, libre de gravámenes y limitaciones de dominio.</p>
+<p><b>SEGUNDA (Precio):</b> El precio de venta es la suma de {{Precio en letras}} (US\${{Precio}}). En este acto EL PROMITENTE COMPRADOR entrega un abono de {{Abono en letras}} (US\${{Abono}}), que se imputará al precio.</p>
+<p><b>TERCERA (Plazo):</b> El saldo se pagará en un plazo de {{Plazo}} contados a partir de la firma del presente documento, fecha en que las partes otorgarán la escritura pública de compraventa.</p>
+<p><b>CUARTA (Incumplimiento):</b> Si EL PROMITENTE COMPRADOR no paga el saldo dentro del plazo pactado, LA PROMITENTE VENDEDORA podrá dar por terminada esta promesa y retener el abono a título de indemnización.</p>
+<p><b>QUINTA (Gastos):</b> Los gastos notariales y de registro serán cubiertos por {{Quién paga gastos}}.</p>
+<p>Para constancia se firma en dos ejemplares de igual valor.</p>
+<p><br>_____________________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _____________________________<br>LA PROMITENTE VENDEDORA &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; EL PROMITENTE COMPRADOR</p>`},
+ {id:"p2",nombre:"Contrato de arrendamiento comercial",tipo:"Arrendamiento",modelo:"Arrendamiento_comercial_modelo.docx",activa:true,mod:"30/09/2026 15:41",por:"SISTEMA",
+  html:`<h2>CONTRATO DE ARRENDAMIENTO COMERCIAL</h2>
+<p>Entre {{Arrendador}}, sociedad con RUC {{RUC arrendador}}, en adelante EL ARRENDADOR, y {{Arrendatario}}, sociedad con RUC {{RUC arrendatario}}, representada por {{Representante arrendatario}}, en adelante EL ARRENDATARIO, se celebra el presente contrato de arrendamiento del inmueble ubicado en {{Inmueble}}, Finca No. {{Finca}}, sujeto a las siguientes cláusulas:</p>
+<p><b>PRIMERA (Canon):</b> El canon mensual es de {{Canon mensual en letras}} (US\${{Canon mensual}}), pagadero a más tardar el día {{Día de pago}} de cada mes.</p>
+<p><b>SEGUNDA (Depósito):</b> EL ARRENDATARIO entrega un depósito de garantía de {{Depósito en letras}} (US\${{Depósito}}), que se devolverá al terminar el contrato, descontando daños o saldos pendientes.</p>
+<p><b>TERCERA (Plazo):</b> El plazo del contrato es de {{Plazo}}, contado a partir del {{Fecha de inicio}}.</p>
+<p><b>CUARTA (Uso):</b> El inmueble se destinará exclusivamente a oficinas administrativas. EL ARRENDATARIO no podrá subarrendar ni ceder el contrato sin autorización escrita de EL ARRENDADOR.</p>
+<p><b>QUINTA (Servicios):</b> Los servicios de electricidad, agua, internet y cuota de mantenimiento corren por cuenta de EL ARRENDATARIO.</p>
+<p>Dado en la ciudad de Panamá, el {{Fecha}}.</p>`},
+ {id:"p3",nombre:"Acuerdo de confidencialidad (NDA)",tipo:"Confidencialidad",modelo:"NDA_modelo.docx",activa:true,mod:"01/10/2026 09:12",por:"Omayra",
+  html:`<h2>ACUERDO DE CONFIDENCIALIDAD</h2>
+<p>Entre {{Parte reveladora}}, en adelante LA PARTE REVELADORA, y {{Parte receptora}}, en adelante LA PARTE RECEPTORA, se celebra el presente acuerdo con el propósito de {{Propósito}}.</p>
+<p><b>PRIMERA (Información confidencial):</b> Se considera confidencial toda información financiera, legal, comercial o técnica que LA PARTE REVELADORA entregue a LA PARTE RECEPTORA, por cualquier medio.</p>
+<p><b>SEGUNDA (Obligaciones):</b> LA PARTE RECEPTORA usará la información solo para el propósito indicado y no la revelará a terceros sin autorización previa y por escrito.</p>
+<p><b>TERCERA (Vigencia):</b> Este acuerdo tendrá una vigencia de {{Vigencia}} a partir del {{Fecha}}.</p>
+<p><b>CUARTA (Devolución):</b> Al terminar la relación, LA PARTE RECEPTORA devolverá o destruirá la información recibida.</p>`},
+ {id:"p4",nombre:"Poder especial",tipo:"Poder",modelo:"Poder_especial_modelo.docx",activa:true,mod:"30/09/2026 15:41",por:"SISTEMA",
+  html:`<h2>PODER ESPECIAL</h2>
+<p>Yo, {{Poderdante}}, varón, mayor de edad, con cédula de identidad personal No. {{Cédula poderdante}}, por medio del presente documento otorgo poder especial, amplio y suficiente a {{Apoderado}}, con cédula de identidad personal No. {{Cédula apoderado}}, para que en mi nombre y representación pueda {{Facultades}}.</p>
+<p>El presente poder se otorga por el tiempo necesario para realizar el acto indicado y quedará sin efecto una vez cumplido.</p>
+<p>Dado en la ciudad de Panamá, el {{Fecha}}.</p>
+<p><br>_____________________________<br>{{Poderdante}}<br>Cédula No. {{Cédula poderdante}}</p>`},
+ {id:"p5",nombre:"Carta de terminación de contrato",tipo:"Carta",modelo:"",activa:true,mod:"02/10/2026 11:05",por:"Omayra",
+  html:`<p style="text-align:right">Panamá, {{Fecha}}</p>
+<p>Señores<br><b>{{Destinatario}}</b><br>Presente</p>
+<p>Estimados señores:</p>
+<p>Por medio de la presente les comunicamos nuestra decisión de dar por terminado el contrato de {{Contrato}} suscrito el {{Fecha del contrato}}, con efecto a partir del {{Fecha de terminación}}, de conformidad con lo pactado en el mismo.</p>
+<p>Quedamos atentos para coordinar la entrega y el cierre de los compromisos pendientes.</p>
+<p>Atentamente,</p>
+<p><br>{{Firmante}}<br>{{Cargo}}</p>`},
+ {id:"p6",nombre:"Acta de junta directiva – autorización de firma",tipo:"Corporativo",modelo:"Acta_junta_modelo.docx",activa:false,mod:"28/09/2026 10:20",por:"SISTEMA",
+  html:`<h2>ACTA DE REUNIÓN DE JUNTA DIRECTIVA</h2>
+<p>En la ciudad de Panamá, siendo las {{Hora}} del {{Fecha}}, se reunió la Junta Directiva de {{Sociedad}}, sociedad inscrita a Folio {{Folio}}, con la asistencia de la totalidad de sus directores.</p>
+<p>Presidió la reunión {{Presidente}} y actuó como secretario {{Secretario}}.</p>
+<p>Por unanimidad se resolvió autorizar a {{Autorizado}} para {{Acto autorizado}}.</p>
+<p>No habiendo más asuntos que tratar, se levantó la sesión.</p>`}
+];
+
+const DOCS_BASE=[
+ {id:"d1",titulo:"Carta de terminación – Oficina 12B (borrador)",plantilla:"Carta de terminación de contrato",caso:"2026-017",mod:"13/10/2026 16:20",rev:"Sin revisar",
+  html:`<p style="text-align:right">Panamá, 13 de octubre de 2026</p>
+<p>Señores<br><b>Torre Pacífica Holdings, S.A.</b><br>Presente</p>
+<p>Estimados señores:</p>
+<p>Por medio de la presente  les comunicamos nuestra desicion de dar por terminado el contrato de arrendamiento de la Oficina 12B suscrito el 15 de enero de 2024, segun lo establecido en la clausula décima, con efecto a partir del 31 de diciembre de 2026.</p>
+<p>Tambien les informamos que el el depósito de garantia debera ser devuelto dentro de los treinta (30) dias siguientes a la entrega del inmueble.</p>
+<p>Quedamos atentos para coordinar la entrega y el cierre de los compromisos pendientes.</p>
+<p>Atentamente,</p>
+<p><br>Julio César Batista<br>Representante legal – Tecnova Soluciones, S.A.</p>`}
+];
+
+/* =====================================================================
+   Estado (en la demo se guarda solo en este navegador)
+   ===================================================================== */
+const CLAVE="demo-redaccion-ma-v1";
+let ST=cargar();
+function cargar(){ try{ const s=JSON.parse(localStorage.getItem(CLAVE)||"null"); if(s&&s.plantillas&&s.docs) return s; }catch(e){} return {plantillas:JSON.parse(JSON.stringify(PLANTILLAS_BASE)),docs:JSON.parse(JSON.stringify(DOCS_BASE))}; }
+function guardarST(){ try{ localStorage.setItem(CLAVE,JSON.stringify(ST)); }catch(e){} }
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const campos=html=>[...new Set([...String(html).matchAll(/\{\{([^{}]+)\}\}/g)].map(m=>m[1].trim()))];
+const casoPor=id=>CASOS.find(c=>c.id===id);
+
+/* ---------- Números a letras (montos) ---------- */
+const U=["","UNO","DOS","TRES","CUATRO","CINCO","SEIS","SIETE","OCHO","NUEVE","DIEZ","ONCE","DOCE","TRECE","CATORCE","QUINCE","DIECISÉIS","DIECISIETE","DIECIOCHO","DIECINUEVE","VEINTE","VEINTIUNO","VEINTIDÓS","VEINTITRÉS","VEINTICUATRO","VEINTICINCO","VEINTISÉIS","VEINTISIETE","VEINTIOCHO","VEINTINUEVE"];
+const DEC=["","","","TREINTA","CUARENTA","CINCUENTA","SESENTA","SETENTA","OCHENTA","NOVENTA"];
+const CEN=["","CIENTO","DOSCIENTOS","TRESCIENTOS","CUATROCIENTOS","QUINIENTOS","SEISCIENTOS","SETECIENTOS","OCHOCIENTOS","NOVECIENTOS"];
+function mil(n){ if(!n) return ""; if(n===100) return "CIEN"; const c=Math.floor(n/100), r=n%100; let s=CEN[c]; if(r) s+=(s?" ":"")+(r<30?U[r]:DEC[Math.floor(r/10)]+(r%10?" Y "+U[r%10]:"")); return s; }
+const apoc=s=>s.replace(/VEINTIUNO$/,"VEINTIÚN").replace(/UNO$/,"UN");
+function entero(n){ if(n===0) return "CERO"; const mm=Math.floor(n/1e6), m=Math.floor(n%1e6/1000), r=n%1000; let s="";
+  if(mm) s=mm===1?"UN MILLÓN":apoc(entero(mm))+" MILLONES"; if(m) s+=(s?" ":"")+(m===1?"MIL":apoc(mil(m))+" MIL"); if(r) s+=(s?" ":"")+mil(r); return s; }
+function enLetras(v){ const t=String(v||"").replace(/[^0-9.]/g,""); if(!t) return ""; const n=Number(t); if(!isFinite(n)) return "";
+  const e=Math.floor(n), c=Math.round((n-e)*100); return (e===1?"UN DÓLAR":(/(MILLÓN|MILLONES)$/.test(entero(e))?entero(e)+" DE DÓLARES":apoc(entero(e))+" DÓLARES"))+" CON "+String(c).padStart(2,"0")+"/100"; }
+
+/* =====================================================================
+   Navegación
+   ===================================================================== */
+let vista="casos";
+function ir(v){ vista=v; document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===v));
+  ["casos","docs","plant","revisar","como","editor"].forEach(x=>$("v-"+x).classList.toggle("hidden",x!==v));
+  if(v==="docs") pintarDocs(); if(v==="plant") pintarPl(); if(v==="como") pintarComo(); if(v==="revisar") pintarRevisar(); window.scrollTo(0,0); }
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>ir(b.dataset.t));
+$("btnPropuesta").onclick=()=>ir("como");
+$("btnReset").onclick=()=>{ try{ localStorage.removeItem(CLAVE); }catch(e){} ST=cargar(); ir("casos"); pintarCasos(CASOS[0].id); };
+
+/* =====================================================================
+   ¿Qué falta? — por lógica, sin IA
+   1) Expediente: documentos requeridos según el tipo de caso vs. archivos de la carpeta
+   2) Datos: campos de la plantilla que no aparecen en los documentos del caso
+   3) Documento: elementos que todo documento de ese tipo debe tener
+   (En la demo las listas son de ejemplo; en el sistema las define Legal.)
+   ===================================================================== */
+const CHECKLISTS={
+ "Compraventa de inmueble":[
+  {doc:"Certificado del Registro Público de la finca",rx:/registro p[uú]blico|certificado.*finca/i},
+  {doc:"Cédula del comprador",rx:/c[eé]dula.*m[eé]ndez/i},
+  {doc:"Cédula del representante de la vendedora",rx:/c[eé]dula.*r[ií]os/i},
+  {doc:"Pacto social o certificado de la sociedad vendedora",rx:/pacto social|certificado.*sociedad/i},
+  {doc:"Avalúo del inmueble",rx:/aval[uú]o/i},
+  {doc:"Paz y salvo de impuesto de inmueble",rx:/paz y salvo.*inmueble/i},
+  {doc:"Paz y salvo del IDAAN",rx:/idaan/i},
+  {doc:"Promesa de compraventa firmada",rx:/promesa.*firmad/i,borrador:/borrador.*promesa|promesa.*borrador/i}],
+ "Arrendamiento comercial":[
+  {doc:"Certificado del Registro Público de la finca",rx:/registro p[uú]blico|certificado.*finca/i},
+  {doc:"Aviso de operación del arrendatario",rx:/aviso de operaci[oó]n/i},
+  {doc:"Certificado de persona jurídica del arrendatario",rx:/persona jur[ií]dica|certificado.*tecnova/i},
+  {doc:"Cédula del representante del arrendatario",rx:/c[eé]dula.*batista/i},
+  {doc:"Tabla o acuerdo de cánones",rx:/c[aá]non/i},
+  {doc:"Contrato de arrendamiento vigente firmado",rx:/contrato.*arrendamiento.*(firmad|2026)/i,borrador:/contrato.*arrendamiento.*anterior/i,nota:"Solo está el contrato anterior (2024)"}],
+ "Acuerdo de confidencialidad":[
+  {doc:"Carta de intención",rx:/carta de intenci[oó]n/i},
+  {doc:"Certificado de la sociedad receptora",rx:/certificado.*andino|pacto.*andino/i},
+  {doc:"Acuerdo de confidencialidad firmado",rx:/(confidencialidad|nda).*firmad/i}],
+ "Poder":[
+  {doc:"Cédula del poderdante",rx:/c[eé]dula.*salda[nñ]a/i},
+  {doc:"Cédula del apoderado",rx:/c[eé]dula.*herrera/i},
+  {doc:"Instrucciones del cliente",rx:/instrucciones/i},
+  {doc:"Poder firmado y autenticado",rx:/poder.*(firmad|autenticad)/i}]
+};
+function expediente(c){
+  return (CHECKLISTS[c.tipo]||[]).map(it=>{ const a=c.archivos.find(x=>it.rx.test(x.n)), b=!a&&it.borrador&&c.archivos.find(x=>it.borrador.test(x.n));
+    return {doc:it.doc,estado:a?"Completo":b?"Por revisar":"Falta",archivo:a?a.n:b?b.n:"",nota:a?"":b?(it.nota||"Solo hay un borrador; falta la versión firmada"):"No hay ningún archivo de este tipo en la carpeta"}; });
+}
+function plantillaSugerida(c){ const act=ST.plantillas.filter(p=>p.activa); return act.find(p=>p.tipo&&c.tipo.toLowerCase().includes(p.tipo.toLowerCase().slice(0,6)))||null; }
+const REGLAS={
+ compraventa:{nombre:"Promesa de compraventa",es:/compraventa/i,req:[
+  ["Identificación de las partes con cédula",/c[eé]dula[\s\S]{0,60}?\d{1,2}-\d{1,4}-\d{1,6}/i],
+  ["RUC de la sociedad",/RUC\s*[\d-]{6,}/i],
+  ["Número de finca",/finca\s*(no\.?)?\s*\d{3,}/i],
+  ["Precio en letras y en cifras",/D[ÓO]LARES CON \d{2}\/100\s*\(US\$/],
+  ["Plazo para pagar el saldo",/plazo de [^.]*?\(\d+\)\s*(d[ií]as|meses|a[nñ]os)/i],
+  ["Cláusula de incumplimiento",/incumpl|no cumple/i],
+  ["Quién paga los gastos",/gastos[^.]*(cubiertos|pagados) por (?!\{\{|_)[A-Za-zÁÉÍÓÚáéíóú]/i],
+  ["Fecha de firma completa",/(a los|el)\s+\d{1,2}\s+(d[ií]as|de)/i],
+  ["Bloque de firmas",/_{8,}[\s\S]{0,80}(VENDEDOR|COMPRADOR)/i]]},
+ arrendamiento:{nombre:"Contrato de arrendamiento",es:/arrendamiento/i,req:[
+  ["Identificación de las partes (RUC o cédula)",/RUC\s*[\d-]{6,}|c[eé]dula[\s\S]{0,60}?\d{1,2}-\d{1,4}-\d{1,6}/i],
+  ["Canon en letras y en cifras",/D[ÓO]LARES CON \d{2}\/100\s*\(US\$/],
+  ["Plazo del contrato",/plazo[^.]*\(\d+\)\s*(d[ií]as|meses|a[nñ]os)/i],
+  ["Fecha de inicio",/a partir del?\s+\d{1,2}|a partir del?\s+[a-z]/i],
+  ["Depósito de garantía con monto",/dep[oó]sito[^.]*US\$\s*[\d,]+/i],
+  ["Bloque de firmas",/_{8,}/]]},
+ poder:{nombre:"Poder",es:/\bpoder\b/i,req:[
+  ["Cédula del poderdante",/(yo|poderdante)[\s\S]{0,140}?\d{1,2}-\d{1,4}-\d{1,6}/i],
+  ["Cédula del apoderado",/(a favor de|otorgo)[\s\S]{0,220}?\d{1,2}-\d{1,4}-\d{1,6}/i],
+  ["Facultades concretas",/para que[^.]{20,}/i],
+  ["Fecha",/\d{1,2} de (enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre) de \d{4}/i],
+  ["Firma del poderdante",/_{8,}/]]},
+ carta:{nombre:"Carta",es:/estimados|atentamente/i,req:[
+  ["Fecha",/\d{1,2} de (enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre) de \d{4}/i],
+  ["Destinatario",/señores|señor|señora/i],
+  ["Firmante y cargo",/atentamente[\s\S]{0,40}\n?.*[A-Za-z]{3,}/i]]}
+};
+function tipoDoc(txt){ const t=txt.slice(0,400); if(/PODER/.test(t)) return "poder"; if(/COMPRAVENTA/i.test(t)) return "compraventa"; if(/ARRENDAMIENTO/i.test(t)) return "arrendamiento"; if(/estimados|atentamente/i.test(txt)) return "carta"; return null; }
+function faltantesDoc(txt){ const k=tipoDoc(txt); if(!k) return {tipo:null,lista:[]}; const r=REGLAS[k]; return {tipo:r.nombre,lista:r.req.map(([n,rx])=>({n,ok:rx.test(txt)}))}; }
+
+/* =====================================================================
+   Casos
+   ===================================================================== */
+function bloqueFalta(c){
+  const ex=expediente(c), n={ok:ex.filter(x=>x.estado==="Completo").length,rev:ex.filter(x=>x.estado==="Por revisar").length,f:ex.filter(x=>x.estado==="Falta").length};
+  const p=plantillaSugerida(c), faltan=p?campos(p.html).filter(k=>k!=="Fecha"&&!/ en letras$/.test(k)&&!c.datos[k]):[];
+  return `<div class="box"><h3>🧾 ¿Qué falta en este caso? <span class="muted small" style="font-weight:500">— revisión automática del expediente</span></h3>
+    <div class="resumen"><span class="tag ok">${n.ok} completos</span><span class="tag warn">${n.rev} por revisar</span><span class="tag bad">${n.f} faltan</span>${p?`<span class="tag ${faltan.length?"bad":"ok"}">${faltan.length} dato(s) faltan para «${esc(p.nombre)}»</span>`:""}</div>
+    <div class="cols2" style="padding:12px 14px;gap:16px">
+      <div><b class="small">Documentos que debe tener el expediente (${esc(c.tipo)})</b>
+        <table class="t" style="margin-top:6px"><tbody>${ex.map(x=>`<tr><td style="width:110px"><span class="tag ${x.estado==="Completo"?"ok":x.estado==="Falta"?"bad":"warn"}">${x.estado==="Completo"?"✓ Completo":x.estado==="Falta"?"✗ Falta":"! Por revisar"}</span></td><td><b>${esc(x.doc)}</b><div class="muted small">${x.archivo?"📄 "+esc(x.archivo)+(x.nota?" · "+esc(x.nota):""):esc(x.nota)}</div></td></tr>`).join("")}</tbody></table></div>
+      <div><b class="small">Datos que faltan para redactar${p?" la «"+esc(p.nombre)+"»":""}</b>
+        ${p?(faltan.length?`<ul style="margin:8px 0 0;padding-left:18px">${faltan.map(k=>`<li><b>${esc(k)}</b> <span class="muted small">— no aparece en ningún documento del caso</span></li>`).join("")}</ul><p class="small muted" style="margin:10px 0 0">Al redactar, estos datos quedan como línea para llenar a mano. Si se agrega a la carpeta el documento que los contiene, se llenan solos.</p>`:'<p class="small" style="margin:8px 0 0">✓ Todos los datos de la plantilla aparecen en los documentos del caso.</p>'):'<p class="small muted">No hay plantilla activa para este tipo de caso.</p>'}
+        <p class="small muted" style="margin:12px 0 0">Las listas de documentos requeridos son de ejemplo; en el sistema las define el equipo de Legal para cada tipo de proceso.</p></div>
+    </div></div>`;
+}
+let casoSel=CASOS[0].id;
+function pintarCasos(id){ casoSel=id||casoSel;
+  $("listaCasos").innerHTML=CASOS.map(c=>`<button class="caso ${c.id===casoSel?"sel":""}" data-id="${c.id}"><b>📁 ${esc(c.id)} · ${esc(c.nombre)}</b><span>${esc(c.tipo)} · ${c.archivos.length} archivos · ${ST.docs.filter(d=>d.caso===c.id).length} documento(s) redactado(s)</span></button>`).join("");
+  $("listaCasos").querySelectorAll(".caso").forEach(b=>b.onclick=()=>pintarCasos(b.dataset.id));
+  const c=casoPor(casoSel);
+  $("detCaso").innerHTML=`<div class="ph"><h2>${esc(c.id)} · ${esc(c.nombre)}</h2><p>${esc(c.tipo)} · Responsable: ${esc(c.resp)}</p>
+    <div class="r"><button class="btn ok" id="btnRedactarCaso">＋ Redactar documento para este caso</button></div></div>
+    <div class="cuerpo cols2">
+      <div class="box"><h3>Archivos en la carpeta del caso</h3><table class="t"><tbody>${c.archivos.map((a,i)=>`<tr><td><span class="fi ${a.t}">${a.t.toUpperCase()}</span>${esc(a.n)}<div class="muted small" style="margin-left:32px">Modificado ${esc(a.f)}</div></td><td class="acc">${a.texto?`<button class="lnk" data-leer="${i}">Leer y revisar</button>`:""}</td></tr>`).join("")}</tbody></table></div>
+      <div class="box"><h3>Datos que la IA encontró en los documentos</h3><dl class="datos">${Object.entries(c.datos).map(([k,[v,f]])=>`<dt>${esc(k)}</dt><dd>${esc(v)}<small>📄 ${esc(f)}</small></dd>`).join("")}</dl>
+        <div class="rv-vacio small">Cada dato indica de qué archivo salió. Si un dato no aparece en los documentos, queda en blanco: la IA no lo inventa.</div></div>
+    </div>
+    <div class="cuerpo" style="padding-top:0">${bloqueFalta(c)}</div>`;
+  $("btnRedactarCaso").onclick=()=>nuevoDoc(c.id);
+  $("detCaso").querySelectorAll("[data-leer]").forEach(b=>b.onclick=()=>{ const a=c.archivos[+b.dataset.leer]; ir("revisar"); $("rvArchivo").value=c.id+"|"+a.n; abrirRevision(); });
+}
+
+/* =====================================================================
+   Modal
+   ===================================================================== */
+function modal(titulo,html,botones){ $("mTitulo").textContent=titulo; $("mCuerpo").innerHTML=html; $("mPie").innerHTML="";
+  (botones||[]).forEach(([txt,cls,fn])=>{ const b=document.createElement("button"); b.className="btn "+(cls||""); b.textContent=txt; b.onclick=fn; $("mPie").appendChild(b); });
+  $("fondo").classList.remove("hidden"); }
+const cerrarModal=()=>$("fondo").classList.add("hidden");
+$("mCerrar").onclick=cerrarModal; $("fondo").onclick=e=>{ if(e.target.id==="fondo") cerrarModal(); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") cerrarModal(); });
+
+/* =====================================================================
+   Nuevo documento (plantilla + caso → campos llenos)
+   ===================================================================== */
+function nuevoDoc(casoId,plId){
+  const activas=ST.plantillas.filter(p=>p.activa);
+  if(!activas.length){ alert("No hay plantillas activas."); return; }
+  const sugerida=plId||(casoId?(activas.find(p=>casoPor(casoId).tipo.toLowerCase().includes(p.tipo.toLowerCase().slice(0,6)))||activas[0]).id:activas[0].id);
+  modal("Nuevo documento",`<div class="grid2">
+      <label class="f">Plantilla<select class="inp" id="ndPl">${activas.map(p=>`<option value="${p.id}" ${p.id===sugerida?"selected":""}>${esc(p.nombre)}</option>`).join("")}</select></label>
+      <label class="f">Caso (llena los datos solos)<select class="inp" id="ndCaso"><option value="">— Sin caso —</option>${CASOS.map(c=>`<option value="${c.id}" ${c.id===casoId?"selected":""}>${esc(c.id)} · ${esc(c.nombre)}</option>`).join("")}</select></label>
+    </div>
+    <label class="f" style="margin-top:12px">Título del documento<input class="inp" id="ndTit"></label>
+    <div class="sec">Datos del documento</div>
+    <p class="ayuda">Los datos en verde salieron de los documentos del caso (se indica el archivo). Lo que quede vacío saldrá como una línea para llenar a mano. Los montos en letras se escriben solos. Después podrás editar todo el texto.</p>
+    <div class="grid2" id="ndCampos"></div>`,
+    [["Cancelar","",cerrarModal],["Crear y editar","ok",crearDoc]]);
+  const pintar=()=>{ const p=ST.plantillas.find(x=>x.id===$("ndPl").value), c=casoPor($("ndCaso").value);
+    $("ndTit").value=p.nombre+(c?" – "+c.nombre:"");
+    $("ndCampos").innerHTML=campos(p.html).map(k=>{ let v="",f=""; if(c&&c.datos[k]){ v=c.datos[k][0]; f=c.datos[k][1]; } if(k==="Fecha"&&!v) { v=hoyTxt(); f="fecha de hoy"; }
+      const auto=/ en letras$/.test(k);
+      return `<label class="f">${esc(k)}${f?` <small>📄 ${esc(f)}</small>`:""}${auto?` <small>✎ se calcula del monto</small>`:""}<input class="inp ${v?"lleno":""}" data-k="${esc(k)}" value="${esc(v)}" ${auto?"readonly":""}></label>`; }).join("");
+    const recalc=()=>$("ndCampos").querySelectorAll("input[data-k$=' en letras']").forEach(i=>{ const base=$("ndCampos").querySelector(`input[data-k="${CSS.escape(i.dataset.k.replace(/ en letras$/,""))}"]`); i.value=base?enLetras(base.value):""; i.classList.toggle("lleno",!!i.value); });
+    $("ndCampos").querySelectorAll("input").forEach(i=>i.addEventListener("input",recalc)); recalc(); };
+  $("ndPl").onchange=pintar; $("ndCaso").onchange=pintar; pintar();
+}
+function crearDoc(){
+  const p=ST.plantillas.find(x=>x.id===$("ndPl").value), casoId=$("ndCaso").value, datos={};
+  $("ndCampos").querySelectorAll("input").forEach(i=>datos[i.dataset.k]=i.value.trim());
+  const html=p.html.replace(/\{\{([^{}]+)\}\}/g,(m,k)=>{ k=k.trim(); return datos[k]?esc(datos[k]):'<span class="falta">______________</span>'; });
+  const d={id:"d"+Date.now(),titulo:$("ndTit").value.trim()||p.nombre,plantilla:p.nombre,caso:casoId,mod:ahora(),rev:"Sin revisar",html,datos};
+  ST.docs.unshift(d); guardarST(); cerrarModal(); abrirEditor("doc",d.id);
+}
+$("btnNuevoDoc").onclick=()=>nuevoDoc("");
+
+/* =====================================================================
+   Documentos guardados
+   ===================================================================== */
+function pintarDocs(){
+  $("tbDocs").innerHTML=ST.docs.length?ST.docs.map(d=>{ const c=casoPor(d.caso);
+    return `<tr><td><b>${esc(d.titulo)}</b></td><td>${esc(d.plantilla)}</td><td>${c?esc(c.id+" · "+c.nombre):'<span class="muted">—</span>'}</td>
+    <td><span class="tag ${d.rev==="Revisado"?"ok":d.rev==="Sin revisar"?"warn":"bad"}">${esc(d.rev)}</span></td><td>${esc(d.mod)}</td>
+    <td class="acc"><button class="lnk" data-a="abrir" data-id="${d.id}">Abrir</button><button class="lnk" data-a="word" data-id="${d.id}">Word</button><button class="lnk" data-a="dup" data-id="${d.id}">Duplicar</button><button class="lnk bad" data-a="del" data-id="${d.id}">Eliminar</button></td></tr>`; }).join("")
+    :`<tr><td colspan="6" class="muted">Todavía no hay documentos. Pulsa <b>Nuevo documento</b>.</td></tr>`;
+  $("tbDocs").querySelectorAll("button").forEach(b=>b.onclick=()=>{ const d=ST.docs.find(x=>x.id===b.dataset.id);
+    if(b.dataset.a==="abrir") abrirEditor("doc",d.id);
+    if(b.dataset.a==="word") bajarWord(d.titulo,d.html);
+    if(b.dataset.a==="dup"){ ST.docs.unshift({...d,id:"d"+Date.now(),titulo:d.titulo+" (copia)",mod:ahora()}); guardarST(); pintarDocs(); }
+    if(b.dataset.a==="del") modal("Eliminar documento",`<p>¿Eliminar <b>${esc(d.titulo)}</b>? En el sistema real se mueve a la papelera de OneDrive.</p>`,[["Cancelar","",cerrarModal],["Eliminar","pri",()=>{ ST.docs=ST.docs.filter(x=>x.id!==d.id); guardarST(); cerrarModal(); pintarDocs(); }]]); });
+}
+
+/* =====================================================================
+   Plantillas
+   ===================================================================== */
+function pintarPl(){
+  $("tbPl").innerHTML=ST.plantillas.map(p=>`<tr><td><b>${esc(p.nombre)}</b></td><td>${esc(p.tipo)}</td><td>${campos(p.html).length}</td>
+    <td>${p.modelo?`<span class="fi docx">W</span>${esc(p.modelo)}`:`— <button class="lnk" data-a="subir" data-id="${p.id}">Subir</button>`}</td>
+    <td><span class="tag ${p.activa?"ok":"off"}">${p.activa?"Activa":"Inactiva"}</span></td><td>${esc(p.mod)}<div class="muted small">${esc(p.por)}</div></td>
+    <td class="acc"><button class="lnk" data-a="usar" data-id="${p.id}" ${p.activa?"":"disabled"}>Usar</button><button class="lnk" data-a="ver" data-id="${p.id}">Ver</button><button class="lnk" data-a="edit" data-id="${p.id}">Editar</button><button class="lnk" data-a="dup" data-id="${p.id}">Duplicar</button><button class="lnk ${p.activa?"bad":""}" data-a="act" data-id="${p.id}">${p.activa?"Desactivar":"Activar"}</button></td></tr>`).join("");
+  $("tbPl").querySelectorAll("button").forEach(b=>b.onclick=()=>{ const p=ST.plantillas.find(x=>x.id===b.dataset.id);
+    if(b.dataset.a==="usar"&&p.activa) nuevoDoc("",p.id);
+    if(b.dataset.a==="ver") modal(p.nombre,`<div class="hoja" style="min-height:0;padding:36px 44px;box-shadow:none;border:1px solid var(--border)">${resaltar(p.html)}</div>`,[["Cerrar","",cerrarModal],["Usar plantilla","ok",()=>{ cerrarModal(); nuevoDoc("",p.id); }]]);
+    if(b.dataset.a==="edit") abrirEditor("pl",p.id);
+    if(b.dataset.a==="dup"){ ST.plantillas.push({...p,id:"p"+Date.now(),nombre:p.nombre+" (copia)",mod:ahora(),por:"Omayra"}); guardarST(); pintarPl(); }
+    if(b.dataset.a==="act"){ p.activa=!p.activa; p.mod=ahora(); p.por="Omayra"; guardarST(); pintarPl(); }
+    if(b.dataset.a==="subir"){ plSubir=p.id; $("fileModelo").click(); } });
+}
+const resaltar=html=>html.replace(/\{\{([^{}]+)\}\}/g,'<span class="campo" contenteditable="false">{{$1}}</span>');
+const limpiarCampos=html=>html.replace(/<span class="campo"[^>]*>(\{\{[^{}]+\}\})<\/span>/g,"$1");
+$("btnNuevaPl").onclick=()=>{ const p={id:"p"+Date.now(),nombre:"Nueva plantilla",tipo:"",modelo:"",activa:true,mod:ahora(),por:"Omayra",html:"<p>Pega aquí el texto del modelo y marca los datos que cambian con <b>＋ Campo</b>.</p>"}; ST.plantillas.push(p); guardarST(); abrirEditor("pl",p.id); };
+let plSubir=null;
+$("btnDesdeWord").onclick=()=>{ plSubir=null; $("fileModelo").click(); };
+$("fileModelo").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  const html=await leerWord(f); if(html==null) return;
+  let p=plSubir&&ST.plantillas.find(x=>x.id===plSubir);
+  if(p){ p.modelo=f.name; p.mod=ahora(); p.por="Omayra"; guardarST(); pintarPl(); modal("Modelo original guardado",`<p>Se guardó <b>${esc(f.name)}</b> como modelo original de <b>${esc(p.nombre)}</b>. En el sistema real queda en <b>Legal › Plantillas</b>.</p>`,[["Listo","pri",cerrarModal]]); return; }
+  p={id:"p"+Date.now(),nombre:f.name.replace(/\.docx$/i,"").replace(/[_-]+/g," "),tipo:"",modelo:f.name,activa:true,mod:ahora(),por:"Omayra",html};
+  ST.plantillas.push(p); guardarST(); abrirEditor("pl",p.id);
+  avisoLado("Selecciona en el texto un dato que cambia de un caso a otro (un nombre, una cédula, un monto) y pulsa <b>＋ Campo</b> para convertirlo en campo."); };
+async function leerWord(f){
+  if(!window.mammoth){ alert("No se pudo cargar el lector de Word. Revisa la conexión."); return null; }
+  try{ const r=await mammoth.convertToHtml({arrayBuffer:await f.arrayBuffer()}); return r.value||"<p></p>"; }
+  catch(e){ alert("No se pudo leer el Word: "+e.message); return null; }
+}
+
+/* =====================================================================
+   Editor (documentos y plantillas)
+   ===================================================================== */
+let ED={modo:null,id:null};
+function abrirEditor(modo,id){
+  ED={modo,id}; ir("editor");
+  document.querySelectorAll(".solo-doc").forEach(x=>x.classList.toggle("hidden",modo!=="doc"));
+  document.querySelectorAll(".solo-pl").forEach(x=>x.classList.toggle("hidden",modo!=="pl"));
+  $("edTipo").classList.toggle("hidden",modo!=="pl"); $("popCampo").classList.add("hidden");
+  if(modo==="doc"){ const d=ST.docs.find(x=>x.id===id); $("edTitulo").value=d.titulo; $("hoja").innerHTML=d.html; estadoDoc(d);
+    const c=casoPor(d.caso);
+    $("edDatos").innerHTML=c?`<b>${esc(c.id)} · ${esc(c.nombre)}</b><br><br>`+Object.entries(c.datos).map(([k,[v,f]])=>`<div style="margin-bottom:6px"><b>${esc(k)}:</b> ${esc(v)}<br><span class="muted small">📄 ${esc(f)}</span></div>`).join(""):"Documento sin caso asociado.";
+    $("rvResumen").classList.add("hidden"); $("rvLista").innerHTML='<div class="rv-vacio">Pulsa <b>Revisar ortografía</b> para buscar faltas, o <b>Validar</b> para revisar campos sin llenar y montos en letras.<br><br>Mientras escribes, el navegador también subraya en rojo las palabras que no reconoce.</div>';
+  } else { const p=ST.plantillas.find(x=>x.id===id); $("edTitulo").value=p.nombre; $("edTipo").value=p.tipo; $("hoja").innerHTML=resaltar(p.html);
+    $("edEstado").textContent=p.activa?"Plantilla activa":"Plantilla inactiva"; $("edEstado").className="tag "+(p.activa?"ok":"off"); camposPl(); }
+}
+function estadoDoc(d){ $("edEstado").textContent=d.rev; $("edEstado").className="tag "+(d.rev==="Revisado"?"ok":d.rev==="Sin revisar"?"warn":"bad"); }
+function camposPl(){ const ks=campos(limpiarCampos($("hoja").innerHTML));
+  $("plCampos").innerHTML=ks.length?ks.map(k=>`<span class="tag" style="margin:0 6px 6px 0">{{${esc(k)}}}</span>`).join("")+`<p class="small muted" style="margin:8px 0 0">${ks.length} campo(s). Al usar la plantilla, cada campo pide su dato o lo toma del caso.</p>`:'Aún no hay campos. Selecciona un texto y pulsa <b>＋ Campo</b>.';
+  $("dlCampos").innerHTML=[...new Set([...ks,...CASOS.flatMap(c=>Object.keys(c.datos))])].map(k=>`<option value="${esc(k)}">`).join(""); }
+function avisoLado(html){ if(ED.modo==="pl") $("plCampos").insertAdjacentHTML("afterbegin",`<div class="tag warn" style="display:block;white-space:normal;margin-bottom:10px;line-height:1.5">${html}</div>`); }
+$("hoja").addEventListener("input",()=>{ if(ED.modo==="pl") camposPl(); });
+document.querySelectorAll(".tb[data-c]").forEach(b=>b.onclick=()=>{ $("hoja").focus(); document.execCommand(b.dataset.c,false,null); });
+let rango=null;
+$("tbCampo").onmousedown=e=>{ const s=getSelection(); rango=(s.rangeCount&&$("hoja").contains(s.anchorNode))?s.getRangeAt(0).cloneRange():null; };
+$("tbCampo").onclick=()=>{ $("popCampo").classList.remove("hidden"); $("popNombre").value=""; $("popNombre").focus(); };
+$("popNo").onclick=()=>$("popCampo").classList.add("hidden");
+$("popOk").onclick=()=>{ const n=$("popNombre").value.trim().replace(/[{}]/g,""); if(!n) return;
+  const span=document.createElement("span"); span.className="campo"; span.contentEditable="false"; span.textContent="{{"+n+"}}";
+  if(rango){ rango.deleteContents(); rango.insertNode(span); } else $("hoja").appendChild(span);
+  span.after(document.createTextNode(" ")); rango=null; $("popCampo").classList.add("hidden"); camposPl(); };
+$("popNombre").addEventListener("keydown",e=>{ if(e.key==="Enter") $("popOk").click(); });
+$("edVolver").onclick=()=>ir(ED.modo==="pl"?"plant":"docs");
+$("edGuardar").onclick=()=>{ quitarMarcas();
+  if(ED.modo==="doc"){ const d=ST.docs.find(x=>x.id===ED.id); d.titulo=$("edTitulo").value.trim()||d.titulo; d.html=$("hoja").innerHTML; d.mod=ahora(); guardarST(); }
+  else { const p=ST.plantillas.find(x=>x.id===ED.id); p.nombre=$("edTitulo").value.trim()||p.nombre; p.tipo=$("edTipo").value.trim(); p.html=limpiarCampos($("hoja").innerHTML); p.mod=ahora(); p.por="Omayra"; guardarST(); }
+  const b=$("edGuardar"); b.textContent="✓ Guardado"; setTimeout(()=>b.textContent="Guardar",1500); };
+$("edWord").onclick=()=>{ quitarMarcas(); bajarWord($("edTitulo").value,ED.modo==="pl"?limpiarCampos($("hoja").innerHTML):$("hoja").innerHTML); };
+$("edPdf").onclick=()=>{ quitarMarcas(); window.print(); };
+function bajarWord(titulo,html){
+  const limpio=html.replace(/<span class="falta">[^<]*<\/span>/g,"______________").replace(/<\/?mark[^>]*>/g,"");
+  const doc=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(titulo)}</title>
+<style>body{font-family:Arial;font-size:11pt;line-height:1.5}h1,h2{font-size:12pt;text-align:center}p{text-align:justify;margin:0 0 10pt}</style></head><body>${limpio}</body></html>`;
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["﻿",doc],{type:"application/msword"})); a.download=(titulo||"documento").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[–—]/g,"-").replace(/[^\w .()-]+/g,"").replace(/\s+/g," ").trim()+".doc"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+
+/* =====================================================================
+   Revisión ortográfica y validación
+   (En la demo: lista de errores frecuentes. En el sistema: la IA revisa
+    ortografía, gramática y coherencia, y propone cada corrección.)
+   ===================================================================== */
+const ORTO={"articulo":"artículo","clausula":"cláusula","clausulas":"cláusulas","numero":"número","dias":"días","tambien":"también","ademas":"además","segun":"según","atravez":"a través",
+ "debera":"deberá","podra":"podrá","sera":"será","seran":"serán","estara":"estará","pagara":"pagará","garantia":"garantía","cedula":"cédula","telefono":"teléfono","asi":"así","despues":"después",
+ "desicion":"decisión","decision":"decisión","indemnizacion":"indemnización","autorizacion":"autorización","notificacion":"notificación","terminacion":"terminación","informacion":"información",
+ "administracion":"administración","razon":"razón","pais":"país","unico":"único","proposito":"propósito","exepto":"excepto","escencial":"esencial","deposito":"depósito","credito":"crédito",
+ "economico":"económico","interes":"interés","terminos":"términos","tramite":"trámite","linea":"línea","codigo":"código","pagina":"página","titulo":"título","minimo":"mínimo","maximo":"máximo","compañia":"compañía","ultimo":"último","ultima":"última","dia":"día","via":"vía","tambien":"también","adquisicion":"adquisición","juridica":"jurídica","juridico":"jurídico","publica":"pública","traves":"través","tecnico":"técnico","valido":"válido","haci":"así","inmeble":"inmueble"};
+const ESPECIAL={"mas":["más","«mas» sin tilde significa «pero»; en «a más tardar» va con tilde"],"el":["él","«el» es artículo; si se refiere a una persona («por él») lleva tilde"]};
+let MARCAS=[];
+function quitarMarcas(){ $("hoja").querySelectorAll("mark").forEach(m=>m.replaceWith(document.createTextNode(m.textContent))); $("hoja").normalize(); }
+function nodosTexto(raiz){ const w=document.createTreeWalker(raiz,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest(".campo,.falta")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}); const a=[]; let n; while(n=w.nextNode()) a.push(n); return a; }
+function hallazgos(raiz){
+  const out=[]; const RX=/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g;
+  nodosTexto(raiz).forEach(nodo=>{ const t=nodo.nodeValue; let m; RX.lastIndex=0;
+    const pals=[]; while(m=RX.exec(t)) pals.push({w:m[0],i:m.index});
+    pals.forEach((p,j)=>{ const low=p.w.toLowerCase(), sig=(pals[j+1]||{}).w||"", ant=(pals[j-1]||{}).w||"";
+      const conservar=s=>p.w===p.w.toUpperCase()&&p.w.length>1?s.toUpperCase():(p.w[0]===p.w[0].toUpperCase()?s[0].toUpperCase()+s.slice(1):s);
+      const regla=!ORTO[low]&&/[cs]ion$/.test(low)&&low.length>5?low.replace(/cion$/,"ción").replace(/sion$/,"sión"):null;
+      if(regla) out.push({nodo,i:p.i,len:p.w.length,mal:p.w,bien:conservar(regla),tipo:"Ortografía",por:"Las palabras terminadas en «-ción» o «-sión» llevan tilde"});
+      else if(ORTO[low]) out.push({nodo,i:p.i,len:p.w.length,mal:p.w,bien:conservar(ORTO[low]),tipo:"Ortografía",por:"Falta tilde o está mal escrita"});
+      else if(low==="mas"&&ant.toLowerCase()==="a"&&sig.toLowerCase()==="tardar") out.push({nodo,i:p.i,len:p.w.length,mal:p.w,bien:conservar("más"),tipo:"Ortografía",por:ESPECIAL.mas[1]});
+      else if(low==="el"&&/^(por|para|con|sin|de|a)$/i.test(ant)&&/^(la|las|los|el)$/i.test(sig)) out.push({nodo,i:p.i,len:p.w.length,mal:p.w,bien:conservar("él"),tipo:"Ortografía",por:ESPECIAL.el[1]});
+      if(sig&&low===sig.toLowerCase()&&low.length>1&&t.slice(p.i+p.w.length,pals[j+1].i).trim()===""){ out.push({nodo,i:p.i,len:pals[j+1].i+sig.length-p.i,mal:t.slice(p.i,pals[j+1].i+sig.length),bien:p.w,tipo:"Redacción",por:"Palabra repetida"}); }
+    });
+    const dob=/ {2,}/g; while(m=dob.exec(t)) out.push({nodo,i:m.index,len:m[0].length,mal:"«"+m[0].replace(/ /g,"·")+"»",bien:" ",tipo:"Formato",por:"Espacios dobles",espacio:true});
+  });
+  // quita solapados (se queda con el primero)
+  out.sort((a,b)=>a.nodo===b.nodo?a.i-b.i:0);
+  return out.filter((h,k)=>!out.slice(0,k).some(o=>o.nodo===h.nodo&&h.i<o.i+o.len&&o.i<h.i+h.len));
+}
+function marcar(lista){
+  // de atrás hacia adelante para no mover los índices
+  const porNodo=new Map(); lista.forEach(h=>{ if(!porNodo.has(h.nodo)) porNodo.set(h.nodo,[]); porNodo.get(h.nodo).push(h); });
+  porNodo.forEach(hs=>{ hs.sort((a,b)=>b.i-a.i).forEach(h=>{ const n=h.nodo; const fin=n.splitText(h.i); fin.splitText(h.len); const mk=document.createElement("mark"); mk.className="ort"; mk.textContent=fin.nodeValue; fin.replaceWith(mk); h.mark=mk; }); });
+}
+function revisarOrto(){
+  quitarMarcas(); const lista=hallazgos($("hoja")); marcar(lista); MARCAS=lista;
+  pintarRevision(lista,[]);
+  const d=ED.modo==="doc"&&ST.docs.find(x=>x.id===ED.id); if(d){ d.rev=lista.length?"Con observaciones":"Revisado"; guardarST(); estadoDoc(d); }
+}
+function pintarRevision(lista,vals){
+  const res=$("rvResumen"); res.classList.remove("hidden");
+  const n={o:lista.filter(h=>h.tipo==="Ortografía").length,r:lista.filter(h=>h.tipo!=="Ortografía").length};
+  res.innerHTML=`<span class="tag ${n.o?"bad":"ok"}">${n.o} ortografía</span><span class="tag ${n.r?"warn":"ok"}">${n.r} redacción / formato</span>${vals.length?`<span class="tag ${vals.some(v=>!v.ok)?"bad":"ok"}">${vals.filter(v=>!v.ok).length} validaciones con error</span>`:""}${lista.length?'<button class="btn sm pri" id="rvTodo" style="margin-left:auto">Corregir todo</button>':""}`;
+  const items=lista.map((h,k)=>`<div class="rv-item" data-k="${k}"><span class="tag ${h.tipo==="Ortografía"?"bad":"warn"}">${h.tipo}</span> <b class="mal">${esc(h.mal)}</b> → <b class="bien">${h.espacio?"un espacio":esc(h.bien)}</b><div class="ctx">${esc(h.por)}</div><div class="acts"><button class="btn sm ok" data-c="${k}">Corregir</button><button class="btn sm" data-i="${k}">Ignorar</button><button class="lnk" data-v="${k}">Ver en el texto</button></div></div>`).join("");
+  const vs=vals.map(v=>`<div class="rv-item"><span class="tag ${v.ok?"ok":"bad"}">${v.ok?"OK":"Revisar"}</span> ${v.txt}</div>`).join("");
+  $("rvLista").innerHTML=(vs+items)||'<div class="rv-vacio">✓ No se encontraron faltas en la lista revisada.</div>';
+  const corregir=k=>{ const h=lista[k]; if(h.hecho||!h.mark||!h.mark.isConnected) return; h.mark.replaceWith(document.createTextNode(h.bien)); h.hecho=true; const it=$("rvLista").querySelector(`[data-k="${k}"]`); if(it) it.remove(); };
+  $("rvLista").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ corregir(+b.dataset.c); fin(); });
+  $("rvLista").querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{ const h=lista[+b.dataset.i]; if(h.mark&&h.mark.isConnected) h.mark.replaceWith(document.createTextNode(h.mark.textContent)); h.hecho=true; b.closest(".rv-item").remove(); fin(); });
+  $("rvLista").querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{ const h=lista[+b.dataset.v]; document.querySelectorAll("mark.act").forEach(m=>m.classList.remove("act")); if(h.mark){ h.mark.classList.add("act"); h.mark.scrollIntoView({block:"center",behavior:"smooth"}); } });
+  if($("rvTodo")) $("rvTodo").onclick=()=>{ lista.forEach((h,k)=>corregir(k)); fin(); };
+  function fin(){ $("hoja").normalize(); if(lista.every(h=>h.hecho)){ const d=ED.modo==="doc"&&ST.docs.find(x=>x.id===ED.id); if(d){ d.rev="Revisado"; d.html=$("hoja").innerHTML; d.mod=ahora(); guardarST(); estadoDoc(d); } pintarRevision([],vals); } }
+}
+let MALOS=[];
+function marcarMontos(){ MALOS.forEach(c=>nodosTexto($("hoja")).forEach(n=>{ const i=n.nodeValue.indexOf(c); if(i<0) return; const r=n.splitText(i); r.splitText(c.length); const mk=document.createElement("mark"); mk.className="val"; mk.title="El monto en letras no coincide con esta cifra"; mk.textContent=r.nodeValue; r.replaceWith(mk); })); }
+function calcVals(){
+  const raiz=$("hoja"), vals=[]; MALOS=[];
+  const spans=[...raiz.querySelectorAll(".falta")], llaves=(raiz.innerText.match(/\{\{[^{}]+\}\}/g)||[]).length-spans.filter(x=>/\{\{/.test(x.textContent)).length;
+  const faltas=spans.length+Math.max(0,llaves);
+  vals.push({ok:!faltas,txt:faltas?`<b>${faltas} dato(s) sin llenar</b> (líneas en rojo o campos entre llaves).`:"Todos los datos del documento están llenos."});
+  const txt=raiz.innerText.replace(/\s+/g," ");
+  const RX=/([A-ZÁÉÍÓÚÑ ]+?(?:DÓLARES|DÓLAR) CON \d{2}\/100)\s*\(US\$\s*([\d,]+(?:\.\d{2})?)\)/g; let m, n=0;
+  while(m=RX.exec(txt)){ n++; const escrito=m[1].trim(), cifra=m[2], esperado=enLetras(cifra);
+    const ok=escrito===esperado||escrito.endsWith(" "+esperado)&&!/(CIENTO|CIENTOS|MIL|UN|UNO|DOS|TRES|CUATRO|CINCO|SEIS|SIETE|OCHO|NUEVE|DIEZ|VEINTE|TREINTA|CUARENTA|CINCUENTA|SESENTA|SETENTA|OCHENTA|NOVENTA|Y)$/.test(escrito.slice(0,-esperado.length).trim());
+    if(!ok) MALOS.push("US$"+cifra);
+    vals.push({ok,txt:ok?`Monto <b>US$${esc(cifra)}</b>: coincide con lo escrito en letras.`:`Monto <b>US$${esc(cifra)}</b>: en letras dice «${esc(escrito)}», pero esa cifra se escribe «<b>${esc(esperado)}</b>».`}); }
+  if(!n) vals.push({ok:true,txt:"No hay montos con formato «… DÓLARES CON 00/100 (US$…)» para comparar."});
+  const fd=faltantesDoc(raiz.innerText);
+  if(fd.tipo){ const no=fd.lista.filter(x=>!x.ok); vals.push({ok:!no.length,txt:no.length?`<b>Le falta al documento (${esc(fd.tipo)}):</b><ul style="margin:6px 0 0;padding-left:18px">${no.map(x=>`<li>${esc(x.n)}</li>`).join("")}</ul><span class="muted small">Tiene: ${fd.lista.filter(x=>x.ok).map(x=>esc(x.n)).join(" · ")||"—"}</span>`:`Tiene todos los elementos de un(a) ${esc(fd.tipo)}: ${fd.lista.map(x=>esc(x.n)).join(" · ")}.`}); }
+  const fechas=(txt.match(/\b\d{1,2} de (enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre) de \d{4}\b/gi)||[]);
+  vals.push({ok:true,txt:`${fechas.length} fecha(s) encontradas${fechas.length?": "+esc([...new Set(fechas)].join(" · ")):""}.`});
+  return vals;
+}
+function validar(){ quitarMarcas(); const v=calcVals(); marcarMontos(); pintarRevision([],v); }
+function revisarTodo(){ quitarMarcas(); const vals=calcVals(); const l=hallazgos($("hoja")); marcar(l); MARCAS=l; marcarMontos(); pintarRevision(l,vals);
+  const d=ED.modo==="doc"&&ST.docs.find(x=>x.id===ED.id); if(d){ d.rev=(l.length||vals.some(v=>!v.ok))?"Con observaciones":"Revisado"; guardarST(); estadoDoc(d); } }
+$("edOrto").onclick=revisarOrto; $("edValidar").onclick=validar;
+$("hoja").addEventListener("click",e=>{ const m=e.target.closest("mark.ort"); if(!m) return; const k=MARCAS.findIndex(h=>h.mark===m); const it=$("rvLista").querySelector(`[data-k="${k}"]`); if(it){ it.scrollIntoView({block:"nearest"}); it.style.background="#fdf6e6"; setTimeout(()=>it.style.background="",1200); } });
+
+/* =====================================================================
+   Lectura y corrección de documentos existentes
+   ===================================================================== */
+function pintarRevisar(){
+  const sel=$("rvArchivo"), val=sel.value;
+  sel.innerHTML=CASOS.flatMap(c=>c.archivos.filter(a=>a.texto).map(a=>`<option value="${esc(c.id+"|"+a.n)}">${esc(c.id)} · ${esc(a.n)}</option>`)).join("");
+  if(val) sel.value=val;
+}
+function abrirRevision(){
+  const [cid,n]=$("rvArchivo").value.split("|"), c=casoPor(cid), a=c.archivos.find(x=>x.n===n);
+  abrirComoDoc(a.n.replace(/\.docx$/i,"")+" (revisión)",TEXTOS[a.texto],cid);
+}
+function abrirComoDoc(titulo,html,cid){
+  const d={id:"d"+Date.now(),titulo,plantilla:"Documento existente (lectura)",caso:cid||"",mod:ahora(),rev:"Sin revisar",html:html.replace(/\{\{([^{}]+)\}\}/g,'<span class="falta">{{$1}}</span>')};
+  ST.docs.unshift(d); guardarST(); abrirEditor("doc",d.id); revisarTodo();
+}
+$("rvAbrir").onclick=abrirRevision;
+$("rvSubir").onclick=()=>$("rvFile").click();
+$("rvFile").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const html=await leerWord(f); if(html==null) return; abrirComoDoc(f.name.replace(/\.docx$/i,"")+" (revisión)",html,""); };
+
+/* =====================================================================
+   Cómo funciona
+   ===================================================================== */
+const PEDIDO=`Información y materiales necesarios para implementar la redacción y revisión de documentos en el Agente Legal:
+
+1. La lista de los documentos que más redactan (con los 8 a 10 más frecuentes es suficiente para empezar).
+2. Un modelo en Word, vigente y aprobado, de cada uno.
+3. En cada modelo, resaltar en amarillo los datos que cambian de un caso a otro.
+4. Por cada tipo de proceso, la lista de documentos que debe tener el expediente.
+5. Dos o tres ejemplos de cada tipo, para las pruebas.
+6. Cómo nombran los casos y las subcarpetas dentro de la carpeta de Legal.
+7. Las reglas de estilo: formato de fechas, montos en letras y números, mayúsculas y bloque de firmas.
+8. Quién aprueba los modelos y quién puede crear o modificar plantillas.
+9. Las reglas de lógica para detectar faltantes: qué debe tener cada documento o expediente según el caso (si tiene esto, le falta esto; tipo sí o no).`;
+const PROMPT_IA=`Eres el asistente legal interno de M&A Capital (Panamá).
+Trabajas SOLO con los documentos del caso que se te entregan.
+
+Tarea: llenar los campos de la plantilla "{plantilla}" para el caso "{caso}".
+Campos a llenar: {lista de campos}.
+
+Reglas:
+- No inventes datos. Si un dato no aparece en los documentos, deja el valor vacío.
+- Indica el nombre del archivo de donde sale cada dato.
+- Escribe los nombres, cédulas, RUC y números de finca exactamente como aparecen.
+- Si el mismo dato aparece distinto en dos documentos, avisa la diferencia.
+- Montos: devuelve la cifra; el sistema escribe las letras.
+
+Devuelve: {"campos": {"Nombre del campo": {"valor": "", "fuente": "archivo"}}}
+
+Revisión del documento terminado:
+- Señala faltas de ortografía, tildes, palabras repetidas y errores de concordancia, con la corrección propuesta.
+- Compara montos en letras contra cifras, nombres y cédulas contra los documentos del caso, y fechas y plazos.
+- No cambies el contenido legal: solo propone; la abogada acepta o rechaza cada cambio.`;
+function pintarComo(){
+  const paso=(n,t,p)=>`<div class="paso"><span class="n">${n}</span><b>${t}</b><p>${p}</p></div>`;
+  $("docComo").innerHTML=`
+  <div class="panel portada">
+    <div class="k">M&amp;A Capital · Agente Legal</div>
+    <h2 style="font-size:22px;margin:4px 0 8px">Propuesta: redacción y revisión de documentos legales</h2>
+    <p>Integración del Agente Legal con las carpetas de Legal sincronizadas desde SharePoint, redacción de documentos a partir de plantillas aprobadas y revisión automática de expedientes y documentos.</p>
+    <div class="indice"><a href="#s1">1. Carpetas de Legal</a><a href="#s2">2. Redacción</a><a href="#s3">3. Revisión</a><a href="#s4">4. Proceso</a><a href="#s5">5. Materiales</a></div>
+  </div>
+
+  <div class="panel" id="s1"><h2>1. Documentos de Legal desde las carpetas sincronizadas</h2>
+    <p>Funciona igual que en las demostraciones de Pantera: el Agente Legal lee directamente la carpeta de Legal sincronizada desde SharePoint.</p>
+    <ul><li>Omayra <b>no necesita subir archivos ni carpetas manualmente</b>.</li>
+      <li>Cada subcarpeta se reconoce como un <b>caso</b>; desde el sistema, ella elige cuáles revisar y a cuáles dar seguimiento.</li>
+      <li>Todo documento que se agregue en SharePoint <b>aparece automáticamente</b>.</li>
+      <li>Solo se requiere <b>establecer la ruta</b> de la carpeta una única vez.</li></ul></div>
+
+  <div class="panel" id="s2"><h2>2. Redacción de documentos</h2>
+    <p>Es posible, con una función similar a la presentada. El flujo de trabajo es el siguiente:</p>
+    <div class="flujo">
+      ${paso(1,"Modelo en Word","Cada tipo de documento parte de su modelo en Word.")}
+      ${paso(2,"Plantilla","El modelo se convierte en plantilla, marcando los datos que cambian de un caso a otro: partes, cédulas, finca, montos, fechas y plazos.")}
+      ${paso(3,"Llenado automático","Omayra elige la plantilla y el caso; el sistema completa los datos con los documentos del caso, indica de qué archivo proviene cada uno y redacta los montos en letras o cualquier otro dato que se requiera, según la lógica que se establezca.")}
+      ${paso(4,"Datos faltantes","Lo que no aparece en los documentos queda en blanco para completarlo a mano: el sistema no inventa información. Se puede establecer una lógica de sugerencias y que marque claramente lo que falta.")}
+      ${paso(5,"Revisión y descarga","Omayra revisa y ajusta el texto en el mismo sistema, y lo descarga en Word o PDF.")}
+    </div>
+    <div class="destacado"><b>¿Se necesita una plantilla predeterminada para cada tipo de documento?</b><br>
+      Sí, es lo recomendable. Con un modelo por cada tipo de documento, el texto legal siempre es el aprobado y el sistema solo completa los datos, sin redactar cláusulas por su cuenta. Si un documento tiene variantes importantes (por ejemplo, persona natural o sociedad), se prepara una plantilla para cada variante. Las plantillas se administran desde el propio sistema (<b>usar, ver, editar, duplicar y desactivar</b>), sin necesidad de programar.</div></div>
+
+  <div class="panel" id="s3"><h2>3. Revisión: qué falta, ortografía y corrección</h2>
+    <p>Además de redactar, el sistema ayuda a Omayra a controlar cada caso:</p>
+    <div class="tarjetas">
+      <div class="tj"><b>🧾 Qué falta en el expediente</b><p>Compara los documentos que debe tener cada tipo de caso (cédulas, certificado del Registro Público, paz y salvos, documento firmado, etc.) con los archivos de la carpeta, y marca cada uno como <b>completo</b>, <b>por revisar</b> o <b>faltante</b>.</p></div>
+      <div class="tj"><b>📋 Qué datos faltan</b><p>Indica qué información necesita el documento que no aparece en ningún archivo del caso.</p></div>
+      <div class="tj"><b>🔍 Qué le falta a cada documento</b><p>Detecta si le faltan elementos esenciales, como la identificación de las partes, el plazo, la fecha de firma o el bloque de firmas.</p></div>
+      <div class="tj"><b>✍ Ortografía y consistencia</b><p>Marca faltas de ortografía, palabras repetidas, datos sin llenar y montos en letras que no coinciden con la cifra; Omayra decide qué corregir.</p></div>
+      <div class="tj"><b>📄 Lectura y corrección</b><p>Permite abrir cualquier Word existente, incluso los que se reciban de la contraparte, revisarlo y descargarlo corregido.</p></div>
+    </div></div>
+
+  <div class="panel" id="s4"><h2>4. Proceso de programación, a grandes rasgos</h2>
+    <div class="linea">
+      ${paso(1,"Inventario","Recibir la lista de documentos y sus modelos en Word.")}
+      ${paso(2,"Plantillas","Convertir cada modelo en plantilla, marcando sus datos variables.")}
+      ${paso(3,"Origen de los datos","Definir de qué documento del caso se toma cada dato.")}
+      ${paso(4,"Requisitos","Cargar la lista de documentos requeridos por tipo de proceso, para la detección de faltantes.")}
+      ${paso(5,"Pruebas","Probar con casos ya cerrados, junto con Omayra, y comparar con los documentos finales que se compartan como ejemplo.")}
+      ${paso(6,"Puesta en marcha","Uso diario y ajustes según la experiencia.")}
+    </div></div>
+
+  <div class="panel" id="s5"><h2>5. Información y materiales necesarios <button class="btn sm copiar" id="cpPedido">Copiar texto</button></h2>
+    <ol class="mat">
+      <li>La lista de los documentos que más redactan (con los 8 a 10 más frecuentes es suficiente para empezar).</li>
+      <li>Un modelo en Word, vigente y aprobado, de cada uno.</li>
+      <li>En cada modelo, resaltar en amarillo los datos que cambian de un caso a otro.</li>
+      <li>Por cada tipo de proceso, la lista de documentos que debe tener el expediente.</li>
+      <li>Dos o tres ejemplos de cada tipo, para las pruebas.</li>
+      <li>Cómo nombran los casos y las subcarpetas dentro de la carpeta de Legal.</li>
+      <li>Las reglas de estilo: formato de fechas, montos en letras y números, mayúsculas y bloque de firmas.</li>
+      <li>Quién aprueba los modelos y quién puede crear o modificar plantillas.</li>
+      <li>Las reglas de lógica para detectar faltantes: qué debe tener cada documento o expediente según el caso (<i>si tiene esto, le falta esto</i>; tipo sí o no).</li>
+    </ol>
+    <pre class="hidden" id="txPedido">${esc(PEDIDO)}</pre></div>
+
+  <div class="panel"><h2>Anexo: instrucción que usa la IA (prompt) <button class="btn sm copiar" id="cpPrompt">Copiar texto</button></h2>
+    <p>Instrucción base con la que trabaja la IA. La regla principal: <b>no inventa datos</b>; si algo no está en los documentos, lo deja en blanco y avisa.</p>
+    <pre class="prompt" id="txPrompt">${esc(PROMPT_IA)}</pre></div>`;
+  $("docComo").querySelectorAll(".indice a").forEach(a=>a.onclick=e=>{ e.preventDefault(); document.querySelector(a.getAttribute("href")).scrollIntoView({behavior:"smooth",block:"start"}); });
+  const copiar=(id,b)=>{ const t=$(id).textContent; const ok=()=>{ b.textContent="✓ Copiado"; setTimeout(()=>b.textContent="Copiar texto",1500); };
+    try{ navigator.clipboard.writeText(t).then(ok).catch(()=>{ b.textContent="Selecciona y copia"; }); }catch(e){ b.textContent="Selecciona y copia"; } };
+  $("cpPedido").onclick=e=>copiar("txPedido",e.target); $("cpPrompt").onclick=e=>copiar("txPrompt",e.target);
+}
+
+pintarCasos();
+</script>
+</body>
+</html>

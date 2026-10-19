@@ -1,0 +1,1480 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Contabilidad</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#f0f3f8; --surface-3:#e7ecf3; --border:#dde3ec;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#8792a4;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --grid:#edf1f6; --zebra:#f8fafc;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+.wrap{max-width:none;margin:0;padding:12px 14px}
+.hidden{display:none!important}
+
+/* ---------- Home ---------- */
+.home-hdr{position:relative;overflow:hidden;border-radius:18px;padding:28px 30px;margin-bottom:20px;color:#fff;
+  background:radial-gradient(120% 160% at 12% 0%,#2b5a86 0%,#1b3a5c 40%,#0f2440 80%);box-shadow:var(--shadow)}
+.home-hdr .eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 6px}
+.home-hdr h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.015em}
+.home-hdr p{margin:6px 0 0;font-size:13.5px;opacity:.8;max-width:640px;line-height:1.55}
+.home-bar{height:4px;border-radius:999px;margin-top:20px;background:linear-gradient(90deg,var(--gold),#7dd3fc 45%,rgba(255,255,255,.15))}
+.search-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:24px;box-shadow:var(--shadow)}
+.search-count{font-weight:700;font-size:13.5px;color:var(--text-2);white-space:nowrap}
+.search-box{flex:1;display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:9px 12px}
+.search-box input{flex:1;border:none;background:transparent;font:inherit;color:var(--text);outline:none}
+.cat-hdr{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.cat-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#e8eef6;border:1px solid #d6e0ec}
+.cat-title{font-size:17px;font-weight:800;margin:0}
+.pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)}
+.cat-line{flex:1;height:2px;border-radius:999px;background:var(--grid)}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:22px}
+.cat{margin-bottom:30px}
+.cat-ic svg{width:19px;height:19px;stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mod-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 20px;text-align:center;cursor:pointer;box-shadow:var(--shadow);
+  transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+.mod-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(15,23,42,.12);border-color:#c9d4e3}
+.mod-ic{width:60px;height:60px;border-radius:18px;margin:0 auto 14px;display:grid;place-items:center;font-size:28px;background:linear-gradient(135deg,#f8e7b9,var(--gold))}
+.mod-card h3{margin:0 0 6px;font-size:15.5px;font-weight:800}
+.mod-card p{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.mod-card.sin{cursor:default}.mod-card.sin .mod-tag{background:var(--muted)}
+.mod-card.sin h3{margin-bottom:14px}
+.mod-tag{display:inline-block;font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;color:#fff;background:var(--navy)}
+
+/* ---------- Módulo ---------- */
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--text-2);font-size:12.5px;font-weight:600;cursor:pointer;margin-bottom:8px;background:none;border:none;padding:0}
+.back:hover{color:var(--navy)}
+.mhdr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border-radius:14px;padding:12px 18px;margin-bottom:10px;color:#fff;
+  background:linear-gradient(115deg,var(--navy-d),var(--navy) 55%,#0f5560);box-shadow:var(--shadow)}
+.mhdr .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.mhdr h1{margin:1px 0 0;font-size:19px;font-weight:800}
+.mhdr .sub{margin-top:3px;font-size:12.5px;color:rgba(255,255,255,.75)}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.16)}
+.hbtn.pri{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+.hbtn:disabled{opacity:.5;cursor:not-allowed}
+
+.mtabs{display:flex;gap:4px;padding:4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:11px;max-width:100%;overflow-x:auto}
+.kback{background:none;border:none;padding:0;cursor:pointer;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.kback:hover{color:#fff}
+.mtab{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.8);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.mtab:hover{background:rgba(255,255,255,.1)}
+.mtab[aria-selected="true"]{background:var(--gold);color:var(--navy-d)}
+.mtab .cnt{font-size:11px;padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.08)}
+.mtab[aria-selected="true"] .cnt{background:rgba(255,255,255,.2)}
+
+.banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 8px 6px 14px;border-radius:10px;margin-bottom:10px;font-size:12.5px;background:#fdf6e6;border:1px solid #f0dcaa;color:#6b4d12}
+.banner.err{background:#fbeceb;border-color:#efc4c0;color:#7c2620}
+.banner.ok{background:#e9f6ef;border-color:#bfe3cf;color:#155a35}
+.banner .grow{flex:1;min-width:220px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.pri:hover{filter:brightness(1.12)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+
+/* ---------- Lector ---------- */
+.lector{display:grid;grid-template-columns:270px minmax(0,1fr);gap:12px;align-items:stretch;height:100%}
+.sideoff .lector{grid-template-columns:1fr}
+.sideoff .lector>.panel:first-child{display:none}
+#viewer{min-width:0}
+#viewer.full{position:fixed;inset:10px;height:auto;z-index:60;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(15,23,42,.35)}
+#viewer.full .tbl-wrap{flex:1;max-height:none}
+.fullbg{position:fixed;inset:0;background:rgba(15,28,46,.45);z-index:55}
+@media (max-width:900px){.lector{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.side-top{padding:12px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.side-top input{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font:inherit;color:var(--text);outline:none}
+.side-top input:focus{border-color:var(--navy)}
+.side-top label.dentro{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:var(--text-2);font-weight:600;cursor:pointer}
+.side-top label.dentro input{width:auto;padding:0}
+.dentro-st{font-size:11.5px;color:var(--muted);margin-top:4px;min-height:0}
+.dentro-st:empty{display:none}
+.bq-res{padding:6px 0;overflow:auto;flex:1;min-height:0}
+.bq-it{padding:12px 16px;border-bottom:1px solid var(--grid);cursor:pointer}
+.bq-it:hover{background:var(--surface-2)}
+.bq-it .bq-f{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px}
+.bq-it .bq-r{font-size:11.5px;color:var(--muted);margin:2px 0 6px 30px}
+.bq-it .bq-s{font-size:12.8px;color:var(--text-2);margin:3px 0 0 30px;line-height:1.45}
+.bq-it mark{background:#fff1c2;color:inherit;padding:0 2px;border-radius:3px;font-weight:700}
+/* El módulo ocupa exactamente la pantalla: sin desplazar la página, cada panel se desplaza por dentro */
+#viewModulo:not(.hidden),#viewUsuarios:not(.hidden),#viewApp:not(.hidden){display:flex;flex-direction:column;position:fixed;top:16px;right:24px;bottom:16px;left:24px}
+#viewUsuarios>*{flex:none}
+#viewApp:not(.hidden){display:flex;flex-direction:column;position:fixed;top:16px;right:24px;bottom:16px;left:24px}
+#viewApp>*{flex:none}
+#appFrame{flex:1;min-height:0;width:100%;border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:var(--shadow)}
+#appFrame.hidden{display:none}
+#viewUsuarios>#usrPanel:not(.hidden){flex:1;min-height:0;display:flex;flex-direction:column}
+body.enModulo{overflow:hidden}
+#viewModulo>*{flex:none}
+#viewModulo>#moduloBody:not(.hidden){flex:1;min-height:0;display:flex;flex-direction:column}
+#moduloBody>section:not(.hidden){flex:1;min-height:0}
+.lector>.panel{display:flex;flex-direction:column;min-height:0}
+.lector>.panel>*{flex:none}
+.lector>.panel>.tree{flex:1;min-height:0;overflow-y:auto;padding:6px 0}
+#viewer>.tbl-wrap{flex:1;min-height:0}
+#viewer>.empty{flex:1}
+@media (max-width:900px){#viewModulo:not(.hidden){position:static}body.enModulo{overflow:auto}.lector{height:auto}.lector>.panel>.tree{max-height:60vh}#viewer>.tbl-wrap{max-height:75vh}}
+.y-row{display:flex;align-items:center;gap:8px;padding:9px 14px;font-weight:800;font-size:13.5px;color:var(--navy);cursor:pointer;user-select:none}
+.y-row:hover{background:var(--surface-2)}
+.chev{display:inline-block;width:12px;transition:transform .15s;color:var(--muted);font-size:10px}
+.closed>.y-row .chev,.closed>.m-row .chev{transform:rotate(-90deg)}
+.closed>.kids{display:none}
+.m-row{display:flex;align-items:center;gap:8px;padding:7px 14px 7px 30px;font-weight:700;font-size:12.5px;color:var(--text-2);cursor:pointer;user-select:none;letter-spacing:.02em}
+.m-row:hover{background:var(--surface-2)}
+.m-row .pill{margin-left:auto;font-size:10.5px;padding:1px 8px}
+.f-row{display:flex;align-items:flex-start;gap:9px;padding:8px 14px 8px 48px;cursor:pointer;border-left:3px solid transparent}
+.f-row:hover{background:var(--surface-2)}
+.f-row.sel{background:#eaf0f7;border-left-color:var(--navy)}
+.f-ic{flex:none;width:22px;height:22px;border-radius:5px;background:#1d6f42;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.f-ic.csv{background:#5a6b80}
+.f-name{font-size:12.8px;line-height:1.35;color:var(--text);word-break:break-word}
+.f-date{font-size:11px;color:var(--muted);margin-top:2px}
+.empty{padding:40px 24px;text-align:center;color:var(--text-2)}
+.empty b{display:block;font-size:15.5px;color:var(--text);margin-bottom:6px}
+.empty .big{font-size:34px;margin-bottom:10px}
+
+.viewer-hdr{padding:10px 14px 8px;border-bottom:1px solid var(--border)}
+.crumbs{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.crumbs b{color:var(--gold-d)}
+.viewer-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px}
+.viewer-title h2{margin:0;font-size:18px;font-weight:800;line-height:1.3;word-break:break-word}
+.viewer-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.stabs{display:flex;gap:5px;flex-wrap:wrap;align-items:flex-end;padding:8px 14px 0;border-bottom:1px solid var(--border)}
+.stab{padding:6px 12px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:var(--surface-2);color:var(--text-2);font-size:12.5px;font-weight:600;cursor:pointer}
+.stab[aria-selected="true"]{background:var(--surface);color:var(--navy);box-shadow:inset 0 3px 0 var(--gold)}
+.sheet-info{margin-left:auto;align-self:center;padding:0 2px 6px;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.tbl-wrap{overflow:auto}
+table.x{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+table.x th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-weight:600;font-size:11.5px;text-align:left;padding:8px 10px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.12)}
+table.x th.n,table.x td.n{text-align:right}
+table.x td{padding:4px 9px;font-size:12.5px;border-bottom:1px solid var(--grid);border-right:1px solid #e1e7ef;white-space:nowrap;max-width:340px;overflow:hidden;text-overflow:ellipsis}
+table.x tbody tr:nth-child(even) td{background:var(--zebra)}
+table.x tbody tr:hover td{background:#eef3fa}
+table.x td.rn,table.x th.rn{position:sticky;left:0;z-index:1;width:44px;min-width:44px;text-align:right;color:var(--muted);font-size:11px;background:var(--surface-2)}
+table.x th.rn{z-index:3;background:var(--navy-d);color:rgba(255,255,255,.6)}
+table.x td.neg{color:var(--bad)}
+table.x tr.totrow td{font-weight:700;background:#eef2f7!important;border-top:2px solid var(--navy)}
+.more{padding:10px 18px;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
+
+/* ---------- Pantera ---------- */
+.pframe-wrap{position:relative;height:100%}
+#panteraFrame{display:block;width:100%;height:100%;min-height:480px;border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:var(--shadow)}
+.ploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(243,245,249,.92);border-radius:14px;font-weight:600;color:var(--text-2)}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--surface-3);border-top-color:var(--navy);animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- Conectar ---------- */
+.connect{max-width:560px;margin:40px auto;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 30px;box-shadow:var(--shadow)}
+.connect .big{font-size:42px;margin-bottom:10px}
+.connect h2{margin:0 0 8px;font-size:19px;font-weight:800}
+.connect p{margin:0 0 18px;color:var(--text-2);font-size:13.5px;line-height:1.55}
+.connect code{display:inline-block;margin-bottom:18px;padding:6px 10px;border-radius:8px;background:var(--surface-2);font-size:12px;color:var(--text-2)}
+
+/* ---------- Marca Pantera / Martina ---------- */
+.home-hdr>*:not(.home-mark){position:relative;z-index:1}
+.home-mark{position:absolute;right:40px;top:50%;transform:translateY(-50%);height:104px;opacity:.95;pointer-events:none;filter:drop-shadow(0 2px 10px rgba(0,0,0,.25))}
+.home-hdr p{max-width:calc(100% - 260px)}
+.home-bar{margin-right:250px}
+@media (max-width:760px){.home-bar{margin-right:0}.home-hdr p{max-width:none}}
+@media (max-width:760px){.home-mark{display:none}}
+.mod-logo{height:92px;margin:2px auto 16px;display:flex;align-items:center;justify-content:center;border-radius:14px;
+  background:linear-gradient(180deg,#fbf6ea,#f3e6c4);border:1px solid #ecdcb2;padding:12px}
+.mod-logo img{max-height:68px;max-width:100%}
+.mart{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:600;color:var(--gold-d);letter-spacing:.01em}
+.mhdr .mart{color:var(--gold)}
+.mbrand{display:flex;align-items:center;gap:16px;min-width:0}
+.mlogo{height:56px;width:auto;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.msep{width:1px;align-self:stretch;margin:4px 0;background:linear-gradient(180deg,transparent,rgba(227,194,122,.7),transparent)}
+.mhdr h1{font-size:21px}
+@media (max-width:640px){.mlogo{height:40px}.msep{display:none}}
+
+/* ---------- Barras de desplazamiento visibles (tabla y lista) ---------- */
+.tbl-wrap,.tree{scrollbar-gutter:stable}
+.tbl-wrap::-webkit-scrollbar,.tree::-webkit-scrollbar{width:14px;height:14px}
+.tbl-wrap::-webkit-scrollbar-track,.tree::-webkit-scrollbar-track{background:#eef2f7}
+.tbl-wrap::-webkit-scrollbar-thumb,.tree::-webkit-scrollbar-thumb{background:#9fb0c6;border-radius:999px;border:3px solid #eef2f7}
+.tbl-wrap::-webkit-scrollbar-thumb:hover,.tree::-webkit-scrollbar-thumb:hover{background:var(--navy)}
+.tbl-wrap::-webkit-scrollbar-corner{background:#eef2f7}
+
+table.x td.wrap{white-space:normal;max-width:520px;min-width:220px;line-height:1.4;text-overflow:clip}
+table.x td.span{max-width:none;color:var(--text-2);font-style:italic}
+.banner .bx{background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:14px;padding:4px 6px;border-radius:6px}
+.banner .bx:hover{opacity:1;background:rgba(0,0,0,.06)}
+.banner .btn.sm{padding:4px 10px}
+
+/* ---------- Compacto: más pantalla para los datos ---------- */
+.mhdr{padding:7px 14px;border-radius:12px;margin-bottom:8px;gap:10px}
+.mlogo{height:40px}
+.mbrand{gap:12px}
+.mhdr h1{font-size:17px;margin:0}
+.mhdr .sub{font-size:11.5px;margin-top:1px}
+.kback{font-size:10px}
+.hbtn{padding:7px 12px;font-size:12.5px;border-radius:9px}
+.mtab{padding:6px 12px;font-size:13px}
+.mtabs{padding:3px}
+.viewer-hdr{padding:8px 12px 6px}
+.viewer-title{align-items:center;margin-top:0;flex-wrap:nowrap}
+.vt-left{min-width:0;flex:1}
+.viewer-title h2{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer-title h2 .crumbs{font-size:11px;margin-right:4px}
+.viewer-meta{margin-top:1px;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vt-btns{display:flex;gap:6px;flex:none}
+.stabs{padding:6px 12px 0}
+@media (max-width:1100px){.viewer-title{flex-wrap:wrap}.vt-btns{flex-wrap:wrap}}
+
+/* ---------- Inicio con aire alrededor ---------- */
+#viewHome{max-width:1480px;margin:0 auto;padding:22px 28px 40px}
+table.x th{border-right:1px solid rgba(255,255,255,.18)}
+table.x td.rn{border-right:1px solid var(--border)}
+
+.modoAuto #btnCambiar{display:none}
+
+/* ---------- Sesión, roles, historial y usuarios ---------- */
+#viewLogin:not(.hidden){flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px}
+#viewLogin.hidden{display:none!important}
+.login-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 50px rgba(15,23,42,.12);overflow:hidden}
+.login-top{padding:26px 28px 20px;color:#fff;text-align:center;background:radial-gradient(120% 160% at 12% 0%,#2b5a86 0%,#1b3a5c 40%,#0f2440 80%)}
+.login-top img{height:62px;margin-bottom:10px}
+.login-top .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.login-top h1{margin:4px 0 0;font-size:19px;font-weight:800}
+.login-body{padding:24px 28px 26px}
+.login-body form{display:flex;flex-direction:column;gap:10px}
+.inp{padding:10px 12px;border-radius:9px;border:1px solid var(--border);font:inherit;color:var(--text);background:var(--surface);outline:none}
+.inp:focus{border-color:var(--navy)}
+.inp.sm{padding:6px 9px;font-size:12.5px;border-radius:8px}
+.login-note{margin:14px 0 0;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5}
+.home-user{position:absolute;top:16px;right:20px;z-index:2;display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.85)}
+.home-user .hbtn{padding:5px 11px;font-size:12px}
+.rolchip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(227,194,122,.2);color:var(--gold);border:1px solid rgba(227,194,122,.45)}
+.rolchip.lt{background:#eef2f7;color:var(--navy);border-color:var(--border)}
+.idle{position:fixed;right:22px;bottom:22px;z-index:90;max-width:360px;background:var(--surface);border:1px solid #f0dcaa;border-left:5px solid var(--gold-d);border-radius:12px;padding:14px 16px;box-shadow:0 18px 40px rgba(15,23,42,.22);font-size:13px;color:var(--text)}
+.idle b{display:block;margin-bottom:4px;font-size:14px}
+.idle .btn{margin-top:10px}
+.dlg-bg{position:fixed;inset:0;z-index:95;background:rgba(15,28,46,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+.dlg{width:100%;max-width:440px;background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,.35);padding:20px 22px}
+.dlg h3{margin:0 0 8px;font-size:16px;font-weight:800}
+.dlg p{margin:0 0 14px;color:var(--text-2);line-height:1.5;font-size:13px}
+.dlg .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.adm{display:flex;flex-direction:column;height:100%;min-height:0}
+.adm>.panel{display:flex;flex-direction:column;flex:1;min-height:0}
+.adm-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.adm-top h2{margin:0;font-size:15.5px;font-weight:800;margin-right:auto}
+.adm-top .lbl{font-size:12px;color:var(--text-2);font-weight:600}
+.adm .tbl-wrap{flex:1;min-height:0}
+.adm table.x td{white-space:normal;max-width:none;vertical-align:top}
+.adm table.x td.nw{white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);white-space:nowrap}
+.tag.carga{background:#e8f0fa;border-color:#c7d8ee;color:var(--navy)}
+.tag.quitar_mes{background:#fbeceb;border-color:#efc4c0;color:var(--bad)}
+.tag.reversion{background:#fdf6e6;border-color:#f0dcaa;color:#6b4d12}
+.tag.ok{background:#e9f6ef;border-color:#bfe3cf;color:var(--good)}
+.cnts{white-space:nowrap;font-variant-numeric:tabular-nums}
+.cnts .a{color:var(--good)}.cnts .c{color:var(--navy)}.cnts .q{color:var(--bad)}
+tr.det td{background:#f6f8fb!important;padding:8px 14px 12px}
+.items{width:100%;border-collapse:collapse;font-size:12px}
+.items td,.items th{padding:4px 8px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
+.items th{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.newuser{display:grid;grid-template-columns:2fr 1.4fr 1.2fr 110px auto auto;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+@media (max-width:900px){.newuser{grid-template-columns:1fr 1fr}}
+
+/* ---------- Tarjetas de módulos (inicio) ---------- */
+.mod-card{padding:0;text-align:left;overflow:hidden;display:flex;flex-direction:column;border-radius:18px;border:1px solid #e1e7f0;background:var(--surface);
+  box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.mod-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(15,36,64,.16);border-color:#c8d4e4}
+.mod-card.sin:hover{transform:none;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);border-color:#e1e7f0}
+.mod-ban{position:relative;height:124px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:radial-gradient(130% 150% at 0% 0%,#2b5a86 0%,#1b3a5c 42%,#0f2440 100%)}
+.mod-ban::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 16px)}
+.mod-ban::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--gold),rgba(227,194,122,.15))}
+.ban-legal{background:radial-gradient(130% 150% at 0% 0%,#4a4178 0%,#2a2c56 45%,#0f2440 100%)}
+.ban-gestion{background:radial-gradient(130% 150% at 0% 0%,#178079 0%,#0f5560 45%,#0f2440 100%)}
+.mod-ban img{position:relative;z-index:1;height:74px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35));transition:transform .25s ease}
+.mod-ico{position:relative;z-index:1;width:66px;height:66px;border-radius:18px;display:grid;place-items:center;
+  background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04));border:1px solid rgba(227,194,122,.5);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 10px 24px rgba(0,0,0,.25);transition:transform .25s ease}
+.mod-ico svg{width:34px;height:34px;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.mod-card:hover .mod-ico,.mod-card:hover .mod-ban img{transform:scale(1.06)}
+.mod-card.sin .mod-ban{filter:grayscale(.85) brightness(1.15);opacity:.75}
+.mod-body{padding:16px 18px 16px;display:flex;flex-direction:column;flex:1}
+.mod-k{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold-d);font-weight:800;margin-bottom:5px}
+.mod-card h3{margin:0 0 6px;font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:var(--navy-d)}
+.mod-card p{flex:1;margin:0 0 14px;font-size:12.8px;color:var(--text-2);line-height:1.55}
+.mod-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:1px solid var(--grid)}
+.mod-tag{display:inline-block;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;color:var(--navy);background:#eef2f7;border:1px solid #dbe3ee}
+.mod-card.sin .mod-tag{color:var(--muted);background:var(--surface-2)}
+.mod-go{font-size:12.5px;font-weight:800;color:var(--navy);transition:color .15s,transform .15s}
+.mod-card:hover .mod-go{color:var(--teal);transform:translateX(3px)}
+
+/* ---------- Lector como app propia ---------- */
+html,body{height:100%}
+body{display:flex;flex-direction:column;overflow:hidden}
+.lbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
+.lbar .t{font-weight:800;color:var(--navy)}
+.lbar .sub{font-size:12px;color:var(--muted)}
+.lbar .sp{flex:1}
+.lmain{flex:1;min-height:0;padding:12px}
+.lmain>.lector{height:100%}
+.f-ic.pdf{background:#b03a32}.f-ic.doc{background:#2b579a}.f-ic.img{background:#7c3aed}.f-ic.otro{background:#64748b}
+#viewer .prev{flex:1;min-height:0;width:100%;border:none;background:#f6f7f9}
+#viewer{display:flex;flex-direction:column}
+.connect2{max-width:560px;margin:50px auto;text-align:center;padding:36px 30px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}
+.connect2 .big{font-size:42px}
+.connect2 p{color:var(--text-2);line-height:1.6}
+/* Word */
+.docwrap{flex:1;min-height:0;overflow:auto;background:#eef1f5;padding:20px}
+.docpage{max-width:860px;margin:0 auto;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);padding:48px 56px;font-family:Calibri,"Segoe UI",Arial,sans-serif;font-size:14.5px;line-height:1.55;color:#111}
+.docpage table{border-collapse:collapse;margin:10px 0;max-width:100%}
+.docpage td,.docpage th{border:1px solid #c9d1dc;padding:4px 8px;vertical-align:top}
+.docpage img{max-width:100%}
+.docpage h1,.docpage h2,.docpage h3{color:var(--navy-d);line-height:1.3}
+/* Vista por año / mes */
+.y-row .yn,.m-row .mn{flex:1}
+.y-row.sel,.m-row.sel{background:#eaf0f7;box-shadow:inset 3px 0 0 var(--navy)}
+.vbody{flex:1;min-height:0;overflow:auto;padding:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.kpi .l{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-size:20px;font-weight:800;color:var(--navy-d);margin-top:2px}
+.vsec{font-size:12px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 8px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.mcard{border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--surface);cursor:pointer;text-align:left;font:inherit;color:inherit}
+.mcard:hover{border-color:var(--navy);box-shadow:var(--shadow)}
+.mcard b{display:block;font-size:13px;color:var(--navy-d)}
+.mcard .n{font-size:12px;color:var(--text-2);margin-top:3px}
+.mcard .ty{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.mcard .ty span{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2)}
+.mcard.vacio{cursor:default;opacity:.5;background:var(--surface-2)}
+.mcard.vacio:hover{border-color:var(--border);box-shadow:none}
+table.fl{width:100%;border-collapse:collapse;font-size:13px}
+table.fl th{text-align:left;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:6px 8px;border-bottom:2px solid var(--border);position:sticky;top:-14px;background:var(--surface)}
+table.fl td{padding:7px 8px;border-bottom:1px solid var(--grid);vertical-align:middle}
+table.fl tr.cl{cursor:pointer}
+table.fl tr.cl:hover td{background:#eef3fa}
+table.fl .fn{display:flex;align-items:center;gap:8px;word-break:break-word}
+table.fl .r{text-align:right;white-space:nowrap;color:var(--text-2)}
+</style>
+</head>
+<body>
+<!-- ===== M&A Capital · acceso (cada página es independiente; mismo usuario y clave en todas) ===== -->
+<style>
+.ma-hdr{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 12px 0;padding:7px 14px;border-radius:12px;color:#fff;
+  background:linear-gradient(115deg,#0f2440,#1b3a5c 55%,#0f5560);box-shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);font-family:Inter,system-ui,"Segoe UI",sans-serif;line-height:1.3}
+.ma-hdr .ma-b{display:flex;align-items:center;gap:12px;min-width:0}
+.ma-hdr .ma-logo{height:40px;width:auto;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.ma-hdr .ma-sep{width:1px;align-self:stretch;margin:4px 0;background:linear-gradient(180deg,transparent,rgba(227,194,122,.7),transparent)}
+.ma-hdr .ma-k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#e3c27a;font-weight:700;text-decoration:none}
+.ma-hdr .ma-k:hover{color:#fff}
+.ma-hdr h1{margin:0;font-size:17px;font-weight:800;color:#fff}
+.ma-hdr .ma-sub{font-size:11.5px;color:rgba(255,255,255,.75);margin-top:1px}
+.ma-hdr .ma-der{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ma-chip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(227,194,122,.2);color:#e3c27a;border:1px solid rgba(227,194,122,.45)}
+.ma-hbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.ma-hbtn:hover{background:rgba(255,255,255,.16)}
+.ma-oculto{display:none!important}
+body.ma-fuera>*:not(.ma-hdr):not(.ma-login):not(script):not(style):not(link){display:none!important}
+.ma-login{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,"Segoe UI",sans-serif;background:#f3f5f9}
+.ma-card{width:100%;max-width:420px;background:#fff;border:1px solid #dde3ec;border-radius:18px;box-shadow:0 18px 50px rgba(15,23,42,.12);overflow:hidden}
+.ma-top{padding:26px 28px 20px;color:#fff;text-align:center;background:radial-gradient(120% 160% at 12% 0%,#2b5a86 0%,#1b3a5c 40%,#0f2440 80%)}
+.ma-top img{height:62px;margin-bottom:10px}
+.ma-top .ma-ey{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#e3c27a;font-weight:700}
+.ma-top h2{margin:4px 0 0;font-size:19px;font-weight:800}
+.ma-body{padding:24px 28px 22px}
+.ma-body form{display:flex;flex-direction:column;gap:10px}
+.ma-inp{padding:10px 12px;border-radius:9px;border:1px solid #dde3ec;font:14px Inter,system-ui,sans-serif;color:#0f1c2e;background:#fff;outline:none}
+.ma-inp:focus{border-color:#1b3a5c}
+.ma-ok{padding:11px 22px;border-radius:9px;border:1px solid #e3c27a;background:#e3c27a;color:#0f2440;font:700 14px Inter,system-ui,sans-serif;cursor:pointer}
+.ma-ok:disabled{opacity:.6;cursor:default}
+.ma-err{color:#b03a32;min-height:16px;font-size:12.5px;text-align:center}
+.ma-nota{margin:14px 0 0;font-size:11.5px;color:#8792a4;text-align:center;line-height:1.5}
+.ma-nota a{color:#1b3a5c;font-weight:600}
+.ma-idle{position:fixed;right:22px;bottom:22px;z-index:9999;max-width:360px;background:#fff;border:1px solid #f0dcaa;border-left:5px solid #b98b2f;border-radius:12px;padding:14px 16px;box-shadow:0 18px 40px rgba(15,23,42,.22);font:13px Inter,system-ui,sans-serif;color:#0f1c2e}
+.ma-idle b{display:block;margin-bottom:4px;font-size:14px}
+.ma-idle button{margin-top:10px;padding:6px 12px;border-radius:8px;border:none;background:#1b3a5c;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+window.MA=(function(){
+  const URL_="https://oiongsqkcbovzsavjwql.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pb25nc3FrY2JvdnpzYXZqd3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3Njc5NTEsImV4cCI6MjEwNzM0Mzk1MX0.nV1qgE1gd3TybJKhF8q_JphvkqbJtCLldl63YBTaLqs", VERSION="v19-10-2026 17:07", LOGO="data:image/png;base64,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";
+  const MODULOS=[
+    {id:"martina",nombre:"Pantera Reportería — Martina",url:"pantera.html"},
+    {id:"contabilidad",nombre:"Dashboard Contabilidad",url:"contabilidad.html"},
+    {id:"agente_legal",nombre:"Agente Legal",url:"legal.html"},
+    {id:"legal",nombre:"Dashboard de Legal",url:"dashboard-legal.html"},
+    {id:"tareas",nombre:"Seguimiento de tareas",url:"tareas.html"},
+    {id:"bitacora",nombre:"Bitácora Ejecutiva",url:"bitacora.html"},
+    {id:"notas",nombre:"Tablero de Notas",url:"notas.html"},
+    {id:"ventas",nombre:"Pulso Comercial — Ventas",url:"ventas.html"}];
+  const ROL_TXT={admin:"Administradora",editor:"Editor",lector:"Lector"};
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  // La sesión vive solo en esta pestaña (se borra al cerrarla) y se cierra tras 10 minutos sin actividad o con "Salir".
+  const ss={getItem:k=>{try{return sessionStorage.getItem(k);}catch(e){return null;}},setItem:(k,v)=>{try{sessionStorage.setItem(k,v);}catch(e){}},removeItem:k=>{try{sessionStorage.removeItem(k);}catch(e){}}};
+  const ON=/^https?:\/\//.test(URL_)&&ANON.length>20&&!!window.supabase;
+  const sb=ON?window.supabase.createClient(URL_,ANON,{auth:{storage:ss,storageKey:"ma-sesion",persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
+  const IDLE=10*60*1000, AVISO=60*1000, KACT="ma-ult-act", KMSG="ma-msg";
+  let ctx=null, O={}, listo; const listoP=new Promise(r=>listo=r);
+  const $=id=>document.getElementById(id);
+
+  function cabecera(){
+    if(O.cabecera===false||$("maHdr")) return;
+    const h=document.createElement("div"); h.className="ma-hdr"; h.id="maHdr";
+    h.innerHTML=`<div class="ma-b"><img class="ma-logo" src="${LOGO}" alt="M&amp;A Capital Inc"><div class="ma-sep"></div><div>
+      <a class="ma-k" href="index.html" title="Volver al inicio">← M&amp;A Capital · Inicio</a><h1>${esc(O.titulo||"")}</h1><div class="ma-sub" id="maSub">Inicia sesión para entrar</div></div></div>
+      <div class="ma-der"><span id="maExtra"></span><span class="ma-chip ma-oculto" id="maChip"></span><button class="ma-hbtn ma-oculto" id="maSalir" title="Cerrar sesión">⎋ Salir</button></div>`;
+    document.body.prepend(h); $("maSalir").onclick=()=>salir();
+  }
+  function pantallaLogin(msg,sinPermiso){
+    document.body.classList.add("ma-fuera");
+    let l=$("maLogin"); if(l) l.remove();
+    l=document.createElement("div"); l.className="ma-login"; l.id="maLogin";
+    const titulo=O.soloAdmin?"Usuarios y permisos":(O.titulo||"Dashboard Interno Ultimate");
+    l.innerHTML=`<div class="ma-card"><div class="ma-top"><img src="${LOGO}" alt="M&amp;A Capital Inc"><div class="ma-ey">M&amp;A Capital · Uso interno</div><h2>${esc(titulo)}</h2></div>
+      <div class="ma-body">${sinPermiso?`<div class="ma-err" style="margin-bottom:14px">${esc(msg)}</div>
+        <button class="ma-ok" id="maOtro" style="width:100%">Entrar con otro usuario</button>`:`<form id="maForm">
+        <input class="ma-inp" type="email" id="maEmail" placeholder="correo@empresa.com" autocomplete="username" required>
+        <input class="ma-inp" type="password" id="maPass" placeholder="Contraseña" autocomplete="current-password" required>
+        <button class="ma-ok" type="submit" id="maEntrar">Entrar</button>
+        <div class="ma-err" id="maErr">${esc(msg||"")}</div></form>`}
+        <p class="ma-nota">La sesión se cierra al pulsar “Salir”, al cerrar la pestaña o tras 10 minutos sin actividad.<br><a href="index.html">← Volver al inicio</a></p></div></div>`;
+    const hdr=$("maHdr"); if(hdr) hdr.after(l); else document.body.prepend(l);
+    if(sinPermiso){ $("maOtro").onclick=async()=>{ try{ await sb.auth.signOut(); }catch(e){} pantallaLogin(""); }; return; }
+    $("maForm").onsubmit=async e=>{
+      e.preventDefault(); $("maErr").textContent=""; $("maEntrar").disabled=true;
+      const {error}=await sb.auth.signInWithPassword({email:$("maEmail").value.trim(),password:$("maPass").value});
+      $("maEntrar").disabled=false; $("maPass").value="";
+      if(error){ $("maErr").textContent=/invalid/i.test(error.message)?"Correo o contraseña incorrectos.":error.message; return; }
+      ss.setItem(KACT,String(Date.now())); await validar();
+    };
+    setTimeout(()=>{ try{ $("maEmail").focus(); }catch(e){} },50);
+  }
+  // ¿quién es y qué puede ver? (ma_usuarios: rol, módulos, activo)
+  async function leerUsuario(){
+    if(!sb) return null;
+    const {data:{session}}=await sb.auth.getSession(); if(!session) return null;
+    const ult=+ss.getItem(KACT)||0;
+    if(ult&&Date.now()-ult>IDLE){ try{ await sb.auth.signOut(); }catch(e){} ss.setItem(KMSG,"La sesión se cerró por 10 minutos sin actividad."); return null; }
+    const email=session.user.email.toLowerCase();
+    const {data:yo,error}=await sb.from("ma_usuarios").select("rol,modulos,activo").eq("email",email).maybeSingle();
+    if(error) return {error:"No se pudo validar tu acceso: "+error.message};
+    if(!yo||!yo.activo){ try{ await sb.auth.signOut(); }catch(e){} return {error:"Tu usuario no tiene acceso al dashboard o está desactivado. Pídele acceso a la administradora."}; }
+    return {sb,email,rol:yo.rol,modulos:yo.modulos||[],token:session.access_token,user:session.user,url:URL_,anon:ANON};
+  }
+  const puede=(c,id)=>c&&(c.rol==="admin"||(c.modulos||[]).includes(id));
+  function avisarPagina(){ if(!ctx) return; try{ window.postMessage({type:"MA_SESSION",url:URL_,anon:ANON,token:ctx.token,email:ctx.email,rol:ctx.rol,modulos:ctx.modulos},"*"); }catch(e){} }
+  async function validar(){
+    const c=await leerUsuario();
+    if(!c){ const m=ss.getItem(KMSG)||""; ss.removeItem(KMSG); pantallaLogin(m); return; }
+    if(c.error){ pantallaLogin(c.error); return; }
+    if(O.soloAdmin? c.rol!=="admin" : (O.modulo&&!puede(c,O.modulo))){
+      pantallaLogin(O.soloAdmin?"Solo la administradora puede manejar usuarios.":"Tu usuario ("+c.email+") no tiene acceso a "+(O.titulo||"este módulo")+". Pídele acceso a la administradora.",true); return; }
+    ctx=c; const l=$("maLogin"); if(l) l.remove(); document.body.classList.remove("ma-fuera");
+    if($("maSub")) $("maSub").textContent=c.email;
+    if($("maChip")){ $("maChip").textContent=ROL_TXT[c.rol]||c.rol; $("maChip").classList.remove("ma-oculto"); }
+    if($("maSalir")) $("maSalir").classList.remove("ma-oculto");
+    actividad(); avisarPagina(); listo(c);
+    try{ window.dispatchEvent(new CustomEvent("ma:sesion",{detail:c})); }catch(e){}
+  }
+  // ---- inactividad (cuenta en todas las páginas de la pestaña) ----
+  let ultEsc=0;
+  function actividad(){ const n=Date.now(); if(n-ultEsc>1000){ ultEsc=n; ss.setItem(KACT,String(n)); } const b=$("maIdle"); if(b) b.remove(); }
+  ["mousemove","mousedown","keydown","wheel","touchstart","scroll"].forEach(ev=>addEventListener(ev,()=>{ if(ctx) actividad(); },{passive:true,capture:true}));
+  setInterval(()=>{
+    if(!ctx) return;
+    const resta=IDLE-(Date.now()-(+ss.getItem(KACT)||Date.now()));
+    if(resta<=0){ salir("La sesión se cerró por 10 minutos sin actividad."); return; }
+    if(resta<=AVISO){ let b=$("maIdle");
+      if(!b){ b=document.createElement("div"); b.id="maIdle"; b.className="ma-idle"; b.innerHTML=`<b>¿Sigues ahí?</b>La sesión se cerrará en <span id="maSeg"></span> s por inactividad.<br><button type="button">Seguir conectado</button>`; document.body.appendChild(b); b.querySelector("button").onclick=()=>{ ultEsc=0; actividad(); }; }
+      $("maSeg").textContent=Math.ceil(resta/1000); }
+  },1000);
+  async function salir(msg){
+    ctx=null; try{ await sb.auth.signOut(); }catch(e){}
+    ss.removeItem(KACT); if(msg) ss.setItem(KMSG,msg); else ss.setItem(KMSG,"Sesión cerrada.");
+    location.reload();   // la página vuelve a empezar limpia, sin datos en pantalla
+  }
+  if(sb) sb.auth.onAuthStateChange((ev,session)=>{
+    if(ev==="TOKEN_REFRESHED"&&ctx&&session){ ctx.token=session.access_token; avisarPagina(); }
+    if(ev==="SIGNED_OUT"&&ctx) salir("La sesión expiró. Vuelve a entrar.");
+  });
+  addEventListener("load",()=>{ if(ctx) avisarPagina(); });
+
+  return {
+    MODULOS, ROL_TXT, VERSION, sb, puede, esc, actividad:()=>{ if(ctx) actividad(); },
+    listo:listoP, ctx:()=>ctx, salir,
+    // Página que exige usuario: {modulo, titulo, soloAdmin, cabecera}
+    iniciar(o){ O=o||{}; document.body.classList.add("ma-fuera"); cabecera();
+      if(!ON){ pantallaLogin("Falta configurar Supabase en el dashboard."); return listoP; }
+      validar(); return listoP; },
+    // Inicio: no exige usuario; si ya entró en esta pestaña, devuelve quién es
+    async opcional(){ if(!ON) return null; const c=await leerUsuario(); if(!c||c.error) return null; ctx=c; actividad(); return c; }
+  };
+})();
+</script>
+<script>
+/* ===== Fuentes automáticas de carpetas (sin que Chrome pregunte) =====
+   1) ACCESO DIRECTO: la página se abre desde la carpeta de OneDrive de la PC con el acceso directo
+      "Dashboard M&A" (Chrome con --allow-file-access-from-files en un perfil aparte). Lee la carpeta
+      que está al lado de la página (o la propia carpeta de la página). Solo lectura.
+   2) MICROSOFT 365: lee la carpeta de OneDrive en la nube con la cuenta Microsoft de la persona
+      (Microsoft Graph). Necesita una app registrada por el administrador de Microsoft 365 de M&A
+      (clientId) y el enlace de la carpeta. Lee y guarda.
+   Si ninguna está disponible, cada módulo usa lo de siempre (elegir carpeta en Chrome). */
+(function(){
+  const MS={clientId:"",tenant:""||"organizations",
+    carpetas:{PruebaDashboard:"",Contabilidad:"",Legal:""}};
+  const msOn=()=>/^[0-9a-f-]{36}$/i.test(MS.clientId);
+
+  /* ---------- 1) acceso directo (file://) ---------- */
+  const xhr=(url,tipo)=>new Promise((ok,no)=>{ const x=new XMLHttpRequest(); x.open("GET",url); if(tipo) x.responseType=tipo;
+    x.onload=()=>(x.status===0||x.status===200)?ok(x.response):no(new Error("HTTP "+x.status)); x.onerror=()=>no(new Error("sin acceso")); x.send(); });
+  async function listarLocal(url){
+    const t=await xhr(url); const out=[]; const re=/addRow\((.*?)\);<\/script>/g; let m;
+    if(!/addRow\(/.test(t)) throw new Error("no es una carpeta");
+    while((m=re.exec(t))){ try{ const a=JSON.parse("["+m[1]+"]"); if(a[0]==="."||a[0]==="..") continue;
+      let n=a[0]; try{ n=decodeURIComponent(String(a[1]).replace(/\/$/,""))||a[0]; }catch(e){}
+      out.push({name:n,url:a[1],dir:!!a[2],size:a[3],mod:(a[5]||0)*1000}); }catch(e){} }
+    return out;
+  }
+  function rutaLegible(url){   // file:///C:/Users/x/OneDrive%20-%20MA/Legal/ → C:\Users\x\OneDrive - MA\Legal
+    try{ const p=decodeURIComponent(String(url).replace(/^file:\/\/\/?/,"")).replace(/\/+$/,""); return /^[a-z]:/i.test(p)?p.replace(/\//g,"\\"):"/"+p; }catch(e){ return url; } }
+  function dirLocal(url,name){
+    return {kind:"directory",name,auto:"local",ruta:rutaLegible(url),
+      async *entries(){ for(const e of await listarLocal(url)){
+        if(e.dir){ let u=url+e.url; if(!u.endsWith("/")) u+="/"; yield [e.name,dirLocal(u,e.name)]; } else yield [e.name,fileLocal(url+e.url,e)]; } },
+      async getDirectoryHandle(n){ const e=(await listarLocal(url)).find(x=>x.dir&&x.name===n); if(!e){ const er=new Error("no existe"); er.name="NotFoundError"; throw er; } let u=url+e.url; if(!u.endsWith("/")) u+="/"; return dirLocal(u,n); },
+      async getFileHandle(n,o){ const e=(await listarLocal(url)).find(x=>!x.dir&&x.name===n); if(!e||(o&&o.create&&!e)){ const er=new Error(o&&o.create?"Con el acceso directo la carpeta es solo de lectura. Para guardar, abre el dashboard en línea.":"no existe"); er.name=o&&o.create?"NotAllowedError":"NotFoundError"; throw er; } const f=fileLocal(url+e.url,e); f.createWritable=async()=>{ throw new Error("Con el acceso directo la carpeta es solo de lectura. Para guardar, abre el dashboard en línea."); }; return f; },
+      async queryPermission(o){ return o&&o.mode==="readwrite"?"denied":"granted"; }, async requestPermission(o){ return o&&o.mode==="readwrite"?"denied":"granted"; }};
+  }
+  const fileLocal=(u,e)=>({kind:"file",name:e.name,meta:{mod:e.mod,size:e.size},async getFile(){ return new File([await xhr(u,"arraybuffer")],e.name,{lastModified:e.mod}); }});
+  async function fuenteLocal(nombre,o){
+    if(location.protocol!=="file:") return null;
+    const base=location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"");
+    const actual=decodeURIComponent(base.split("/").filter(Boolean).pop()||"");
+    try{
+      if(nombresDe(nombre).includes(norm(actual))){ await listarLocal(base); return dirLocal(base,actual); }     // la página está dentro de la carpeta del módulo
+      const hijos=await listarLocal(base); const h=hijos.find(e=>e.dir&&nombresDe(nombre).includes(norm(e.name)));     // la carpeta está al lado de la página
+      if(h){ let u=base+h.url; if(!u.endsWith("/")) u+="/"; return dirLocal(u,h.name); }
+    }catch(e){ return null; }   // sin el permiso del acceso directo no se puede buscar nada
+    // no está al lado: ¿está junto a la carpeta de otro módulo ya encontrada?
+    const todas=cacheRutas();
+    for(const k of Object.keys(todas)){ if(k===nombre||!todas[k].url) continue; try{ const pd=padreDe(todas[k].url);
+      const e=(await listarLocal(pd)).find(x=>x.dir&&nombresDe(nombre).includes(norm(x.name))); if(!e) continue; const u=hijo(pd,e);
+      if(!(await listarLocal(u)).some(x=>x.dir&&esAnioN(x.name))) continue;
+      if(!todas[nombre]||todas[nombre].url!==u){ todas[nombre]={url:u,name:e.name,ruta:rutaLegible(u),t:Date.now()}; guardarRutas(todas); }
+      return dirLocal(u,e.name); }catch(_){} }
+    // si no, la ruta recordada o se busca sola en OneDrive (ver detector abajo)
+    const c=todas[nombre];
+    if(c&&c.url){ try{ await listarLocal(c.url); return dirLocal(c.url,c.name); }catch(e){}   // ruta recordada, sigue en su sitio
+      const x=cacheRutas(); delete x[nombre]; guardarRutas(x); }                                          // se movió: se olvida y se busca otra vez
+    const r=await detectarRutas(o&&o.gesto); const f=r[nombre];
+    return f?dirLocal(f.url,f.name):null;
+  }
+
+  /* ---------- 1b) detector automático de rutas (solo con el acceso directo) ----------
+     Si la carpeta del módulo no está al lado de la página, la busca sola dentro de las carpetas de OneDrive
+     de la PC: "OneDrive", "OneDrive - <empresa>" y las bibliotecas de SharePoint sincronizadas en la carpeta
+     del usuario de Windows. No inicia sesión ni pide elegir carpeta. Recuerda la ruta encontrada y, si la
+     carpeta se mueve dentro de OneDrive, la vuelve a encontrar sola en la siguiente apertura.
+     Solo cuenta una carpeta con el nombre del módulo que tenga adentro carpetas de año (2026…); si hay varias,
+     prefiere la que está junto a las otras carpetas del dashboard. */
+  const MODULOS={PruebaDashboard:["PruebaDashboard","Pantera"],Contabilidad:["Contabilidad"],Legal:["Legal"]};
+  const norm=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase();
+  const nombresDe=n=>(MODULOS[n]||[n]).map(norm);
+  const RKEY="ma_rutas_detectadas_v1", NOHAY_MS=3*60*1000, MAX_LISTAS=2000, MAX_MS=10000;
+  const NO_ENTRAR=new Set(["appdata","application data","local settings","cookies","nethood","printhood","recent","sendto","start menu",
+    "templates","menu inicio","plantillas","entorno de red","impresoras","reciente","saved games","searches","contacts","links","favorites",
+    "3d objects","music","videos","pictures","musica","imagenes","juegos guardados","busquedas","contactos","vinculos","favoritos",
+    "objetos 3d","node_modules","windows","program files","program files (x86)","programdata","system volume information","snap"]);
+  const noEntrar=n=>{ const k=norm(n); return !k||/^[.$~]/.test(k)||NO_ENTRAR.has(k); };
+  const esAnioN=n=>/^(19|20)\d\d$/.test(String(n).trim());
+  const cacheRutas=()=>{ try{ return JSON.parse(localStorage.getItem(RKEY)||"{}")||{}; }catch(e){ return {}; } };
+  const guardarRutas=x=>{ try{ localStorage.setItem(RKEY,JSON.stringify(x)); }catch(e){} };
+  const hijo=(u,e)=>{ let s=u+e.url; if(!s.endsWith("/")) s+="/"; return s; };
+  const padreDe=u=>u.replace(/[^/]+\/$/,"");
+  let DETECCION=null;
+  function detectarRutas(gesto){
+    const c=cacheRutas();
+    const faltan=Object.keys(MODULOS).filter(n=>!(c[n]&&c[n].url));
+    if(!gesto&&faltan.length&&faltan.every(n=>c[n]&&c[n].nohay&&Date.now()-c[n].nohay<NOHAY_MS)) return Promise.resolve({});   // se buscó hace poco y no existe
+    return DETECCION||(DETECCION=buscarRutas().finally(()=>{ setTimeout(()=>{ DETECCION=null; },2000); }));
+  }
+  async function buscarRutas(){
+    const t0=Date.now(); let listas=0; const memo=new Map(), prof=new Map(), cand=[];
+    const listar=u=>{ if(memo.has(u)) return memo.get(u); if(listas>=MAX_LISTAS||Date.now()-t0>MAX_MS) return Promise.resolve(null);
+      listas++; const r=listarLocal(u).catch(()=>null); memo.set(u,r); return r; };
+    // dónde buscar: la carpeta del usuario de Windows (C:\Users\<usuario>) a partir de la ruta del acceso directo
+    const base=location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"");
+    const m=base.match(/^(file:\/\/\/(?:[A-Za-z]:\/)?)(.*)$/)||["","file:///",""]; const pre=m[1], segs=m[2].split("/").filter(Boolean);
+    const iu=segs.findIndex(s=>/^(users|home|usuarios)$/i.test(decodeURIComponent(s)));
+    let casas=[];
+    if(iu>=0&&segs.length>iu+1) casas=[pre+segs.slice(0,iu+2).join("/")+"/"];
+    else for(const d of ["Users/","home/"]){ const l=await listar(pre+d); if(l) for(const e of l) if(e.dir&&!/^(public|default|default user|all users|defaultapppool)$/i.test(e.name)) casas.push(hijo(pre+d,e)); }
+    // 1) alrededor del acceso directo  2) carpetas OneDrive  3) el resto de la carpeta del usuario (SharePoint sincronizado, Escritorio, Documentos)
+    const fases=[[],[],[]];
+    const dentroDeCasa=u=>casas.some(h=>u.startsWith(h)&&u!==h);
+    let a=padreDe(base);
+    if(casas.some(h=>base.startsWith(h))) for(let i=0;i<3&&dentroDeCasa(a);i++){ fases[0].push({u:a,p:2}); a=padreDe(a); }
+    else { fases[0].push({u:base,p:4}); for(let i=0;i<3&&a.length>pre.length;i++){ fases[0].push({u:a,p:4}); a=padreDe(a); } }   // OneDrive en otro disco (D:\OneDrive…)
+    for(const h of casas){ const l=await listar(h); if(!l) continue;
+      for(const e of l) if(e.dir&&!noEntrar(e.name)) fases[/^onedrive/i.test(e.name)?1:2].push({u:hijo(h,e),p:/^onedrive/i.test(e.name)?6:4,n:e.name}); }
+    // se deja de buscar cuando aparecen las tres carpetas juntas (en la misma carpeta)
+    const listo=()=>cand.some(x=>Object.keys(MODULOS).every(n=>cand.some(y=>y.mod===n&&y.padre===x.padre)));
+    for(const fase of fases){
+      let nivel=fase.slice();
+      while(nivel.length){ const sig=[];
+        for(let i=0;i<nivel.length;i+=8){
+          await Promise.all(nivel.slice(i,i+8).map(async q=>{ if((prof.has(q.u)?prof.get(q.u):-1)>=q.p) return; prof.set(q.u,q.p);
+            const l=await listar(q.u); if(!l) return;
+            for(const e of l){ if(!e.dir||noEntrar(e.name)) continue; const u=hijo(q.u,e);
+              const mod=Object.keys(MODULOS).find(n=>nombresDe(n).includes(norm(e.name)));
+              if(mod){ if(!cand.some(x=>x.url===u)){ const dentro=await listar(u); if(dentro&&dentro.some(x=>x.dir&&esAnioN(x.name))&&!cand.some(x=>x.url===u)) cand.push({mod,url:u,name:e.name,padre:q.u,anios:dentro.some(x=>x.dir&&esAnioN(x.name)),orden:cand.length}); } continue; }
+              if(q.p>1&&!esAnioN(e.name)) sig.push({u,p:q.p-1}); } })); }
+        nivel=sig; if(listo()) break; }
+      if(listo()) break;
+    }
+    // elegir: con carpetas de año > junto a otras carpetas del dashboard > la que se encontró primero
+    const res={}, c=cacheRutas();
+    for(const n of Object.keys(MODULOS)){
+      const lista=cand.filter(x=>x.mod===n).map(x=>({...x,junto:new Set(cand.filter(y=>y.padre===x.padre&&y.mod!==n&&y.anios).map(y=>y.mod)).size}));
+      lista.sort((p,q)=>(q.anios-p.anios)||(q.junto-p.junto)||(p.orden-q.orden));
+      if(lista[0]){ res[n]={url:lista[0].url,name:lista[0].name}; c[n]={url:lista[0].url,name:lista[0].name,ruta:rutaLegible(lista[0].url),t:Date.now()}; }
+      else if(!(c[n]&&c[n].url)) c[n]={nohay:Date.now()};
+    }
+    guardarRutas(c);
+    try{ console.info("[Dashboard M&A] rutas detectadas en "+(Date.now()-t0)+" ms ("+listas+" carpetas revisadas):",Object.fromEntries(Object.entries(res).map(([k,v])=>[k,rutaLegible(v.url)]))); }catch(e){}
+    return res;
+  }
+
+  /* ---------- 2) Microsoft 365 (OneDrive en la nube) ---------- */
+  const GRAPH="https://graph.microsoft.com/v1.0", ALCANCE=["Files.ReadWrite.All"];
+  let msal=null, msalP=null;
+  function cargarMsal(){ if(window.msal) return Promise.resolve(window.msal); if(msalP) return msalP;
+    msalP=new Promise((ok,no)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js"; s.onload=()=>ok(window.msal); s.onerror=()=>no(new Error("No se pudo cargar el inicio de sesión de Microsoft.")); document.head.appendChild(s); });
+    return msalP; }
+  async function token(gesto){
+    const lib=await cargarMsal();
+    if(!msal){ msal=new lib.PublicClientApplication({auth:{clientId:MS.clientId,authority:"https://login.microsoftonline.com/"+MS.tenant,redirectUri:location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"")},cache:{cacheLocation:"localStorage"}}); if(msal.initialize) await msal.initialize(); }
+    const cuenta=msal.getAllAccounts()[0];
+    const pista=(window.MA&&MA.ctx()&&MA.ctx().email)||undefined;
+    if(cuenta){ try{ return (await msal.acquireTokenSilent({scopes:ALCANCE,account:cuenta})).accessToken; }catch(e){} }
+    else if(pista){ try{ return (await msal.ssoSilent({scopes:ALCANCE,loginHint:pista})).accessToken; }catch(e){} }
+    if(!gesto) return null;
+    return (await msal.acquireTokenPopup({scopes:ALCANCE,loginHint:pista})).accessToken;
+  }
+  async function g(tok,ruta,op){ op=op||{}; const r=await fetch(ruta.startsWith("http")?ruta:GRAPH+ruta,{method:op.method||"GET",headers:{Authorization:"Bearer "+tok,...(op.tipo?{"Content-Type":op.tipo}:{})},body:op.body});
+    if(r.status===404){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; }
+    if(!r.ok){ let m=r.statusText; try{ m=(await r.json()).error.message; }catch(e){} throw new Error("Microsoft 365: "+m); }
+    return op.crudo?r:(r.status===204?null:r.json()); }
+  const b64u=s=>"u!"+btoa(unescape(encodeURIComponent(s))).replace(/=+$/,"").replace(/\//g,"_").replace(/\+/g,"-");
+  function dirMS(tok,drive,item){
+    const hijos=async()=>{ let url=`/drives/${drive}/items/${item.id}/children?$top=999`, out=[]; while(url){ const j=await g(tok,url); out.push(...(j.value||[])); url=j["@odata.nextLink"]||null; } return out; };
+    return {kind:"directory",name:item.name,auto:"ms365",
+      async *entries(){ for(const c of await hijos()) yield [c.name,c.folder?dirMS(tok,drive,c):fileMS(tok,drive,c,item.id)]; },
+      async getDirectoryHandle(n,o){ const c=(await hijos()).find(x=>x.folder&&x.name===n); if(c) return dirMS(tok,drive,c);
+        if(!(o&&o.create)){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; }
+        return dirMS(tok,drive,await g(tok,`/drives/${drive}/items/${item.id}/children`,{method:"POST",tipo:"application/json",body:JSON.stringify({name:n,folder:{},"@microsoft.graph.conflictBehavior":"fail"})})); },
+      async getFileHandle(n,o){ const c=(await hijos()).find(x=>x.file&&x.name===n); if(c) return fileMS(tok,drive,c,item.id);
+        if(!(o&&o.create)){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; }
+        return fileMS(tok,drive,{name:n,size:0,lastModifiedDateTime:new Date().toISOString()},item.id); },
+      async removeEntry(n){ const c=(await hijos()).find(x=>x.name===n); if(!c){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; } await g(tok,`/drives/${drive}/items/${c.id}`,{method:"DELETE"}); },
+      async queryPermission(){ return "granted"; }, async requestPermission(){ return "granted"; }};
+  }
+  function fileMS(tok,drive,c,padre){
+    const mod=Date.parse(c.lastModifiedDateTime)||0;
+    return {kind:"file",name:c.name,meta:{mod,size:c.size},
+      async getFile(){ const u=c["@microsoft.graph.downloadUrl"]; const r=u?await fetch(u):await g(tok,`/drives/${drive}/items/${c.id}/content`,{crudo:true}); return new File([await r.arrayBuffer()],c.name,{lastModified:mod}); },
+      async createWritable(){ const partes=[]; return {async write(d){ partes.push(d); }, async close(){ const blob=new Blob(partes);
+        await g(tok,`/drives/${drive}/items/${padre}:/${encodeURIComponent(c.name)}:/content`,{method:"PUT",tipo:"application/octet-stream",body:blob}); }}; }};
+  }
+  async function fuenteMS(nombre,gesto){
+    if(!msOn()) return null; const link=MS.carpetas[nombre]; if(!/^https?:\/\//.test(link||"")) return null;
+    const tok=await token(gesto); if(!tok) return null;
+    const it=await g(tok,`/shares/${b64u(link)}/driveItem`);
+    return dirMS(tok,it.parentReference.driveId,it);
+  }
+
+  // abierto desde la PC pero sin el permiso del acceso directo (el navegador ya estaba abierto): avisarlo claro
+  async function avisoLocal(){
+    if(location.protocol!=="file:"||document.getElementById("maAvisoLocal")) return;
+    try{ await listarLocal(location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"")); return; }catch(e){}
+    const d=document.createElement("div"); d.id="maAvisoLocal";
+    d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:9998;max-width:760px;width:calc(100% - 32px);background:#fdf6e6;border:1px solid #f0dcaa;border-left:5px solid #b98b2f;border-radius:12px;padding:14px 18px;box-shadow:0 18px 40px rgba(15,23,42,.22);font:13.5px Inter,system-ui,sans-serif;color:#6b4d12;line-height:1.5";
+    d.innerHTML='<b style="display:block;font-size:15px;color:#0f1c2e;margin-bottom:4px">El navegador ya estaba abierto y no tomó el permiso del acceso directo</b>Cierra <b>todas</b> las ventanas de Chrome (y en la bandeja junto al reloj, clic derecho en Chrome → Salir) y vuelve a abrir el acceso directo. Así lee la carpeta solo, sin pedirla.<br><button type="button" style="margin-top:8px;padding:6px 12px;border-radius:8px;border:none;background:#1b3a5c;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer">Entendido</button>';
+    d.querySelector("button").onclick=()=>d.remove(); document.body.appendChild(d);
+  }
+  window.MA.fuente=async(nombre,o)=>{ o=o||{};
+    const l=await fuenteLocal(nombre,o); if(l) return l;
+    avisoLocal();
+    try{ return await fuenteMS(nombre,!!o.gesto); }catch(e){ if(o.gesto) throw e; return null; } };
+  window.MA.rutasDetectadas=()=>{ const c=cacheRutas(), r={}; for(const k in c) if(c[k].ruta) r[k]=c[k].ruta; return r; };
+  window.MA.ms365=()=>msOn()&&Object.values(MS.carpetas).some(x=>/^https?:\/\//.test(x||""));
+})();
+</script>
+<script>
+/* ===== Consolidado de Excel conservando el formato =====
+   Copia cada hoja tal como está en el Excel original: anchos de columna, alto de filas, fuentes,
+   colores, bordes, formato de números, celdas combinadas y paneles fijos. Las fórmulas se pasan
+   con su valor (para que no queden apuntando a otros libros). Agrega una hoja "Índice" con enlaces.
+   lista: [{nombre, carpeta, getFile:async()=>File}] */
+(function(){
+  let P=null;
+  const cargar=()=>window.ExcelJS?Promise.resolve(window.ExcelJS):(P=P||new Promise((ok,no)=>{ const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"; s.onload=()=>ok(window.ExcelJS); s.onerror=()=>no(new Error("No se pudo cargar el armador de Excel (revisa internet).")); document.head.appendChild(s); }));
+  const limpio=s=>String(s).replace(/[\\/?*[\]:]/g," ").replace(/\s+/g," ").trim();
+  const valor=v=>{ if(v&&typeof v==="object"&&!(v instanceof Date)){ if("formula" in v||"sharedFormula" in v) return v.result===undefined?null:(v.result&&typeof v.result==="object"&&v.result.error?null:v.result); } return v; };
+  const copia=o=>o?JSON.parse(JSON.stringify(o)):o;
+  window.MA.consolidarExcel=async(lista,nombreSalida,titulo,progreso)=>{
+    const ExcelJS=await cargar(); const out=new ExcelJS.Workbook(); out.creator="M&A Capital · Dashboard";
+    const ind=out.addWorksheet("Índice",{views:[{showGridLines:false}]});
+    const usados=new Set(["índice"]), filas=[], fallos=[]; let n=0;
+    for(let k=0;k<lista.length;k++){ const it=lista[k]; progreso&&progreso(`Armando ${k+1} de ${lista.length}: ${it.nombre}`);
+      try{
+        let buf=await (await it.getFile()).arrayBuffer();
+        const wbx=XLSX.read(buf,{type:"array"});   // valores guardados en el archivo (sirve para fórmulas cuyo resultado es 0)
+        if(!/\.(xlsx|xlsm)$/i.test(it.nombre)) buf=XLSX.write(wbx,{bookType:"xlsx",type:"array"});   // .xls/.csv
+        const src=new ExcelJS.Workbook(); await src.xlsx.load(buf);
+        const hojas=src.worksheets.filter(w=>w.state!=="hidden"&&w.state!=="veryHidden"&&w.actualRowCount>0);
+        const base=limpio(it.nombre.replace(/\.[^.]+$/,""));
+        for(const ws of hojas){ n++;
+          let nom=(String(n).padStart(2,"0")+" "+(hojas.length>1?base.slice(0,14).trim()+" · "+limpio(ws.name):base)).slice(0,31).trim(), i=2;
+          while(usados.has(nom.toLowerCase())){ nom=nom.slice(0,28)+" "+(i++); } usados.add(nom.toLowerCase());
+          const dst=out.addWorksheet(nom,{properties:copia(ws.properties),pageSetup:copia(ws.pageSetup),views:copia(ws.views)});
+          if(ws.properties&&ws.properties.tabColor) dst.properties.tabColor=copia(ws.properties.tabColor);
+          (ws.columns||[]).forEach((c,ci)=>{ const d=dst.getColumn(ci+1); if(c.width) d.width=c.width; if(c.hidden) d.hidden=true; if(c.style&&Object.keys(c.style).length) d.style=copia(c.style); });
+          ws.eachRow({includeEmpty:true},(row,ri)=>{ const r=dst.getRow(ri); if(row.height) r.height=row.height; if(row.hidden) r.hidden=true;
+            row.eachCell({includeEmpty:true},(cell,ci)=>{ const c=r.getCell(ci); let v=valor(cell.value);
+              if((v===null||v===undefined)&&cell.value&&typeof cell.value==="object"&&("formula" in cell.value||"sharedFormula" in cell.value)){ const sx=wbx.Sheets[ws.name]&&wbx.Sheets[ws.name][cell.address]; if(sx&&sx.v!==undefined&&sx.t!=="e") v=sx.v; } if(v!==null&&v!==undefined) c.value=(v instanceof Date||typeof v!=="object")?v:copia(v); c.style=copia(cell.style)||{}; }); });
+          ((ws.model&&ws.model.merges)||[]).forEach(m=>{ try{ dst.mergeCells(m); }catch(e){} });
+          filas.push([it.carpeta||"",it.nombre,ws.name,nom]);
+        }
+      }catch(e){ fallos.push(it.nombre); }
+    }
+    // Índice
+    ind.columns=[{width:6},{width:16},{width:58},{width:30},{width:34}];
+    ind.mergeCells("A1:E1"); const t=ind.getCell("A1"); t.value=titulo||"Consolidado"; t.font={bold:true,size:16,color:{argb:"FF0F2440"}};
+    ind.mergeCells("A2:E2"); ind.getCell("A2").value=`${filas.length} hoja(s) de ${lista.length-fallos.length} archivo(s) · generado ${new Date().toLocaleString("es-PA")}`; ind.getCell("A2").font={color:{argb:"FF8792A4"},size:10};
+    const h=ind.getRow(4); ["#","Carpeta","Archivo original","Hoja original","Hoja en este libro"].forEach((x,i)=>{ const c=h.getCell(i+1); c.value=x; c.font={bold:true,color:{argb:"FFFFFFFF"}}; c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF1B3A5C"}}; c.alignment={vertical:"middle"}; }); h.height=20;
+    filas.forEach((f,i)=>{ const r=ind.getRow(5+i); r.getCell(1).value=i+1; r.getCell(2).value=f[0]; r.getCell(3).value=f[1]; r.getCell(4).value=f[2];
+      r.getCell(5).value={text:f[3],hyperlink:"#'"+f[3].replace(/'/g,"''")+"'!A1"}; r.getCell(5).font={color:{argb:"FF1A3FBF"},underline:true};
+      if(i%2) for(let c=1;c<=5;c++) r.getCell(c).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF3F5F9"}}; });
+    if(fallos.length){ const r=ind.getRow(6+filas.length); r.getCell(3).value="No se pudieron leer: "+fallos.join(", "); r.getCell(3).font={color:{argb:"FFB03A32"}}; }
+    ind.views=[{state:"frozen",ySplit:4,showGridLines:false}];
+    const blob=new Blob([await out.xlsx.writeBuffer()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=nombreSalida; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+    return {hojas:filas.length,fallos};
+  };
+})();
+</script>
+<script>
+/* ===== Instalar el dashboard como app (solo en línea, desde GitHub) =====
+   Una app instalada guarda el permiso de las carpetas: después de darlo una vez, ya no vuelve a pedir "Abrir carpeta". */
+(function(){
+  if(!/^https:/.test(location.protocol)&&location.hostname!=="localhost") { window.MA.instalable=()=>false; window.MA.instalar=async()=>false; window.MA.esApp=()=>false; return; }
+  const l=document.createElement("link"); l.rel="manifest"; l.href="manifest.webmanifest"; document.head.appendChild(l);
+  try{ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
+  let ev=null; const avisar=()=>document.dispatchEvent(new CustomEvent("ma-instalable"));
+  window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); ev=e; avisar(); });
+  window.addEventListener("appinstalled",()=>{ ev=null; avisar(); });
+  window.MA.esApp=()=>{ try{ return matchMedia("(display-mode: standalone)").matches||matchMedia("(display-mode: window-controls-overlay)").matches; }catch(e){ return false; } };
+  window.MA.instalable=()=>!!ev;
+  window.MA.instalar=async()=>{ if(!ev) return false; ev.prompt(); const r=await ev.userChoice.catch(()=>({})); ev=null; avisar(); return r&&r.outcome==="accepted"; };
+  // Botón en la cabecera común
+  function boton(){ const der=document.getElementById("maExtra"); if(!der) return;
+    let b=document.getElementById("maInstalar");
+    if(!window.MA.instalable()){ if(b) b.remove(); return; }
+    if(!b){ b=document.createElement("button"); b.id="maInstalar"; b.className="ma-hbtn"; b.title="Instalar el dashboard como app: así no vuelve a pedir la carpeta"; b.textContent="⬇ Instalar app"; b.onclick=()=>window.MA.instalar(); der.appendChild(b); } }
+  document.addEventListener("ma-instalable",boton); setTimeout(boton,1500);
+})();
+</script>
+
+<script>MA.iniciar({modulo:"contabilidad",titulo:"Dashboard Contabilidad"});</script>
+<div class="lbar">
+  <div class="ltabs"><button class="ltab" data-v="lector" aria-selected="true">📁 Lector de carpeta</button><button class="ltab" data-v="reportes" aria-selected="false">📊 Reportes específicos</button></div><span class="sub" id="hdrSub">Conectando…</span><span class="sp"></span>
+  <button class="btn sm pri" id="btnActualizar" disabled>↻ Actualizar</button>
+  <button class="btn sm" id="btnCambiar">📁 Cambiar carpeta</button>
+</div>
+<div class="lmain" id="lmain">
+  <div class="connect2 hidden" id="connectBox"><div class="big">📂</div><h2 id="connectTitle">Conectar la carpeta Contabilidad</h2>
+    <p id="connectText">Elige la carpeta <b>Contabilidad</b> de OneDrive (la que tiene adentro los años y los meses). Solo se hace la primera vez en esta PC: elige <b>“Permitir en cada visita”</b>.</p>
+    <button class="btn gold" id="btnConectar" style="font-size:14px;padding:11px 22px">📂 Conectar carpeta</button></div>
+  <div class="lector hidden" id="lectorBox">
+    <div class="panel"><div class="side-top"><input type="text" id="buscador" placeholder="🔍  Buscar archivo…"><label class="dentro"><input type="checkbox" id="buscarDentro"> Buscar también dentro de los documentos</label><div class="dentro-st" id="dentroSt"></div></div><div class="tree" id="tree"></div></div>
+    <div class="panel" id="viewer"></div>
+  </div>
+<div class="rep hidden" id="repBox"><div class="panel"><div class="rep-top"><b>Reportes específicos</b><button class="btn sm pri" id="repNuevo">＋ Nuevo</button></div><div id="repLista"></div><div class="rep-nota" id="repNota"></div></div><div class="panel" id="repMain"></div></div>
+</div>
+<script>
+/* ============================ Dashboard Contabilidad ============================
+   Lee la carpeta de OneDrive de esta PC (año › mes), igual que el Lector de Pantera.
+   Solo lectura: nada se sube a ningún lado. */
+const MODULO="contabilidad", LS="ma_"+MODULO+"_";
+/* ============================ utilidades ============================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+const norm = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase();
+function mesIndex(nombre){
+  const n = norm(nombre).replace("SETIEMBRE","SEPTIEMBRE");
+  for(let i=0;i<12;i++) if(n.includes(MESES[i])) return i;
+  const m = n.match(/(?:^|[^0-9])(0?[1-9]|1[0-2])(?:[^0-9]|$)/);
+  return m ? (+m[1]-1) : 99;
+}
+const esAnio = s => /^(19|20)\d{2}$/.test(s);
+// nombre de carpeta que ES un mes (AGOSTO, 08, 08-AGOSTO, AGOSTO 2026…), no solo que lo contenga
+const esMesNombre = s => { const n=norm(s).replace("SETIEMBRE","SEPTIEMBRE").trim();
+  return /^(0?[1-9]|1[0-2])$/.test(n) || new RegExp("^(\\d{1,2}[\\s._-]*)?("+MESES.join("|")+")([\\s._-]*\\d{2,4})?$").test(n); };
+// Solo cuentan los archivos que están dentro de AÑO › MES (p. ej. 2026/AGOSTO/...).
+// Lo que está fuera de esa estructura (una carpeta de mes movida a la raíz, archivos sueltos) no se muestra ni se usa.
+function enFecha(ruta, raiz){
+  let c=String(ruta).split("/").slice(0,-1);
+  if(raiz&&esAnio(raiz)) c=[raiz,...c];
+  const i=c.findIndex(esAnio);
+  return i>=0 && !!c[i+1] && esMesNombre(c[i+1]);
+}
+const fFecha = t => t ? new Date(t).toLocaleString("es-PA",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "—";
+const fTam = b => b==null ? "" : b<1024 ? b+" B" : b<1048576 ? (b/1024).toFixed(0)+" KB" : (b/1048576).toFixed(1)+" MB";
+
+
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+let DIR_HANDLE=null, ARCHIVOS=[], ARBOL={}, SEL=null;
+const esExcel=n=>/\.(xlsx|xlsm|xls|csv)$/i.test(n);
+const extDe=n=>((n.match(/\.([^.]+)$/)||[])[1]||"").toLowerCase();
+function tipo(n){ const e=extDe(n);
+  if(["xlsx","xlsm","xls","csv"].includes(e)) return "Excel";
+  if(e==="pdf") return "PDF";
+  if(["doc","docx"].includes(e)) return "Word";
+  if(["png","jpg","jpeg","gif","webp"].includes(e)) return "Imagen";
+  return "Otro"; }
+function icono(n){
+  const e=(n.match(/\.([^.]+)$/)||[])[1]?.toLowerCase()||"";
+  if(e==="csv") return '<span class="f-ic csv">CSV</span>';
+  if(["xlsx","xlsm","xls"].includes(e)) return '<span class="f-ic">X</span>';
+  if(e==="pdf") return '<span class="f-ic pdf">PDF</span>';
+  if(["doc","docx"].includes(e)) return '<span class="f-ic doc">W</span>';
+  if(["png","jpg","jpeg","gif","webp"].includes(e)) return '<span class="f-ic img">IMG</span>';
+  return '<span class="f-ic otro">'+esc(e.slice(0,3).toUpperCase()||"?")+'</span>';
+}
+/* ---------- sesión del inicio (actividad para el cierre por inactividad) ---------- */
+if(false){
+  let ult=0; ["mousemove","mousedown","keydown","wheel","touchstart"].forEach(e=>addEventListener(e,()=>{ if(Date.now()-ult>10000){ ult=Date.now(); try{ window.parent.postMessage({type:"MA_ACTIVITY"},"*"); }catch(_){} } },{passive:true,capture:true}));
+}
+/* ---------- carpeta ---------- */
+const IDB="ma_lector_"+MODULO;
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open(IDB,1); r.onupgradeneeded=()=>r.result.createObjectStore("h"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function guardarHandle(h){ try{ const db=await idb(); await new Promise(r=>{ const tx=db.transaction("h","readwrite"); tx.objectStore("h").put(h,"carpeta"); tx.oncomplete=r; tx.onerror=r; }); }catch(e){} }
+async function leerHandle(){ try{ const db=await idb(); return await new Promise(r=>{ const g=db.transaction("h").objectStore("h").get("carpeta"); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function* recorrer(dir, ruta){
+  for await (const [nombre, h] of dir.entries()){
+    if(nombre.startsWith(".")||nombre.startsWith("~$")) continue;
+    if(h.kind==="directory") yield* recorrer(h, ruta+nombre+"/");
+    else yield {nombre, ruta:ruta+nombre, handle:h};
+  }
+}
+function pantalla(conectado){ $("connectBox").classList.toggle("hidden",conectado); $("lectorBox").classList.toggle("hidden",!conectado); $("btnActualizar").disabled=!conectado; }
+async function conectar(gesto){
+  // acceso directo o Microsoft 365: lee solo, sin que Chrome pregunte
+  try{ const f=await MA.fuente("Contabilidad",{gesto:gesto&&MA.ms365()}); if(f){ $("btnCambiar").classList.add("hidden"); await usar(f); return; } }catch(e){ alertaTxt("Microsoft 365: "+e.message); }
+  if(!window.showDirectoryPicker){ $("connectTitle").textContent="Este navegador no puede leer carpetas"; $("connectText").textContent="Abre el dashboard con Google Chrome o Microsoft Edge."; pantalla(false); return; }
+  let h=await leerHandle();
+  if(h){ try{ let p=await h.queryPermission({mode:"read"}); if(p!=="granted"&&gesto) p=await h.requestPermission({mode:"read"}); if(p==="granted"){ await usar(h); return; } }catch(e){} }
+  if(gesto){ await elegir(); return; }
+  if(h){ $("connectTitle").textContent="Abrir la carpeta "+h.name; $("btnConectar").textContent="🔓 Abrir carpeta";
+    document.addEventListener("pointerdown",e=>{ if(!DIR_HANDLE&&!e.target.closest("#btnConectar,#btnCambiar,#maSalir,a")) conectar(true); },{once:true,capture:true}); }
+  $("hdrSub").textContent="Sin carpeta conectada"; pantalla(false);
+}
+async function elegir(){
+  try{ const h=await window.showDirectoryPicker({mode:"read",id:"ma_"+MODULO});
+    if(esMesNombre(h.name)||esAnio(h.name)){ $("connectTitle").textContent="Elegiste “"+h.name+"”, que es un "+(esAnio(h.name)?"año":"mes"); $("connectText").innerHTML="Elige la carpeta de arriba, la que tiene los años adentro."; pantalla(false); return; }
+    await guardarHandle(h); await usar(h);
+  }catch(e){ if(e&&e.name!=="AbortError") alertaTxt("No se pudo abrir la carpeta: "+e.message); }
+}
+function alertaTxt(t){ $("hdrSub").textContent=t; }
+async function usar(h){ DIR_HANDLE=h; pantalla(true); await escanear(); }
+async function leerLista(){
+  const l=[]; for await (const f of recorrer(DIR_HANDLE,"")) if(enFecha(f.ruta,DIR_HANDLE.name)) l.push(f);
+  for(const f of l){ try{ const x=await f.handle.getFile(); f.mod=x.lastModified; f.size=x.size; }catch(e){} }
+  return l;
+}
+const firma=l=>l.map(a=>a.ruta+"|"+(a.mod||0)+"|"+(a.size||0)).sort().join(";");
+async function escanear(){
+  if(!DIR_HANDLE) return;
+  $("hdrSub").textContent="Leyendo la carpeta "+DIR_HANDLE.name+"…";
+  try{ ARCHIVOS=await leerLista(); }
+  catch(e){ DIR_HANDLE=null; $("connectTitle").textContent="No se pudo leer la carpeta"; $("connectText").textContent=e.message+" · Vuelve a conectarla."; pantalla(false); return; }
+  construirArbol();
+  $("hdrSub").textContent=`Carpeta: ${DIR_HANDLE.name}${DIR_HANDLE.auto==="ms365"?" (Microsoft 365)":DIR_HANDLE.auto==="local"?" (acceso directo)":""} · ${ARCHIVOS.length} archivo(s) · actualizado ${new Date().toLocaleTimeString("es-PA",{hour:"2-digit",minute:"2-digit"})}`;
+  $("hdrSub").title=DIR_HANDLE.ruta?"Ruta: "+DIR_HANDLE.ruta:"";
+  renderTree();
+  if(window.repRefrescar) repRefrescar();
+  if(!ARCHIVOS.length){ $("viewer").innerHTML=`<div class="empty"><div class="big">📂</div><b>No hay archivos dentro de año › mes</b>La carpeta ${esc(DIR_HANDLE.name)} debe tener carpetas de año (2026) y adentro los meses (AGOSTO…).</div>`; return; }
+  if(SEL && !existeSel(SEL)) SEL=null;
+  if(!SEL){ const a=aniosOrden()[0]; if(a) abrirVista("y:"+a); } else abrirArchivo(SEL);
+}
+async function verOtro(f){
+  const v=$("viewer"); const file=await f.handle.getFile(); const url=URL.createObjectURL(file);
+  const ext=(f.nombre.match(/\.([^.]+)$/)||[])[1]?.toLowerCase()||"";
+  const cab=`<div class="viewer-hdr"><div class="viewer-title"><div class="vt-left"><h2><span class="crumbs"><b>${esc(f.anio)}</b> › ${esc(f.mes)} ›</span> ${esc(f.nombre)}</h2>
+    <div class="viewer-meta">${fFecha(f.mod)} · ${fTam(f.size)}</div></div><div class="vt-btns"><a class="btn sm" href="${url}" download="${esc(f.nombre)}">⬇ Archivo</a></div></div></div>`;
+  if(ext==="pdf") v.innerHTML=cab+`<iframe class="prev" src="${url}"></iframe>`;
+  else if(ext==="docx"){
+    try{
+      if(!window.mammoth) throw new Error("no se pudo cargar el lector de Word (revisa la conexión a internet)");
+      const r=await mammoth.convertToHtml({arrayBuffer:await file.arrayBuffer()});
+      const html=r.value.trim();
+      v.innerHTML=cab+(html?`<div class="docwrap"><div class="docpage">${html}</div></div>`:`<div class="empty"><div class="big">📄</div><b>Documento sin texto</b>Descarga el archivo para abrirlo.</div>`);
+    }catch(e){ v.innerHTML=cab+`<div class="empty"><div class="big">⚠️</div><b>No se pudo leer el Word</b>${esc(e.message)}</div>`; }
+  }
+  else if(ext==="doc") v.innerHTML=cab+`<div class="empty"><div class="big">📄</div><b>Word 97-2003 (.doc)</b>El navegador no puede mostrar este formato antiguo. Descarga el archivo para abrirlo, o guárdalo como .docx en la carpeta y aquí se verá.</div>`;
+  else if(["png","jpg","jpeg","gif","webp"].includes(ext)) v.innerHTML=cab+`<div class="tbl-wrap" style="flex:1;text-align:center;padding:14px"><img src="${url}" style="max-width:100%"></div>`;
+  else v.innerHTML=cab+`<div class="empty"><div class="big">📄</div><b>Vista previa no disponible</b>Descarga el archivo para abrirlo.</div>`;
+}
+/* ============================ árbol año / mes ============================ */
+function construirArbol(){
+  const arbol={}; const raiz=DIR_HANDLE.name;
+  ARCHIVOS.forEach(f=>{
+    const partes=f.ruta.split("/"); const carpetas=partes.slice(0,-1);
+    let anio=carpetas.find(esAnio), mes;
+    if(anio){ mes=carpetas[carpetas.indexOf(anio)+1] || "General"; }
+    else if(esAnio(raiz)){ anio=raiz; mes=carpetas[0]||"General"; }
+    else { anio=esMesNombre(raiz) ? "Carpeta "+raiz : "Otros"; mes=carpetas[0]||(esMesNombre(raiz)?raiz:"General"); }
+    f.anio=anio; f.mes=mes;
+    ((arbol[anio]=arbol[anio]||{})[mes]=arbol[anio][mes]||[]).push(f);
+  });
+  ARBOL=arbol;
+}
+const aniosOrden = () => Object.keys(ARBOL).sort((a,b)=>(esAnio(b)?+b:0)-(esAnio(a)?+a:0)||a.localeCompare(b));
+const mesesOrden = a => Object.keys(ARBOL[a]).sort((x,y)=>mesIndex(y)-mesIndex(x)||x.localeCompare(y));
+function ultimoArchivo(){ const a=aniosOrden()[0]; if(!a) return null; const m=mesesOrden(a)[0]; return ARBOL[a][m].slice().sort((x,y)=>x.nombre.localeCompare(y.nombre,"es"))[0]; }
+
+const ABIERTOS=new Set();
+function renderTree(){
+  const q=norm($("buscador").value.trim());
+  const tree=$("tree"); let html="";
+  const anios=aniosOrden();
+  if(!ABIERTOS.size && anios.length){ ABIERTOS.add("y:"+anios[0]); ABIERTOS.add("m:"+anios[0]+"/"+mesesOrden(anios[0])[0]); }
+  anios.forEach(a=>{
+    let yHtml="", yCount=0;
+    mesesOrden(a).forEach(m=>{
+      const fs=ARBOL[a][m].filter(f=>!q||norm(f.ruta).includes(q)||(DENTRO_ON()&&HALLADOS.has(f.ruta))).sort((x,y)=>x.nombre.localeCompare(y.nombre,"es"));
+      if(!fs.length) return; yCount+=fs.length;
+      const mOpen = q || ABIERTOS.has("m:"+a+"/"+m);
+      yHtml+=`<div class="${mOpen?"":"closed"}"><div class="m-row${SEL==="m:"+a+"/"+m?" sel":""}" data-k="m:${esc(a+"/"+m)}" title="Ver el mes completo"><span class="chev">▼</span><span class="mn">${esc(m)}</span><span class="pill">${fs.length}</span></div><div class="kids">`+
+        fs.map(f=>`<div class="f-row${SEL===f.ruta?" sel":""}" data-r="${esc(f.ruta)}">${icono(f.nombre)}<div><div class="f-name">${esc(f.nombre.replace(/\.(xlsx|xlsm|xls|csv)$/i,""))}</div><div class="f-date">${fFecha(f.mod)} · ${fTam(f.size)}</div></div></div>`).join("")+
+        `</div></div>`;
+    });
+    if(!yCount) return;
+    const yOpen = q || ABIERTOS.has("y:"+a);
+    html+=`<div class="${yOpen?"":"closed"}"><div class="y-row${SEL==="y:"+a?" sel":""}" data-k="y:${esc(a)}" title="Ver el año completo"><span class="chev">▼</span><span class="yn">📅 ${esc(a)}</span><span class="pill">${yCount}</span></div><div class="kids">${yHtml}</div></div>`;
+  });
+  tree.innerHTML = html || `<div class="empty" style="padding:24px"><b>Sin resultados</b>Prueba con otro nombre.</div>`;
+  tree.querySelectorAll(".y-row,.m-row").forEach(r=>r.onclick=e=>{
+    const k=r.dataset.k, abierto=!r.parentElement.classList.contains("closed");
+    // la flecha solo abre/cierra; el nombre abre la vista del año o del mes
+    if(e.target.classList.contains("chev") || (abierto && SEL===k)){ abierto?ABIERTOS.delete(k):ABIERTOS.add(k); r.parentElement.classList.toggle("closed",abierto); return; }
+    ABIERTOS.add(k); r.parentElement.classList.remove("closed"); abrirVista(k); });
+  tree.querySelectorAll(".f-row").forEach(r=>r.onclick=()=>abrirArchivo(r.dataset.r));
+}
+$("buscador").oninput=()=>alBuscar();
+
+/* ============================ buscar dentro de los documentos ============================ */
+const TXT=new Map(); let HALLADOS=new Set(), BQ_ID=0, BQ_T=null;
+const DENTRO_ON=()=>$("buscarDentro").checked&&$("buscador").value.trim().length>=3;
+let PDFJS=null;
+async function cargarPdfjs(){ if(PDFJS) return PDFJS; await new Promise((ok,no)=>{ const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"; s.onload=ok; s.onerror=()=>no(new Error("no se pudo cargar el lector de PDF")); document.head.appendChild(s); });
+  PDFJS=window.pdfjsLib; PDFJS.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; return PDFJS; }
+async function textoDe(f){
+  const k=f.ruta+"|"+f.mod; if(TXT.has(k)) return TXT.get(k);
+  const ext=(f.nombre.split(".").pop()||"").toLowerCase(); let t="";
+  try{ const file=await f.handle.getFile();
+    if(["xlsx","xlsm","xls","csv"].includes(ext)){ const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}); t=wb.SheetNames.map(n=>n+"\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{FS:" | "})).join("\n"); }
+    else if(ext==="docx"&&window.mammoth){ t=(await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()})).value||""; }
+    else if(ext==="pdf"){ const lib=await cargarPdfjs(); const pdf=await lib.getDocument({data:await file.arrayBuffer()}).promise; const ps=[];
+      for(let i=1;i<=Math.min(pdf.numPages,60);i++){ const c=await (await pdf.getPage(i)).getTextContent(); ps.push(c.items.map(x=>x.str).join(" ")); } t=ps.join("\n"); }
+    else if(["txt","json","xml","html","htm"].includes(ext)){ t=await file.text(); }
+  }catch(e){ t=""; }
+  TXT.set(k,t); return t;
+}
+function fragmentos(texto,q,max){ const T=norm(texto), out=[]; let i=T.indexOf(q), n=0;
+  while(i>=0){ n++; if(out.length<max){ const a=Math.max(0,i-60), b=Math.min(texto.length,i+q.length+60);
+      out.push((a?"…":"")+esc(texto.slice(a,i))+"<mark>"+esc(texto.slice(i,i+q.length))+"</mark>"+esc(texto.slice(i+q.length,b))+(b<texto.length?"…":"")); }
+    i=T.indexOf(q,i+q.length); }
+  return {n,out}; }
+async function buscarDentro(){
+  const id=++BQ_ID, q=norm($("buscador").value.trim());
+  if(!DENTRO_ON()){ HALLADOS=new Set(); $("dentroSt").textContent=$("buscarDentro").checked?"Escribe al menos 3 letras.":""; renderTree(); return; }
+  const lista=ARCHIVOS.filter(f=>/\.(xlsx|xlsm|xls|csv|docx|pdf|txt)$/i.test(f.nombre)); const res=[];
+  for(let k=0;k<lista.length;k++){ if(id!==BQ_ID) return; const f=lista[k]; $("dentroSt").textContent=`Leyendo ${k+1} de ${lista.length}…`;
+    const t=await textoDe(f); const fr=fragmentos(t,q,3); if(fr.n||norm(f.nombre).includes(q)) res.push({f,...fr}); }
+  if(id!==BQ_ID) return;
+  HALLADOS=new Set(res.map(r=>r.f.ruta)); renderTree();
+  $("dentroSt").textContent=`${res.length} archivo(s) contienen «${$("buscador").value.trim()}».`;
+  const v=$("viewer"); SEL=null; marcarSel();
+  v.innerHTML=`<div class="viewer-hdr"><div class="viewer-title"><div class="vt-left"><h2>🔎 «${esc($("buscador").value.trim())}» dentro de los documentos</h2><div class="viewer-meta">${res.length} archivo(s) · ${res.reduce((s,r)=>s+r.n,0)} coincidencia(s) · se buscó en Excel, Word, PDF y texto</div></div></div></div>
+    <div class="bq-res">${res.length?res.sort((a,b)=>b.n-a.n).map(r=>`<div class="bq-it" data-r="${esc(r.f.ruta)}"><div class="bq-f">${icono(r.f.nombre)}${esc(r.f.nombre)}${r.n?`<span class="pill">${r.n}</span>`:""}</div><div class="bq-r">${esc(r.f.anio)} › ${esc(r.f.mes)}</div>${r.out.map(s=>`<div class="bq-s">${s}</div>`).join("")||'<div class="bq-s">Coincide el nombre del archivo.</div>'}</div>`).join("")
+      :'<div class="empty"><div class="big">🔎</div><b>Sin resultados</b>Ningún documento contiene ese texto. Los PDF escaneados (imagen) no tienen texto que leer.</div>'}</div>`;
+  v.querySelectorAll(".bq-it").forEach(x=>x.onclick=()=>abrirArchivo(x.dataset.r));
+}
+function alBuscar(){ renderTree(); clearTimeout(BQ_T); if($("buscarDentro").checked) BQ_T=setTimeout(buscarDentro,450); else { HALLADOS=new Set(); $("dentroSt").textContent=""; } }
+$("buscarDentro").onchange=()=>{ if($("buscarDentro").checked) buscarDentro(); else { BQ_ID++; HALLADOS=new Set(); $("dentroSt").textContent=""; renderTree(); } };
+
+/* ============================ visor de archivo ============================ */
+const vacioViewer=()=>`<div class="empty"><div class="big">📊</div><b>Elige un archivo</b>Selecciona un Excel del panel izquierdo para verlo aquí, organizado por hojas.</div>`;
+let LIBRO=null;
+function marcarSel(){
+  document.querySelectorAll(".f-row").forEach(r=>r.classList.toggle("sel",r.dataset.r===SEL));
+  document.querySelectorAll(".y-row,.m-row").forEach(r=>r.classList.toggle("sel",r.dataset.k===SEL));
+}
+async function abrirArchivo(ruta){
+  if(/^[ym]:/.test(ruta)) return abrirVista(ruta);
+  const f=ARCHIVOS.find(a=>a.ruta===ruta); if(!f) return;
+  SEL=ruta; marcarSel();
+  const v=$("viewer");
+  v.innerHTML=`<div class="empty"><div class="spin" style="margin:0 auto 12px"></div>Leyendo ${esc(f.nombre)}…</div>`;
+  if(!esExcel(f.nombre)){ await verOtro(f); return; }
+  try{
+    if(!window.XLSX) throw new Error("no se pudo cargar el lector de Excel (revisa la conexión a internet)");
+    const buf=await (await f.handle.getFile()).arrayBuffer();
+    const wb=XLSX.read(buf,{type:"array",cellDates:true});
+    LIBRO={f,wb};
+    pintarLibro(wb.SheetNames[0]);
+  }catch(e){ v.innerHTML=`<div class="empty"><div class="big">⚠️</div><b>No se pudo leer el archivo</b>${esc(e.message)}</div>`; }
+}
+function filasLimpias(ws){
+  // valores reales (para sumar y ordenar) + el texto tal como lo muestra Excel (%, fechas, años, monedas)
+  const crudo=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:"",blankrows:true});
+  const vista=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:"",blankrows:true});
+  let filas=crudo.map((r,i)=>{r.w=vista[i]||[];return r;}).filter(r=>r.some(c=>String(c).trim()!==""));
+  if(!filas.length) return {titulo:[],cab:[],cuerpo:[]};
+  const ncol=Math.max(...filas.map(r=>r.length));
+  const usadas=[]; for(let c=0;c<ncol;c++) if(filas.some(r=>String(r[c]??"").trim()!=="")) usadas.push(c);
+  filas=filas.map(r=>{const x=usadas.map(c=>r[c]??"");x.w=usadas.map(c=>r.w[c]??"");return x;});
+  // encabezado = primera fila con al menos la mitad de celdas con texto
+  let hi=filas.findIndex(r=>r.filter(c=>typeof c==="string"&&c.trim()).length>=Math.max(2,Math.ceil(usadas.length/2)));
+  // si la fila candidata trae números, no es un encabezado real: se usan letras de columna (A, B, C…) como en Excel
+  if(hi<0 || filas[hi].some(c=>typeof c==="number")){
+    const letra=i=>{let s="";i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;};
+    return {titulo:[], cab:usadas.map((_,i)=>letra(usadas[i])), cuerpo:filas};
+  }
+  const titulo=filas.slice(0,hi).map(r=>r.filter(c=>String(c).trim()).join(" · ")).filter(Boolean);
+  return {titulo, cab:filas[hi], cuerpo:filas.slice(hi+1)};
+}
+function celda(v,w){
+  w=String(w==null?"":w).trim();
+  if(v instanceof Date) return {t:w||v.toLocaleDateString("es-PA"),n:false};
+  if(typeof v==="number"){
+    let t;
+    if(w && /[%$€£,]|\d[\/-]\d|[a-z]/i.test(w)) t=w;                       // formato de Excel: 7.00%, $1,200, 30/06/2026
+    else if(Number.isInteger(v) && v>=1900 && v<=2100) t=String(v);          // años: 2032, no 2,032
+    else t=v.toLocaleString("en-US",{maximumFractionDigits:Math.abs(v)<1?4:2,minimumFractionDigits:Number.isInteger(v)?0:2});
+    return {t,n:true,neg:v<0};
+  }
+  return {t:String(v),n:false};
+}
+function pintarLibro(hoja){
+  const {f,wb}=LIBRO; const v=$("viewer");
+  const ws=wb.Sheets[hoja]; const {titulo=[],cab=[],cuerpo=[]}=ws?filasLimpias(ws):{};
+  const MAX=500;
+  const cols=cab.length;
+  const esNum=cab.map((_,i)=>{const vals=cuerpo.map(r=>r[i]).filter(x=>x!==""&&x!=null);return vals.length&&vals.filter(x=>typeof x==="number").length/vals.length>.6;});
+  const esFilaTot=r=>r.slice(0,3).some(c=>/^\s*(total|totales|gran total|suma)\b/i.test(String(c??"")));
+  // columnas de numeración (#, No., 1,2,3…) no se suman
+  const esConteo=i=>/^\s*(#|n[o°º]\.?|num|item|línea|linea)\s*$/i.test(String(cab[i]??""))||(()=>{const v=cuerpo.map(r=>r[i]).filter(x=>typeof x==="number");return v.length>2&&v.every((x,k)=>k===0||x===v[k-1]+1);})();
+  // columnas de años (2032, 2039…) o tasas/porcentajes no se suman
+  const noSumar=i=>{const v=cuerpo.filter(r=>!esFilaTot(r)).map(r=>r[i]).filter(x=>typeof x==="number");
+    return v.length>0&&(v.every(x=>Number.isInteger(x)&&x>=1900&&x<=2100)||/%|rate|tasa|año|year|maturity|vencimiento|plazo/i.test(String(cab[i]??"")));};
+  const sumas=cab.map((_,i)=>esNum[i]&&!esConteo(i)&&!noSumar(i)?cuerpo.filter(r=>!esFilaTot(r)).reduce((t,r)=>t+(typeof r[i]==="number"?r[i]:0),0):null);
+  const conRn=!esConteo(0);   // si la hoja ya trae su propia numeración, no se repite
+  const vacia=x=>x===""||x==null;
+  const filasHTML=cuerpo.slice(0,MAX).map((r,ri)=>{
+    const esTot=esFilaTot(r);
+    let tds="";
+    for(let i=0;i<cols;i++){
+      const c=celda(r[i]??"", r.w&&r.w[i]);
+      let span=1;
+      if(!c.n && c.t.length>28){ while(i+span<cols && vacia(r[i+span])) span++; }
+      const largo=!c.n && c.t.length>40;
+      tds+=`<td class="${c.n?"n":""}${c.neg?" neg":""}${largo?" wrap":""}${span>1?" span":""}"${span>1?` colspan="${span}"`:""}>${esc(c.t)}</td>`;
+      i+=span-1;
+    }
+    return `<tr${esTot?' class="totrow"':""}>${conRn?`<td class="rn">${ri+1}</td>`:""}${tds}</tr>`;
+  }).join("");
+  const hayTot=sumas.some(x=>x!=null)&&cuerpo.length>1&&!cuerpo.some(esFilaTot);
+  v.innerHTML=`
+    <div class="viewer-hdr">
+      <div class="viewer-title">
+        <div class="vt-left">
+          <h2><span class="crumbs"><b>${esc(f.anio)}</b> › ${esc(f.mes)} ›</span> ${esc(f.nombre)}</h2>
+          <div class="viewer-meta" title="${esc(titulo.join(" — "))}">${fFecha(f.mod)} · ${fTam(f.size)} · ${wb.SheetNames.length} hoja(s)${titulo.length?` · <span style="color:var(--text-2)">${esc(titulo.join(" — "))}</span>`:""}</div>
+        </div>
+        <div class="vt-btns">
+          <button class="btn sm" id="btnLista" title="Ocultar o mostrar la lista de archivos">${document.body.classList.contains("sideoff")?"☰ Lista":"⇤ Lista"}</button>
+          <button class="btn sm" id="btnFull" title="Ver la tabla en pantalla completa (Esc para salir)">${$("viewer").classList.contains("full")?"✕ Cerrar":"⛶ Ampliar"}</button>
+          <button class="btn sm" id="btnBajarArchivo" title="Descargar este archivo">⬇ Archivo</button>
+          <button class="btn sm pri" id="btnBajarMes" title="Descargar en un solo Excel todos los archivos de ${esc(f.mes)}">⬇ Todo ${esc(f.mes)}</button>
+        </div>
+      </div>
+    </div>
+    <div class="stabs">${wb.SheetNames.map(h=>`<button class="stab" data-h="${esc(h)}" aria-selected="${h===hoja}">${esc(h)}</button>`).join("")}<span class="sheet-info"><b>${cuerpo.length.toLocaleString("es-PA")}</b> filas · <b>${cols}</b> columnas${cuerpo.length>MAX?` · primeras ${MAX}`:""}</span></div>
+    ${cols?`<div class="tbl-wrap"><table class="x"><thead><tr>${conRn?`<th class="rn">#</th>`:""}${cab.map((c,i)=>`<th class="${esNum[i]?"n":""}">${esc(c===""?"Columna "+(i+1):celda(c).t)}</th>`).join("")}</tr></thead>
+      <tbody>${filasHTML}${hayTot?`<tr class="totrow">${conRn?`<td class="rn">Σ</td>`:""}${cab.map((_,i)=>i===0&&!esNum[0]?`<td>Total</td>`:`<td class="${esNum[i]?"n":""}">${sumas[i]!=null?esc(celda(sumas[i]).t):""}</td>`).join("")}</tr>`:""}</tbody></table></div>`
+      :`<div class="empty"><b>Hoja vacía</b>Esta hoja no tiene datos.</div>`}`;
+  v.querySelectorAll(".stab").forEach(b=>b.onclick=()=>pintarLibro(b.dataset.h));
+  $("btnLista").onclick=()=>{ const off=!document.body.classList.contains("sideoff"); document.body.classList.toggle("sideoff",off); lsSet(LS+"sideoff",off?"1":""); $("btnLista").textContent=off?"☰ Lista":"⇤ Lista"; };
+  $("btnFull").onclick=()=>pantallaCompleta(!$("viewer").classList.contains("full"));
+  $("btnBajarArchivo").onclick=async()=>{ const file=await f.handle.getFile(); const a=document.createElement("a"); a.href=URL.createObjectURL(file); a.download=f.nombre; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); };
+  $("btnBajarMes").onclick=()=>descargarMes(f.anio,f.mes);
+}
+function existeSel(k){
+  if(k.startsWith("y:")) return !!ARBOL[k.slice(2)];
+  if(k.startsWith("m:")){ const i=k.indexOf("/"); const a=k.slice(2,i), m=k.slice(i+1); return !!(ARBOL[a]&&ARBOL[a][m]); }
+  return ARCHIVOS.some(a=>a.ruta===k);
+}
+const TIPOS=["Excel","PDF","Word","Imagen","Otro"];
+function conteo(fs){ const c={}; fs.forEach(f=>{ const t=tipo(f.nombre); c[t]=(c[t]||0)+1; }); return c; }
+function tablaArchivos(fs,conMes){
+  const ord=fs.slice().sort((x,y)=>(conMes?mesIndex(x.mes)-mesIndex(y.mes)||x.mes.localeCompare(y.mes):0)||x.nombre.localeCompare(y.nombre,"es"));
+  return `<table class="fl"><thead><tr>${conMes?"<th>Mes</th>":""}<th>Archivo</th><th>Tipo</th><th>Modificado</th><th class="r">Tamaño</th></tr></thead><tbody>`+
+    ord.map(f=>`<tr class="cl" data-r="${esc(f.ruta)}">${conMes?`<td style="white-space:nowrap;font-weight:600;color:var(--text-2)">${esc(f.mes)}</td>`:""}<td><div class="fn">${icono(f.nombre)}<span>${esc(f.nombre)}</span></div></td><td>${tipo(f.nombre)}</td><td style="white-space:nowrap">${fFecha(f.mod)}</td><td class="r">${fTam(f.size)}</td></tr>`).join("")+`</tbody></table>`;
+}
+function kpisHTML(fs,extra){
+  const c=conteo(fs);
+  return `<div class="kpis"><div class="kpi"><div class="l">Archivos</div><div class="v">${fs.length}</div></div>${extra||""}`+
+    TIPOS.filter(t=>c[t]).map(t=>`<div class="kpi"><div class="l">${t}</div><div class="v">${c[t]}</div></div>`).join("")+`</div>`;
+}
+function abrirVista(k){
+  if(!existeSel(k)) return;
+  SEL=k; marcarSel(); pantallaCompleta(false);
+  const v=$("viewer"); const esA=k.startsWith("y:");
+  let a, m, fs, cuerpo, titulo, bajar;
+  if(esA){
+    a=k.slice(2); const meses=mesesOrden(a); fs=meses.flatMap(x=>ARBOL[a][x]);
+    const porIdx={}; meses.forEach(x=>{ const i=mesIndex(x); if(i<12&&!porIdx[i]) porIdx[i]=x; });
+    const extras=meses.filter(x=>mesIndex(x)>=12||porIdx[mesIndex(x)]!==x);
+    const tarjeta=x=>{ const l=ARBOL[a][x], c=conteo(l); return `<button class="mcard" data-k="m:${esc(a+"/"+x)}"><b>${esc(x)}</b><div class="n">${l.length} archivo(s)</div><div class="ty">${TIPOS.filter(t=>c[t]).map(t=>`<span>${t} ${c[t]}</span>`).join("")}</div></button>`; };
+    const grid=MESES.map((nm,i)=>porIdx[i]?tarjeta(porIdx[i]):`<div class="mcard vacio"><b>${nm}</b><div class="n">Sin carpeta</div></div>`).join("")+extras.map(tarjeta).join("");
+    titulo=`<span class="crumbs"><b>${esc(a)}</b> ›</span> Año ${esc(a)}`;
+    cuerpo=kpisHTML(fs,`<div class="kpi"><div class="l">Meses</div><div class="v">${meses.length}</div></div>`)+`<div class="vsec">Meses</div><div class="mgrid">${grid}</div><div class="vsec">Archivos del año</div>`+tablaArchivos(fs,true);
+    bajar=`⬇ Todo ${esc(a)}`;
+  } else {
+    const i=k.indexOf("/"); a=k.slice(2,i); m=k.slice(i+1); fs=ARBOL[a][m];
+    titulo=`<span class="crumbs"><b>${esc(a)}</b> › ${esc(m)} ›</span> ${esc(m)} ${esc(a)}`;
+    cuerpo=kpisHTML(fs)+`<div class="vsec">Archivos del mes</div>`+tablaArchivos(fs,false);
+    bajar=`⬇ Todo ${esc(m)}`;
+  }
+  const nx=fs.filter(f=>esExcel(f.nombre)).length;
+  v.innerHTML=`<div class="viewer-hdr"><div class="viewer-title"><div class="vt-left"><h2>${titulo}</h2>
+      <div class="viewer-meta">${fs.length} archivo(s) · haz clic en un archivo para abrirlo</div></div>
+      <div class="vt-btns"><button class="btn sm" id="btnLista">${document.body.classList.contains("sideoff")?"☰ Lista":"⇤ Lista"}</button>
+      ${nx?`<button class="btn sm pri" id="btnBajarTodo" title="Descargar en un solo Excel los ${nx} Excel de ${esA?"este año":"este mes"}">${bajar}</button>`:""}</div></div></div>
+    <div class="vbody">${cuerpo}</div>`;
+  v.querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>abrirArchivo(r.dataset.r));
+  v.querySelectorAll(".mcard[data-k]").forEach(b=>b.onclick=()=>{ ABIERTOS.add("y:"+a); ABIERTOS.add(b.dataset.k); renderTree(); abrirVista(b.dataset.k); });
+  $("btnLista").onclick=()=>{ const off=!document.body.classList.contains("sideoff"); document.body.classList.toggle("sideoff",off); lsSet(LS+"sideoff",off?"1":""); $("btnLista").textContent=off?"☰ Lista":"⇤ Lista"; };
+  if(nx) $("btnBajarTodo").onclick=()=>esA?descargarAnio(a):descargarMes(a,m);
+}
+async function descargarAnio(anio){
+  const fs=mesesOrden(anio).reverse().flatMap(m=>ARBOL[anio][m]);
+  await consolidar(fs, `Consolidado_${anio}.xlsx`, true);
+}
+async function descargarMes(anio,mes){
+  const fs=(ARBOL[anio]||{})[mes]||[]; if(!fs.length) return;
+  await consolidar(fs, `Consolidado_${mes}_${esAnio(anio)?anio:""}.xlsx`.replace(/\s+/g,"_").replace("_.","."), false);
+}
+async function consolidar(fs, nombre, conMes){
+  fs=fs.filter(f=>esExcel(f.nombre)); if(!fs.length) return;
+  const b=document.activeElement&&document.activeElement.tagName==="BUTTON"?document.activeElement:null, t0=b?b.textContent:""; if(b) b.disabled=true;
+  try{ await MA.consolidarExcel(fs.map(f=>({nombre:f.nombre,carpeta:`${f.anio} › ${f.mes}`,getFile:()=>f.handle.getFile()})), nombre,
+      "Consolidado "+nombre.replace(/^Consolidado_|\.xlsx$/g,"").replace(/_/g," ")+" · Dashboard Contabilidad", t=>{ if(b) b.textContent=t.slice(0,40)+"…"; }); }
+  catch(e){ alertaTxt("No se pudo armar el Excel: "+e.message); }
+  if(b){ b.disabled=false; b.textContent=t0; }
+}
+
+function pantallaCompleta(on){
+  $("viewer").classList.toggle("full",on);
+  let bg=document.querySelector(".fullbg");
+  if(on&&!bg){ bg=document.createElement("div"); bg.className="fullbg"; bg.onclick=()=>pantallaCompleta(false); document.body.appendChild(bg); }
+  if(!on&&bg) bg.remove();
+  const b=$("btnFull"); if(b) b.textContent=on?"✕ Cerrar":"⛶ Ampliar";
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") pantallaCompleta(false); });
+if(lsGet(LS+"sideoff")==="1") document.body.classList.add("sideoff");
+
+
+/* ---------- arranque y revisión automática ---------- */
+$("btnActualizar").onclick=()=>escanear();
+$("btnCambiar").onclick=elegir;
+$("btnConectar").onclick=()=>conectar(true);
+$("buscador").oninput=()=>alBuscar();
+async function revisar(){ if(!DIR_HANDLE||document.hidden) return; try{ const l=await leerLista(); if(firma(l)!==firma(ARCHIVOS)) await escanear(); }catch(e){} }
+setInterval(revisar,60000);
+{ let u=0; const v=()=>{ if(document.hidden||Date.now()-u<5000) return; u=Date.now(); revisar(); }; addEventListener("focus",v); document.addEventListener("visibilitychange",v); }
+MA.listo.then(()=>conectar(false));
+</script>
+<style>
+/* ---------- Reportes específicos ---------- */
+.ltabs{display:flex;gap:4px;padding:3px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px}
+.ltab{padding:6px 12px;border-radius:7px;border:none;background:transparent;color:var(--text-2);font-weight:700;font-size:12.5px;cursor:pointer}
+.ltab[aria-selected="true"]{background:var(--navy);color:#fff}
+.rep{display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;height:100%}
+.rep>.panel{display:flex;flex-direction:column;min-height:0}
+.rep-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.rep-top b{font-size:13.5px;color:var(--navy)}
+#repLista{flex:1;min-height:0;overflow:auto;padding:6px 0}
+.rp-item{padding:10px 14px;cursor:pointer;border-left:3px solid transparent}
+.rp-item:hover{background:var(--surface-2)}
+.rp-item.sel{background:#eaf0f7;border-left-color:var(--navy)}
+.rp-item b{display:block;font-size:13px;color:var(--text)}
+.rp-item small{color:var(--muted);font-size:11.5px}
+.rep-nota{padding:10px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border);line-height:1.45}
+#repMain{overflow:auto}
+.rep-ed{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.rep-ed h2{margin:0;font-size:17px;font-weight:800}
+.rep-ed h3{margin:4px 0 0;font-size:12px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em}
+.rf{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.rf label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-2);font-weight:600}
+.rf input,.rf select,.fl-row input,.fl-row select{padding:7px 9px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:13px;color:var(--text);background:#fff}
+.rchips{display:flex;flex-wrap:wrap;gap:6px}
+.rchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--border);border-radius:999px;font-size:12.5px;background:#fff;cursor:pointer;user-select:none}
+.rchip input{margin:0}
+.fl-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.rinfo{font-size:12px;color:var(--muted)}
+.rinfo.err{color:var(--bad);font-weight:600}
+.racts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rres-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rres-hdr h2{margin:0;font-size:17px;font-weight:800}
+.rres-hdr .m{font-size:12px;color:var(--muted);margin-top:3px}
+@media (max-width:900px){.rep{grid-template-columns:1fr}}
+</style>
+<script>
+/* ===================== Reportes específicos (Contabilidad y Legal) =====================
+   La administradora arma cada reporte (qué archivos, qué hoja, columnas, filtros y totales).
+   Los reportes se guardan en la propia carpeta del módulo (Contabilidad o Legal) de OneDrive, en el archivo
+   _reportes_dashboard.json, así todos los usuarios ven los mismos. Los datos salen siempre
+   de los Excel que hay en la carpeta (año › mes); no se inventa nada. */
+(function(){
+  const ARCH_REP="_reportes_dashboard.json";
+  const VIRT=["Año","Mes","Archivo"];
+  let REPS=[], SELR=null, EDIT=null, LEIDO=false, VISTA="lector";
+  const esAdminR=()=>{ const c=window.MA&&MA.ctx(); return !!(c&&c.rol==="admin"); };
+  const nn=s=>norm(String(s==null?"":s)).trim();
+  const uid=()=>"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+  /* ---------- pestañas ---------- */
+  function vista(v){ VISTA=v; document.querySelectorAll(".ltab").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
+    const conectado=!!DIR_HANDLE;
+    $("lectorBox").classList.toggle("hidden",!conectado||v!=="lector"); $("repBox").classList.toggle("hidden",!conectado||v!=="reportes");
+    if(v==="reportes"&&conectado) pintarLista(); }
+  document.querySelectorAll(".ltab").forEach(b=>b.onclick=()=>vista(b.dataset.v));
+  const pantalla0=window.pantalla;
+  window.pantalla=function(c){ pantalla0(c); if(c) vista(VISTA); else $("repBox").classList.add("hidden"); };
+
+  /* ---------- leer / guardar en la carpeta ---------- */
+  async function leerReportes(){
+    REPS=[]; LEIDO=true;
+    if(!DIR_HANDLE) return;
+    try{ const fh=await DIR_HANDLE.getFileHandle(ARCH_REP); const t=await (await fh.getFile()).text(); const j=JSON.parse(t); REPS=Array.isArray(j.reportes)?j.reportes:[]; }
+    catch(e){ if(e&&e.name!=="NotFoundError") $("repNota").innerHTML=`<span class="rinfo err">No se pudo leer ${ARCH_REP}: ${esc(e.message)}</span>`; }
+  }
+  async function guardarReportes(){
+    if(DIR_HANDLE.auto==="local") throw new Error("Con el acceso directo la carpeta es solo de lectura. Para guardar, abre el dashboard en línea.");
+    let p=await DIR_HANDLE.queryPermission({mode:"readwrite"});
+    if(p!=="granted") p=await DIR_HANDLE.requestPermission({mode:"readwrite"});
+    if(p!=="granted") throw new Error("Chrome no dio permiso para guardar en la carpeta. Vuelve a intentar y elige «Permitir».");
+    const fh=await DIR_HANDLE.getFileHandle(ARCH_REP,{create:true}); const w=await fh.createWritable();
+    await w.write(JSON.stringify({version:1,actualizado:new Date().toISOString(),por:(MA.ctx()||{}).email||"",reportes:REPS},null,2)); await w.close();
+  }
+  window.repRefrescar=async()=>{ await leerReportes(); if(VISTA==="reportes"){ pintarLista(); if(SELR&&!EDIT){ const r=REPS.find(x=>x.id===SELR); if(r) ejecutar(r); else vacio(); } } };
+
+  /* ---------- periodos y archivos ---------- */
+  const clave=(a,m)=>(+a)*100+mesIndex(m)+1;
+  function periodos(){ const out=[]; for(const a of Object.keys(ARBOL)) if(esAnio(a)) for(const m of Object.keys(ARBOL[a])){ const i=mesIndex(m); if(i<12) out.push({k:clave(a,m),t:MESES[i]+" "+a}); }
+    const u=new Map(); out.forEach(p=>u.set(p.k,p)); return [...u.values()].sort((x,y)=>x.k-y.k); }
+  function archivosDe(d){
+    const q=nn(d.archivo||"");
+    return ARCHIVOS.filter(f=>esExcel(f.nombre)&&(!q||nn(f.nombre).includes(q))&&(()=>{ if(!d.desde&&!d.hasta) return true; const i=mesIndex(f.mes); if(i>=12||!esAnio(f.anio)) return false; const k=clave(f.anio,f.mes); return (!d.desde||k>=+d.desde)&&(!d.hasta||k<=+d.hasta); })())
+      .sort((x,y)=>clave(x.anio,x.mes)-clave(y.anio,y.mes)||x.nombre.localeCompare(y.nombre,"es"));
+  }
+  async function libro(f){ return XLSX.read(await (await f.handle.getFile()).arrayBuffer(),{type:"array",cellDates:true}); }
+  function hojaDe(wb,h){ if(h){ const x=wb.SheetNames.find(s=>nn(s)===nn(h)); if(x) return x; } return wb.SheetNames[0]; }
+  const esTot=r=>r.slice(0,3).some(c=>/^\s*(total|totales|gran total|suma)\b/i.test(String(c??"")));
+  async function filasDe(f,hoja){
+    const wb=await libro(f); const ws=wb.Sheets[hojaDe(wb,hoja)]; if(!ws) return {cab:[],filas:[]};
+    const {cab,cuerpo}=filasLimpias(ws);
+    const nombres=cab.map((c,i)=>String(c===""?"Columna "+(i+1):(c instanceof Date?c.toLocaleDateString("es-PA"):c)).trim());
+    const filas=cuerpo.filter(r=>!esTot(r)).map(r=>{ const o={}; nombres.forEach((n,i)=>o[n]=r[i]??""); o["Año"]=f.anio; o["Mes"]=f.mes; o["Archivo"]=f.nombre; return o; });
+    return {cab:nombres,filas};
+  }
+
+  /* ---------- ejecutar ---------- */
+  function pasaFiltro(o,fl){
+    const v=o[fl.col]; const t=nn(v), q=nn(fl.valor);
+    const num=typeof v==="number"?v:parseFloat(String(v).replace(/[^\d.-]/g,"")); const qn=parseFloat(String(fl.valor).replace(/[^\d.-]/g,""));
+    switch(fl.op){
+      case "contiene": return t.includes(q);
+      case "no contiene": return !t.includes(q);
+      case "igual": return t===q;
+      case "distinto": return t!==q;
+      case "mayor": return !isNaN(num)&&!isNaN(qn)&&num>qn;
+      case "menor": return !isNaN(num)&&!isNaN(qn)&&num<qn;
+      case "con dato": return t!=="";
+      case "vacío": return t==="";
+    } return true;
+  }
+  async function calcular(d,progreso){
+    const fs=archivosDe(d); const filas=[]; let cabs=[]; const fallos=[];
+    for(let i=0;i<fs.length;i++){ progreso&&progreso(`Leyendo ${i+1} de ${fs.length}: ${fs[i].nombre}`);
+      try{ const r=await filasDe(fs[i],d.hoja); r.cab.forEach(c=>{ if(!cabs.includes(c)) cabs.push(c); }); filas.push(...r.filas); }catch(e){ fallos.push(fs[i].nombre); } }
+    const sel=filas.filter(o=>(d.filtros||[]).every(fl=>!fl.col||pasaFiltro(o,fl)));
+    const sumar=(d.sumar||[]).filter(Boolean);
+    let cab, cuerpo, numCols=new Set();
+    if(d.agrupar){
+      const meses=[...new Map(sel.map(o=>[clave(o["Año"],o["Mes"]),MESES[mesIndex(o["Mes"])]?.slice(0,3)+" "+o["Año"]])).entries()].sort((x,y)=>x[0]-y[0]);
+      const g=new Map();
+      for(const o of sel){ const k=String(o[d.agrupar]??"").trim()||"(vacío)"; let x=g.get(k); if(!x){ x={k,n:0,s:{},pm:{}}; g.set(k,x); } x.n++;
+        for(const c of sumar){ const v=typeof o[c]==="number"?o[c]:0; x.s[c]=(x.s[c]||0)+v; if(d.porMes){ const mk=clave(o["Año"],o["Mes"]); (x.pm[c]=x.pm[c]||{})[mk]=(x.pm[c][mk]||0)+v; } } }
+      cab=[d.agrupar,"Filas"]; numCols.add(1);
+      if(d.porMes) for(const c of sumar){ for(const [mk,mt] of meses){ cab.push(sumar.length>1?c+" · "+mt:mt); numCols.add(cab.length-1); } cab.push("Total"+(sumar.length>1?" "+c:"")); numCols.add(cab.length-1); }
+      else for(const c of sumar){ cab.push(c); numCols.add(cab.length-1); }
+      cuerpo=[...g.values()].sort((a,b)=>String(a.k).localeCompare(String(b.k),"es",{numeric:true})).map(x=>{ const r=[x.k,x.n];
+        if(d.porMes) for(const c of sumar){ for(const [mk] of meses) r.push((x.pm[c]||{})[mk]||0); r.push(x.s[c]||0); } else for(const c of sumar) r.push(x.s[c]||0); return r; });
+    }else{
+      cab=(d.columnas&&d.columnas.length?d.columnas:cabs).slice();
+      cuerpo=sel.map(o=>cab.map(c=>o[c]??""));
+      cab.forEach((c,i)=>{ if(sumar.includes(c)) numCols.add(i); });
+    }
+    const tot=cab.map((c,i)=>numCols.has(i)||(!d.agrupar&&sumar.includes(c))?cuerpo.reduce((t,r)=>t+(typeof r[i]==="number"?r[i]:0),0):null);
+    return {cab,cuerpo,tot,archivos:fs,fallos,leidas:filas.length,quedan:sel.length};
+  }
+  function tablaHTML(res,max){
+    const {cab,cuerpo,tot}=res; const M=max||1500;
+    const numIdx=cab.map((_,i)=>cuerpo.some(r=>typeof r[i]==="number"));
+    const fil=cuerpo.slice(0,M).map((r,ri)=>`<tr><td class="rn">${ri+1}</td>${r.map((v,i)=>{ const c=celda(v,""); return `<td class="${numIdx[i]?"n":""}${c.neg?" neg":""}">${esc(c.t)}</td>`; }).join("")}</tr>`).join("");
+    const hayTot=tot.some(x=>x!=null);
+    return `<div class="tbl-wrap" style="flex:1;min-height:0"><table class="x"><thead><tr><th class="rn">#</th>${cab.map((c,i)=>`<th class="${numIdx[i]?"n":""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${fil}
+      ${hayTot?`<tr class="totrow"><td class="rn">Σ</td>${tot.map((t,i)=>`<td class="${numIdx[i]?"n":""}">${t!=null?esc(celda(t,"").t):(i===0?"Total":"")}</td>`).join("")}</tr>`:""}</tbody></table></div>
+      ${cuerpo.length>M?`<div class="more">Se muestran ${M} de ${cuerpo.length.toLocaleString("es-PA")} filas. El Excel trae todas.</div>`:""}`;
+  }
+  function descargar(d,res){
+    const aoa=[res.cab,...res.cuerpo]; if(res.tot.some(x=>x!=null)) aoa.push(res.tot.map((t,i)=>t!=null?t:(i===0?"Total":"")));
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),"Reporte");
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Archivo","Año","Mes"],...res.archivos.map(f=>[f.nombre,f.anio,f.mes])]),"Archivos usados");
+    XLSX.writeFile(wb,(d.nombre||"Reporte").replace(/[\\/:*?"<>|]+/g,"").slice(0,80)+".xlsx");
+  }
+  const perTxt=d=>{ const ps=periodos(); const t=k=>(ps.find(p=>p.k===+k)||{}).t||""; return d.desde||d.hasta?`${d.desde?t(d.desde):"inicio"} a ${d.hasta?t(d.hasta):"hoy"}`:"Todos los meses"; };
+
+  /* ---------- lista y resultado ---------- */
+  function vacio(){ $("repMain").innerHTML=`<div class="empty"><div class="big">📊</div><b>${REPS.length?"Elige un reporte":"Todavía no hay reportes"}</b>${esAdminR()?"Pulsa «＋ Nuevo» para armar el primero.":"La administradora los crea aquí; aparecen para todos."}</div>`; }
+  function pintarLista(){
+    $("repNuevo").classList.toggle("hidden",!esAdminR());
+    $("repNota").innerHTML=`Se guardan en la carpeta <b>${esc(DIR_HANDLE?DIR_HANDLE.name:"")}</b> (archivo ${ARCH_REP}) y los ven todos los usuarios.`;
+    $("repLista").innerHTML=REPS.length?REPS.map(r=>`<div class="rp-item${SELR===r.id?" sel":""}" data-id="${esc(r.id)}"><b>${esc(r.nombre)}</b><small>${esc(r.descripcion||perTxt(r))}</small></div>`).join("")
+      :`<div class="empty" style="padding:24px"><b>Sin reportes</b>${esAdminR()?"Crea el primero con «＋ Nuevo».":"La administradora todavía no creó reportes."}</div>`;
+    $("repLista").querySelectorAll(".rp-item").forEach(x=>x.onclick=()=>{ const r=REPS.find(y=>y.id===x.dataset.id); if(r){ SELR=r.id; EDIT=null; pintarLista(); ejecutar(r); } });
+    if(!SELR&&!EDIT) vacio();
+  }
+  async function ejecutar(d){
+    const m=$("repMain");
+    m.innerHTML=`<div class="empty"><div class="spin" style="margin:0 auto 12px"></div><span id="rpProg">Armando el reporte…</span></div>`;
+    let res; try{ res=await calcular(d,t=>{ const p=$("rpProg"); if(p) p.textContent=t; }); }
+    catch(e){ m.innerHTML=`<div class="empty"><div class="big">⚠️</div><b>No se pudo armar el reporte</b>${esc(e.message)}</div>`; return; }
+    if(SELR!==d.id&&!EDIT) return;
+    m.innerHTML=`<div class="rres-hdr"><div><h2>${esc(d.nombre)}</h2><div class="m">${esc(perTxt(d))} · ${res.archivos.length} archivo(s) · ${res.quedan.toLocaleString("es-PA")} de ${res.leidas.toLocaleString("es-PA")} fila(s) pasan los filtros${res.fallos.length?` · <span style="color:var(--bad)">no se pudo leer: ${esc(res.fallos.join(", "))}</span>`:""}</div>${d.descripcion?`<div class="m">${esc(d.descripcion)}</div>`:""}</div>
+      <div class="racts"><button class="btn sm pri" id="rpXls">⬇ Excel</button>${esAdminR()?`<button class="btn sm" id="rpEd">✎ Editar</button><button class="btn sm" id="rpDup">⧉ Duplicar</button><button class="btn sm" id="rpDel" style="color:var(--bad)">Eliminar</button>`:""}</div></div>
+      ${res.archivos.length?tablaHTML(res):`<div class="empty"><b>Ningún archivo coincide</b>No hay Excel cuyo nombre contenga «${esc(d.archivo||"")}» en ${esc(perTxt(d))}.</div>`}`;
+    m.style.display="flex"; m.style.flexDirection="column";
+    $("rpXls").onclick=()=>descargar(d,res);
+    if(esAdminR()){
+      $("rpEd").onclick=()=>editor(JSON.parse(JSON.stringify(d)));
+      $("rpDup").onclick=()=>{ const c=JSON.parse(JSON.stringify(d)); c.id=uid(); c.nombre=d.nombre+" (copia)"; editor(c,true); };
+      $("rpDel").onclick=async()=>{ if(!confirmarInline($("rpDel"),"¿Seguro? Pulsa otra vez para eliminar")) return; REPS=REPS.filter(x=>x.id!==d.id);
+        try{ await guardarReportes(); SELR=null; pintarLista(); }catch(e){ alertar(e.message); await leerReportes(); pintarLista(); } };
+    }
+  }
+  function confirmarInline(b,txt){ if(b.dataset.ok==="1") return true; b.dataset.ok="1"; b.textContent=txt; setTimeout(()=>{ b.dataset.ok=""; b.textContent="Eliminar"; },4000); return false; }
+  function alertar(t){ $("repMain").insertAdjacentHTML("afterbegin",`<div class="banner err" style="margin:10px">${esc(t)}</div>`); }
+
+  /* ---------- editor (solo administradora) ---------- */
+  async function editor(d,nuevo){
+    EDIT=d; const m=$("repMain"); m.style.display=""; const ps=periodos();
+    const opt=(v,t,s)=>`<option value="${esc(v)}"${String(s)===String(v)?" selected":""}>${esc(t)}</option>`;
+    m.innerHTML=`<div class="rep-ed">
+      <h2>${nuevo?"Nuevo reporte":"Editar reporte"}</h2>
+      <div class="rf"><label>Nombre del reporte<input id="reNombre" value="${esc(d.nombre||"")}" placeholder="Nombre que verán todos"></label>
+        <label>Descripción (opcional)<input id="reDesc" value="${esc(d.descripcion||"")}"></label></div>
+      <h3>1 · Archivos</h3>
+      <div class="rf"><label>El nombre del archivo contiene<input id="reArchivo" value="${esc(d.archivo||"")}" placeholder="Vacío = todos los Excel"></label>
+        <label>Hoja<select id="reHoja"></select></label>
+        <label>Desde<select id="reDesde">${opt("","Primer mes",d.desde)}${ps.map(p=>opt(p.k,p.t,d.desde)).join("")}</select></label>
+        <label>Hasta<select id="reHasta">${opt("","Último mes",d.hasta)}${ps.map(p=>opt(p.k,p.t,d.hasta)).join("")}</select></label></div>
+      <div class="rinfo" id="reArchInfo"></div>
+      <h3>2 · Columnas a mostrar</h3><div class="rinfo">Si no marcas ninguna, salen todas. Año, Mes y Archivo dicen de dónde salió cada fila.</div><div class="rchips" id="reCols"></div>
+      <h3>3 · Filtros</h3><div id="reFiltros"></div><div><button class="btn sm" id="reAddF">＋ Agregar filtro</button></div>
+      <h3>4 · Totales</h3>
+      <div class="rf"><label>Agrupar por (opcional)<select id="reAgrupar"></select></label></div>
+      <div class="rinfo">Columnas a sumar:</div><div class="rchips" id="reSumar"></div>
+      <label class="rchip" style="align-self:flex-start"><input type="checkbox" id="rePorMes"${d.porMes?" checked":""}> Al agrupar, una columna por mes</label>
+      <div class="racts"><button class="btn sm" id="reVista">👁 Vista previa</button><button class="btn sm pri" id="reGuardar">💾 Guardar en la carpeta</button><button class="btn sm" id="reCancelar">Cancelar</button><span class="rinfo" id="reMsg"></span></div>
+      <div id="reVistaBox" style="display:flex;flex-direction:column;max-height:420px;border:1px solid var(--border);border-radius:10px;overflow:hidden" class="hidden"></div></div>`;
+    let CABS=[], HOJAS=[];
+    const leerForm=()=>({ ...d, nombre:$("reNombre").value.trim(), descripcion:$("reDesc").value.trim(), archivo:$("reArchivo").value.trim(), hoja:$("reHoja").value,
+      desde:$("reDesde").value, hasta:$("reHasta").value,
+      columnas:[...document.querySelectorAll("#reCols input:checked")].map(x=>x.value),
+      filtros:[...document.querySelectorAll("#reFiltros .fl-row")].map(r=>({col:r.querySelector(".fc").value,op:r.querySelector(".fo").value,valor:r.querySelector(".fv").value})).filter(f=>f.col),
+      agrupar:$("reAgrupar").value, sumar:[...document.querySelectorAll("#reSumar input:checked")].map(x=>x.value), porMes:$("rePorMes").checked });
+    const OPS=["contiene","no contiene","igual","distinto","mayor","menor","con dato","vacío"];
+    function filtroRow(f){ const r=document.createElement("div"); r.className="fl-row";
+      r.innerHTML=`<select class="fc"><option value="">— columna —</option>${[...CABS,...VIRT].map(c=>opt(c,c,f.col)).join("")}</select><select class="fo">${OPS.map(o=>opt(o,o,f.op||"contiene")).join("")}</select><input class="fv" value="${esc(f.valor||"")}" placeholder="valor"><button class="btn sm" type="button" title="Quitar filtro">✕</button>`;
+      r.querySelector("button").onclick=()=>r.remove(); $("reFiltros").appendChild(r); }
+    async function muestra(){
+      const cur=leerForm(); const fs=archivosDe(cur);
+      $("reArchInfo").textContent=fs.length?`${fs.length} archivo(s) coinciden${fs.length?": "+fs.slice(-3).map(f=>f.nombre+" ("+f.mes+" "+f.anio+")").join(", ")+(fs.length>3?"…":""):""}`:"Ningún archivo coincide con ese nombre y periodo.";
+      $("reArchInfo").className="rinfo"+(fs.length?"":" err");
+      if(!fs.length){ CABS=[]; } else {
+        try{ const f=fs[fs.length-1]; const wb=await libro(f); HOJAS=wb.SheetNames;
+          const hs=$("reHoja").value||cur.hoja||d.hoja||"";
+          $("reHoja").innerHTML=HOJAS.map(h=>opt(h,h,hojaDe(wb,hs))).join("");
+          CABS=(await filasDe(f,$("reHoja").value)).cab; }catch(e){ CABS=[]; $("reArchInfo").textContent="No se pudo leer el archivo de muestra: "+e.message; $("reArchInfo").className="rinfo err"; }
+      }
+      const todas=[...CABS,...VIRT];
+      const cols=(cur.columnas&&cur.columnas.length?cur.columnas:d.columnas)||[], sum=(cur.sumar&&cur.sumar.length?cur.sumar:d.sumar)||[];
+      $("reCols").innerHTML=todas.map(c=>`<label class="rchip"><input type="checkbox" value="${esc(c)}"${cols.includes(c)?" checked":""}>${esc(c)}</label>`).join("")||`<span class="rinfo">Elige primero los archivos.</span>`;
+      $("reSumar").innerHTML=CABS.map(c=>`<label class="rchip"><input type="checkbox" value="${esc(c)}"${sum.includes(c)?" checked":""}>${esc(c)}</label>`).join("")||`<span class="rinfo">—</span>`;
+      const ag=cur.agrupar||d.agrupar||""; $("reAgrupar").innerHTML=opt("","Sin agrupar",ag)+todas.map(c=>opt(c,c,ag)).join("");
+      document.querySelectorAll("#reFiltros .fc").forEach(s=>{ const v=s.value; s.innerHTML=`<option value="">— columna —</option>`+todas.map(c=>opt(c,c,v)).join(""); });
+    }
+    (d.filtros||[]).forEach(filtroRow);
+    let tmr=null; $("reArchivo").oninput=()=>{ clearTimeout(tmr); tmr=setTimeout(muestra,450); };
+    ["reDesde","reHasta","reHoja"].forEach(id=>$(id).onchange=muestra);
+    $("reAddF").onclick=()=>filtroRow({});
+    $("reCancelar").onclick=()=>{ EDIT=null; const r=REPS.find(x=>x.id===SELR); pintarLista(); if(r) ejecutar(r); else vacio(); };
+    $("reVista").onclick=async()=>{ const cur=leerForm(); const b=$("reVistaBox"); b.classList.remove("hidden"); b.innerHTML=`<div class="empty" style="padding:20px">Armando…</div>`;
+      try{ const res=await calcular(cur); b.innerHTML=res.archivos.length?tablaHTML(res,200):`<div class="empty" style="padding:20px"><b>Ningún archivo coincide</b></div>`; }catch(e){ b.innerHTML=`<div class="empty">${esc(e.message)}</div>`; } };
+    $("reGuardar").onclick=async()=>{ const cur=leerForm(); const msg=$("reMsg");
+      if(!cur.nombre){ msg.textContent="Ponle un nombre al reporte."; msg.className="rinfo err"; return; }
+      const i=REPS.findIndex(x=>x.id===cur.id); const antes=REPS.slice();
+      if(i>=0) REPS[i]=cur; else REPS.push(cur);
+      msg.textContent="Guardando en la carpeta…"; msg.className="rinfo";
+      try{ await guardarReportes(); EDIT=null; SELR=cur.id; pintarLista(); ejecutar(cur); }
+      catch(e){ REPS=antes; msg.textContent="No se pudo guardar: "+e.message; msg.className="rinfo err"; } };
+    await muestra();
+  }
+  $("repNuevo").onclick=()=>{ if(!esAdminR()) return; SELR=null; pintarLista(); editor({id:uid(),nombre:"",archivo:"",hoja:"",desde:"",hasta:"",columnas:[],filtros:[],agrupar:"",sumar:[],porMes:false},true); };
+})();
+</script>
+
+</body>
+</html>

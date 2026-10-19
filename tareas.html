@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguimiento de tareas</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#fff; --surface-2:#f0f3f8; --border:#dde3ec; --grid:#edf1f6;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#8792a4;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --warn:#9a6b0f;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+.hidden{display:none!important}
+body{display:flex;flex-direction:column}
+.app{display:grid;grid-template-columns:250px minmax(0,1fr);flex:1;min-height:0}
+@media (max-width:820px){.app{grid-template-columns:1fr}.side{display:none}}
+
+/* barra lateral */
+.side{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:14px 10px 20px}
+.sec{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:14px 8px 6px}
+.nav{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:none;background:none;border-radius:8px;color:var(--text-2);font-weight:600;font-size:13px;cursor:pointer;text-align:left}
+.nav:hover{background:var(--surface-2)}
+.nav.on{background:#e8eef6;color:var(--navy)}
+.nav .n{margin-left:auto;font-size:11px;color:var(--muted);font-weight:700}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--muted)}
+.fold{position:relative}
+.fold .acts{position:absolute;right:6px;top:5px;display:none;gap:2px}
+.fold:hover .acts{display:flex}
+.fold .acts button{border:none;background:var(--surface);border-radius:6px;padding:2px 5px;cursor:pointer;color:var(--muted);font-size:12px}
+.fold .acts button:hover{color:var(--navy);background:#e8eef6}
+.kids{padding-left:14px}
+.linkbtn{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;border:none;background:none;color:var(--teal);font-weight:600;font-size:12.5px;cursor:pointer;border-radius:8px;text-align:left}
+.linkbtn:hover{background:var(--surface-2)}
+
+/* contenido */
+.main{overflow-y:auto;padding:20px 24px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.top .k{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.top h1{font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:26px;margin:2px 0 0;display:flex;align-items:center;gap:10px}
+.top h1 .tipo{font-family:Inter,sans-serif;font-size:12px;color:var(--muted);font-weight:600}
+.top .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;font-size:13px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.danger{color:var(--bad);border-color:#efc4c0}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.chip{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:12.5px;cursor:pointer;color:var(--text-2)}
+.chip .c{display:inline-block;min-width:18px;margin-left:4px;padding:0 6px;border-radius:999px;background:var(--surface-2);font-size:11px;text-align:center}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.chip.on .c{background:rgba(255,255,255,.2)}
+.nota{font-size:11.5px;color:var(--muted);margin:2px 0 14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+.kpi{padding:12px 14px}
+.kpi .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi .v{font-size:24px;font-weight:800;margin-top:2px}
+.kpi .s{font-size:11.5px;color:var(--muted)}
+.kpi.bad .v{color:var(--bad)} .kpi.good .v{color:var(--good)}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.inp{padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none}
+.inp:focus{border-color:var(--teal)}
+.inp.grow{flex:1;min-width:200px}
+label.ck{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--text-2)}
+table.t{width:100%;border-collapse:separate;border-spacing:0}
+table.t th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:9px 10px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+table.t td{padding:9px 10px;border-bottom:1px solid var(--grid);vertical-align:middle}
+table.t tr.row{cursor:pointer}
+table.t tr.row:hover td{background:#f6f9fc}
+table.t tr.done td{color:var(--muted)}
+table.t tr.done .tt{text-decoration:line-through}
+.grp td{background:#fbfcfe!important;font-weight:700;color:var(--navy);font-size:12.5px;cursor:default}
+.prio{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid}
+.prio.Crítica{background:#fbeceb;color:var(--bad);border-color:#efc4c0}
+.prio.Alta{background:#fdf2e3;color:#a35a0b;border-color:#f2d4ad}
+.prio.Media{background:#eef2f7;color:var(--navy);border-color:var(--border)}
+.prio.Baja{background:#f2f6f2;color:#4d6b52;border-color:#d6e4d8}
+.est{font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface)}
+.tt{font-weight:600}
+.meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.venc{color:var(--bad);font-weight:700}
+.vacio{padding:34px 20px;text-align:center;color:var(--muted)}
+.vacio b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+.tick{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:var(--surface);cursor:pointer;flex:none;display:grid;place-items:center;font-size:11px;color:#fff}
+.tick:hover{border-color:var(--good)}
+.tick.on{background:var(--good);border-color:var(--good)}
+.plan-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--grid);cursor:pointer}
+.plan-row:hover{background:#f6f9fc}
+.plan-day{padding:9px 14px;font-size:12px;font-weight:700;color:var(--navy);background:var(--surface-2);border-bottom:1px solid var(--border)}
+.plan-day.bad{color:var(--bad)}
+
+/* diálogos */
+.bg{position:fixed;inset:0;background:rgba(15,28,46,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;z-index:50;overflow-y:auto}
+.dlg{width:100%;max-width:760px;background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,.35)}
+.dlg.sm{max-width:460px}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.dlg-h h3{margin:0;font-size:16px}
+.dlg-b{padding:14px 18px}
+.dlg-f{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+.dlg-f .sp{flex:1}
+.x{border:none;background:none;font-size:13px;color:var(--muted);cursor:pointer}
+.info{font-size:12px;color:var(--text-2);background:var(--surface-2);border-radius:9px;padding:8px 10px;margin-bottom:12px}
+.f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.f>span{font-size:11.5px;font-weight:700;color:var(--text-2)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+textarea.inp{min-height:84px;resize:vertical}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:6px 0 10px}
+.tab{border:none;background:none;padding:8px 12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.tab.on{color:var(--teal);border-bottom-color:var(--teal)}
+.item{padding:8px 0;border-bottom:1px solid var(--grid);font-size:13px}
+.item .who{font-size:11.5px;color:var(--muted)}
+.colores{display:flex;gap:8px;flex-wrap:wrap}
+.color{width:26px;height:26px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+.color.on{border-color:var(--text)}
+.err{color:var(--bad);font-size:12.5px;min-height:16px}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--navy-d);color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;z-index:80;box-shadow:var(--shadow)}
+.toast.bad{background:var(--bad)}
+
+/* organigrama */
+.org{padding:14px}
+.org ul{list-style:none;margin:0;padding-left:22px;border-left:2px solid var(--grid)}
+.org>ul{border-left:none;padding-left:0}
+.org li{margin:6px 0}
+.persona{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer}
+.persona:hover,.persona.on{border-color:var(--teal);background:#eef7f6}
+.av{width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.org-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}
+@media (max-width:980px){.org-layout{grid-template-columns:1fr}}
+.cargando{padding:60px 20px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<!-- ===== M&A Capital · acceso (cada página es independiente; mismo usuario y clave en todas) ===== -->
+<style>
+.ma-hdr{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 12px 0;padding:7px 14px;border-radius:12px;color:#fff;
+  background:linear-gradient(115deg,#0f2440,#1b3a5c 55%,#0f5560);box-shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);font-family:Inter,system-ui,"Segoe UI",sans-serif;line-height:1.3}
+.ma-hdr .ma-b{display:flex;align-items:center;gap:12px;min-width:0}
+.ma-hdr .ma-logo{height:40px;width:auto;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.ma-hdr .ma-sep{width:1px;align-self:stretch;margin:4px 0;background:linear-gradient(180deg,transparent,rgba(227,194,122,.7),transparent)}
+.ma-hdr .ma-k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#e3c27a;font-weight:700;text-decoration:none}
+.ma-hdr .ma-k:hover{color:#fff}
+.ma-hdr h1{margin:0;font-size:17px;font-weight:800;color:#fff}
+.ma-hdr .ma-sub{font-size:11.5px;color:rgba(255,255,255,.75);margin-top:1px}
+.ma-hdr .ma-der{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ma-chip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(227,194,122,.2);color:#e3c27a;border:1px solid rgba(227,194,122,.45)}
+.ma-hbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.ma-hbtn:hover{background:rgba(255,255,255,.16)}
+.ma-oculto{display:none!important}
+body.ma-fuera>*:not(.ma-hdr):not(.ma-login):not(script):not(style):not(link){display:none!important}
+.ma-login{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,"Segoe UI",sans-serif;background:#f3f5f9}
+.ma-card{width:100%;max-width:420px;background:#fff;border:1px solid #dde3ec;border-radius:18px;box-shadow:0 18px 50px rgba(15,23,42,.12);overflow:hidden}
+.ma-top{padding:26px 28px 20px;color:#fff;text-align:center;background:radial-gradient(120% 160% at 12% 0%,#2b5a86 0%,#1b3a5c 40%,#0f2440 80%)}
+.ma-top img{height:62px;margin-bottom:10px}
+.ma-top .ma-ey{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#e3c27a;font-weight:700}
+.ma-top h2{margin:4px 0 0;font-size:19px;font-weight:800}
+.ma-body{padding:24px 28px 22px}
+.ma-body form{display:flex;flex-direction:column;gap:10px}
+.ma-inp{padding:10px 12px;border-radius:9px;border:1px solid #dde3ec;font:14px Inter,system-ui,sans-serif;color:#0f1c2e;background:#fff;outline:none}
+.ma-inp:focus{border-color:#1b3a5c}
+.ma-ok{padding:11px 22px;border-radius:9px;border:1px solid #e3c27a;background:#e3c27a;color:#0f2440;font:700 14px Inter,system-ui,sans-serif;cursor:pointer}
+.ma-ok:disabled{opacity:.6;cursor:default}
+.ma-err{color:#b03a32;min-height:16px;font-size:12.5px;text-align:center}
+.ma-nota{margin:14px 0 0;font-size:11.5px;color:#8792a4;text-align:center;line-height:1.5}
+.ma-nota a{color:#1b3a5c;font-weight:600}
+.ma-idle{position:fixed;right:22px;bottom:22px;z-index:9999;max-width:360px;background:#fff;border:1px solid #f0dcaa;border-left:5px solid #b98b2f;border-radius:12px;padding:14px 16px;box-shadow:0 18px 40px rgba(15,23,42,.22);font:13px Inter,system-ui,sans-serif;color:#0f1c2e}
+.ma-idle b{display:block;margin-bottom:4px;font-size:14px}
+.ma-idle button{margin-top:10px;padding:6px 12px;border-radius:8px;border:none;background:#1b3a5c;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+window.MA=(function(){
+  const URL_="https://oiongsqkcbovzsavjwql.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pb25nc3FrY2JvdnpzYXZqd3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3Njc5NTEsImV4cCI6MjEwNzM0Mzk1MX0.nV1qgE1gd3TybJKhF8q_JphvkqbJtCLldl63YBTaLqs", VERSION="v19-10-2026 17:07", LOGO="data:image/png;base64,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";
+  const MODULOS=[
+    {id:"martina",nombre:"Pantera Reportería — Martina",url:"pantera.html"},
+    {id:"contabilidad",nombre:"Dashboard Contabilidad",url:"contabilidad.html"},
+    {id:"agente_legal",nombre:"Agente Legal",url:"legal.html"},
+    {id:"legal",nombre:"Dashboard de Legal",url:"dashboard-legal.html"},
+    {id:"tareas",nombre:"Seguimiento de tareas",url:"tareas.html"},
+    {id:"bitacora",nombre:"Bitácora Ejecutiva",url:"bitacora.html"},
+    {id:"notas",nombre:"Tablero de Notas",url:"notas.html"},
+    {id:"ventas",nombre:"Pulso Comercial — Ventas",url:"ventas.html"}];
+  const ROL_TXT={admin:"Administradora",editor:"Editor",lector:"Lector"};
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  // La sesión vive solo en esta pestaña (se borra al cerrarla) y se cierra tras 10 minutos sin actividad o con "Salir".
+  const ss={getItem:k=>{try{return sessionStorage.getItem(k);}catch(e){return null;}},setItem:(k,v)=>{try{sessionStorage.setItem(k,v);}catch(e){}},removeItem:k=>{try{sessionStorage.removeItem(k);}catch(e){}}};
+  const ON=/^https?:\/\//.test(URL_)&&ANON.length>20&&!!window.supabase;
+  const sb=ON?window.supabase.createClient(URL_,ANON,{auth:{storage:ss,storageKey:"ma-sesion",persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
+  const IDLE=10*60*1000, AVISO=60*1000, KACT="ma-ult-act", KMSG="ma-msg";
+  let ctx=null, O={}, listo; const listoP=new Promise(r=>listo=r);
+  const $=id=>document.getElementById(id);
+
+  function cabecera(){
+    if(O.cabecera===false||$("maHdr")) return;
+    const h=document.createElement("div"); h.className="ma-hdr"; h.id="maHdr";
+    h.innerHTML=`<div class="ma-b"><img class="ma-logo" src="${LOGO}" alt="M&amp;A Capital Inc"><div class="ma-sep"></div><div>
+      <a class="ma-k" href="index.html" title="Volver al inicio">← M&amp;A Capital · Inicio</a><h1>${esc(O.titulo||"")}</h1><div class="ma-sub" id="maSub">Inicia sesión para entrar</div></div></div>
+      <div class="ma-der"><span id="maExtra"></span><span class="ma-chip ma-oculto" id="maChip"></span><button class="ma-hbtn ma-oculto" id="maSalir" title="Cerrar sesión">⎋ Salir</button></div>`;
+    document.body.prepend(h); $("maSalir").onclick=()=>salir();
+  }
+  function pantallaLogin(msg,sinPermiso){
+    document.body.classList.add("ma-fuera");
+    let l=$("maLogin"); if(l) l.remove();
+    l=document.createElement("div"); l.className="ma-login"; l.id="maLogin";
+    const titulo=O.soloAdmin?"Usuarios y permisos":(O.titulo||"Dashboard Interno Ultimate");
+    l.innerHTML=`<div class="ma-card"><div class="ma-top"><img src="${LOGO}" alt="M&amp;A Capital Inc"><div class="ma-ey">M&amp;A Capital · Uso interno</div><h2>${esc(titulo)}</h2></div>
+      <div class="ma-body">${sinPermiso?`<div class="ma-err" style="margin-bottom:14px">${esc(msg)}</div>
+        <button class="ma-ok" id="maOtro" style="width:100%">Entrar con otro usuario</button>`:`<form id="maForm">
+        <input class="ma-inp" type="email" id="maEmail" placeholder="correo@empresa.com" autocomplete="username" required>
+        <input class="ma-inp" type="password" id="maPass" placeholder="Contraseña" autocomplete="current-password" required>
+        <button class="ma-ok" type="submit" id="maEntrar">Entrar</button>
+        <div class="ma-err" id="maErr">${esc(msg||"")}</div></form>`}
+        <p class="ma-nota">La sesión se cierra al pulsar “Salir”, al cerrar la pestaña o tras 10 minutos sin actividad.<br><a href="index.html">← Volver al inicio</a></p></div></div>`;
+    const hdr=$("maHdr"); if(hdr) hdr.after(l); else document.body.prepend(l);
+    if(sinPermiso){ $("maOtro").onclick=async()=>{ try{ await sb.auth.signOut(); }catch(e){} pantallaLogin(""); }; return; }
+    $("maForm").onsubmit=async e=>{
+      e.preventDefault(); $("maErr").textContent=""; $("maEntrar").disabled=true;
+      const {error}=await sb.auth.signInWithPassword({email:$("maEmail").value.trim(),password:$("maPass").value});
+      $("maEntrar").disabled=false; $("maPass").value="";
+      if(error){ $("maErr").textContent=/invalid/i.test(error.message)?"Correo o contraseña incorrectos.":error.message; return; }
+      ss.setItem(KACT,String(Date.now())); await validar();
+    };
+    setTimeout(()=>{ try{ $("maEmail").focus(); }catch(e){} },50);
+  }
+  // ¿quién es y qué puede ver? (ma_usuarios: rol, módulos, activo)
+  async function leerUsuario(){
+    if(!sb) return null;
+    const {data:{session}}=await sb.auth.getSession(); if(!session) return null;
+    const ult=+ss.getItem(KACT)||0;
+    if(ult&&Date.now()-ult>IDLE){ try{ await sb.auth.signOut(); }catch(e){} ss.setItem(KMSG,"La sesión se cerró por 10 minutos sin actividad."); return null; }
+    const email=session.user.email.toLowerCase();
+    const {data:yo,error}=await sb.from("ma_usuarios").select("rol,modulos,activo").eq("email",email).maybeSingle();
+    if(error) return {error:"No se pudo validar tu acceso: "+error.message};
+    if(!yo||!yo.activo){ try{ await sb.auth.signOut(); }catch(e){} return {error:"Tu usuario no tiene acceso al dashboard o está desactivado. Pídele acceso a la administradora."}; }
+    return {sb,email,rol:yo.rol,modulos:yo.modulos||[],token:session.access_token,user:session.user,url:URL_,anon:ANON};
+  }
+  const puede=(c,id)=>c&&(c.rol==="admin"||(c.modulos||[]).includes(id));
+  function avisarPagina(){ if(!ctx) return; try{ window.postMessage({type:"MA_SESSION",url:URL_,anon:ANON,token:ctx.token,email:ctx.email,rol:ctx.rol,modulos:ctx.modulos},"*"); }catch(e){} }
+  async function validar(){
+    const c=await leerUsuario();
+    if(!c){ const m=ss.getItem(KMSG)||""; ss.removeItem(KMSG); pantallaLogin(m); return; }
+    if(c.error){ pantallaLogin(c.error); return; }
+    if(O.soloAdmin? c.rol!=="admin" : (O.modulo&&!puede(c,O.modulo))){
+      pantallaLogin(O.soloAdmin?"Solo la administradora puede manejar usuarios.":"Tu usuario ("+c.email+") no tiene acceso a "+(O.titulo||"este módulo")+". Pídele acceso a la administradora.",true); return; }
+    ctx=c; const l=$("maLogin"); if(l) l.remove(); document.body.classList.remove("ma-fuera");
+    if($("maSub")) $("maSub").textContent=c.email;
+    if($("maChip")){ $("maChip").textContent=ROL_TXT[c.rol]||c.rol; $("maChip").classList.remove("ma-oculto"); }
+    if($("maSalir")) $("maSalir").classList.remove("ma-oculto");
+    actividad(); avisarPagina(); listo(c);
+    try{ window.dispatchEvent(new CustomEvent("ma:sesion",{detail:c})); }catch(e){}
+  }
+  // ---- inactividad (cuenta en todas las páginas de la pestaña) ----
+  let ultEsc=0;
+  function actividad(){ const n=Date.now(); if(n-ultEsc>1000){ ultEsc=n; ss.setItem(KACT,String(n)); } const b=$("maIdle"); if(b) b.remove(); }
+  ["mousemove","mousedown","keydown","wheel","touchstart","scroll"].forEach(ev=>addEventListener(ev,()=>{ if(ctx) actividad(); },{passive:true,capture:true}));
+  setInterval(()=>{
+    if(!ctx) return;
+    const resta=IDLE-(Date.now()-(+ss.getItem(KACT)||Date.now()));
+    if(resta<=0){ salir("La sesión se cerró por 10 minutos sin actividad."); return; }
+    if(resta<=AVISO){ let b=$("maIdle");
+      if(!b){ b=document.createElement("div"); b.id="maIdle"; b.className="ma-idle"; b.innerHTML=`<b>¿Sigues ahí?</b>La sesión se cerrará en <span id="maSeg"></span> s por inactividad.<br><button type="button">Seguir conectado</button>`; document.body.appendChild(b); b.querySelector("button").onclick=()=>{ ultEsc=0; actividad(); }; }
+      $("maSeg").textContent=Math.ceil(resta/1000); }
+  },1000);
+  async function salir(msg){
+    ctx=null; try{ await sb.auth.signOut(); }catch(e){}
+    ss.removeItem(KACT); if(msg) ss.setItem(KMSG,msg); else ss.setItem(KMSG,"Sesión cerrada.");
+    location.reload();   // la página vuelve a empezar limpia, sin datos en pantalla
+  }
+  if(sb) sb.auth.onAuthStateChange((ev,session)=>{
+    if(ev==="TOKEN_REFRESHED"&&ctx&&session){ ctx.token=session.access_token; avisarPagina(); }
+    if(ev==="SIGNED_OUT"&&ctx) salir("La sesión expiró. Vuelve a entrar.");
+  });
+  addEventListener("load",()=>{ if(ctx) avisarPagina(); });
+
+  return {
+    MODULOS, ROL_TXT, VERSION, sb, puede, esc, actividad:()=>{ if(ctx) actividad(); },
+    listo:listoP, ctx:()=>ctx, salir,
+    // Página que exige usuario: {modulo, titulo, soloAdmin, cabecera}
+    iniciar(o){ O=o||{}; document.body.classList.add("ma-fuera"); cabecera();
+      if(!ON){ pantallaLogin("Falta configurar Supabase en el dashboard."); return listoP; }
+      validar(); return listoP; },
+    // Inicio: no exige usuario; si ya entró en esta pestaña, devuelve quién es
+    async opcional(){ if(!ON) return null; const c=await leerUsuario(); if(!c||c.error) return null; ctx=c; actividad(); return c; }
+  };
+})();
+</script>
+<script>
+/* ===== Fuentes automáticas de carpetas (sin que Chrome pregunte) =====
+   1) ACCESO DIRECTO: la página se abre desde la carpeta de OneDrive de la PC con el acceso directo
+      "Dashboard M&A" (Chrome con --allow-file-access-from-files en un perfil aparte). Lee la carpeta
+      que está al lado de la página (o la propia carpeta de la página). Solo lectura.
+   2) MICROSOFT 365: lee la carpeta de OneDrive en la nube con la cuenta Microsoft de la persona
+      (Microsoft Graph). Necesita una app registrada por el administrador de Microsoft 365 de M&A
+      (clientId) y el enlace de la carpeta. Lee y guarda.
+   Si ninguna está disponible, cada módulo usa lo de siempre (elegir carpeta en Chrome). */
+(function(){
+  const MS={clientId:"",tenant:""||"organizations",
+    carpetas:{PruebaDashboard:"",Contabilidad:"",Legal:""}};
+  const msOn=()=>/^[0-9a-f-]{36}$/i.test(MS.clientId);
+
+  /* ---------- 1) acceso directo (file://) ---------- */
+  const xhr=(url,tipo)=>new Promise((ok,no)=>{ const x=new XMLHttpRequest(); x.open("GET",url); if(tipo) x.responseType=tipo;
+    x.onload=()=>(x.status===0||x.status===200)?ok(x.response):no(new Error("HTTP "+x.status)); x.onerror=()=>no(new Error("sin acceso")); x.send(); });
+  async function listarLocal(url){
+    const t=await xhr(url); const out=[]; const re=/addRow\((.*?)\);<\/script>/g; let m;
+    if(!/addRow\(/.test(t)) throw new Error("no es una carpeta");
+    while((m=re.exec(t))){ try{ const a=JSON.parse("["+m[1]+"]"); if(a[0]==="."||a[0]==="..") continue;
+      let n=a[0]; try{ n=decodeURIComponent(String(a[1]).replace(/\/$/,""))||a[0]; }catch(e){}
+      out.push({name:n,url:a[1],dir:!!a[2],size:a[3],mod:(a[5]||0)*1000}); }catch(e){} }
+    return out;
+  }
+  function rutaLegible(url){   // file:///C:/Users/x/OneDrive%20-%20MA/Legal/ → C:\Users\x\OneDrive - MA\Legal
+    try{ const p=decodeURIComponent(String(url).replace(/^file:\/\/\/?/,"")).replace(/\/+$/,""); return /^[a-z]:/i.test(p)?p.replace(/\//g,"\\"):"/"+p; }catch(e){ return url; } }
+  function dirLocal(url,name){
+    return {kind:"directory",name,auto:"local",ruta:rutaLegible(url),
+      async *entries(){ for(const e of await listarLocal(url)){
+        if(e.dir){ let u=url+e.url; if(!u.endsWith("/")) u+="/"; yield [e.name,dirLocal(u,e.name)]; } else yield [e.name,fileLocal(url+e.url,e)]; } },
+      async getDirectoryHandle(n){ const e=(await listarLocal(url)).find(x=>x.dir&&x.name===n); if(!e){ const er=new Error("no existe"); er.name="NotFoundError"; throw er; } let u=url+e.url; if(!u.endsWith("/")) u+="/"; return dirLocal(u,n); },
+      async getFileHandle(n,o){ const e=(await listarLocal(url)).find(x=>!x.dir&&x.name===n); if(!e||(o&&o.create&&!e)){ const er=new Error(o&&o.create?"Con el acceso directo la carpeta es solo de lectura. Para guardar, abre el dashboard en línea.":"no existe"); er.name=o&&o.create?"NotAllowedError":"NotFoundError"; throw er; } const f=fileLocal(url+e.url,e); f.createWritable=async()=>{ throw new Error("Con el acceso directo la carpeta es solo de lectura. Para guardar, abre el dashboard en línea."); }; return f; },
+      async queryPermission(o){ return o&&o.mode==="readwrite"?"denied":"granted"; }, async requestPermission(o){ return o&&o.mode==="readwrite"?"denied":"granted"; }};
+  }
+  const fileLocal=(u,e)=>({kind:"file",name:e.name,meta:{mod:e.mod,size:e.size},async getFile(){ return new File([await xhr(u,"arraybuffer")],e.name,{lastModified:e.mod}); }});
+  async function fuenteLocal(nombre,o){
+    if(location.protocol!=="file:") return null;
+    const base=location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"");
+    const actual=decodeURIComponent(base.split("/").filter(Boolean).pop()||"");
+    try{
+      if(nombresDe(nombre).includes(norm(actual))){ await listarLocal(base); return dirLocal(base,actual); }     // la página está dentro de la carpeta del módulo
+      const hijos=await listarLocal(base); const h=hijos.find(e=>e.dir&&nombresDe(nombre).includes(norm(e.name)));     // la carpeta está al lado de la página
+      if(h){ let u=base+h.url; if(!u.endsWith("/")) u+="/"; return dirLocal(u,h.name); }
+    }catch(e){ return null; }   // sin el permiso del acceso directo no se puede buscar nada
+    // no está al lado: ¿está junto a la carpeta de otro módulo ya encontrada?
+    const todas=cacheRutas();
+    for(const k of Object.keys(todas)){ if(k===nombre||!todas[k].url) continue; try{ const pd=padreDe(todas[k].url);
+      const e=(await listarLocal(pd)).find(x=>x.dir&&nombresDe(nombre).includes(norm(x.name))); if(!e) continue; const u=hijo(pd,e);
+      if(!(await listarLocal(u)).some(x=>x.dir&&esAnioN(x.name))) continue;
+      if(!todas[nombre]||todas[nombre].url!==u){ todas[nombre]={url:u,name:e.name,ruta:rutaLegible(u),t:Date.now()}; guardarRutas(todas); }
+      return dirLocal(u,e.name); }catch(_){} }
+    // si no, la ruta recordada o se busca sola en OneDrive (ver detector abajo)
+    const c=todas[nombre];
+    if(c&&c.url){ try{ await listarLocal(c.url); return dirLocal(c.url,c.name); }catch(e){}   // ruta recordada, sigue en su sitio
+      const x=cacheRutas(); delete x[nombre]; guardarRutas(x); }                                          // se movió: se olvida y se busca otra vez
+    const r=await detectarRutas(o&&o.gesto); const f=r[nombre];
+    return f?dirLocal(f.url,f.name):null;
+  }
+
+  /* ---------- 1b) detector automático de rutas (solo con el acceso directo) ----------
+     Si la carpeta del módulo no está al lado de la página, la busca sola dentro de las carpetas de OneDrive
+     de la PC: "OneDrive", "OneDrive - <empresa>" y las bibliotecas de SharePoint sincronizadas en la carpeta
+     del usuario de Windows. No inicia sesión ni pide elegir carpeta. Recuerda la ruta encontrada y, si la
+     carpeta se mueve dentro de OneDrive, la vuelve a encontrar sola en la siguiente apertura.
+     Solo cuenta una carpeta con el nombre del módulo que tenga adentro carpetas de año (2026…); si hay varias,
+     prefiere la que está junto a las otras carpetas del dashboard. */
+  const MODULOS={PruebaDashboard:["PruebaDashboard","Pantera"],Contabilidad:["Contabilidad"],Legal:["Legal"]};
+  const norm=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase();
+  const nombresDe=n=>(MODULOS[n]||[n]).map(norm);
+  const RKEY="ma_rutas_detectadas_v1", NOHAY_MS=3*60*1000, MAX_LISTAS=2000, MAX_MS=10000;
+  const NO_ENTRAR=new Set(["appdata","application data","local settings","cookies","nethood","printhood","recent","sendto","start menu",
+    "templates","menu inicio","plantillas","entorno de red","impresoras","reciente","saved games","searches","contacts","links","favorites",
+    "3d objects","music","videos","pictures","musica","imagenes","juegos guardados","busquedas","contactos","vinculos","favoritos",
+    "objetos 3d","node_modules","windows","program files","program files (x86)","programdata","system volume information","snap"]);
+  const noEntrar=n=>{ const k=norm(n); return !k||/^[.$~]/.test(k)||NO_ENTRAR.has(k); };
+  const esAnioN=n=>/^(19|20)\d\d$/.test(String(n).trim());
+  const cacheRutas=()=>{ try{ return JSON.parse(localStorage.getItem(RKEY)||"{}")||{}; }catch(e){ return {}; } };
+  const guardarRutas=x=>{ try{ localStorage.setItem(RKEY,JSON.stringify(x)); }catch(e){} };
+  const hijo=(u,e)=>{ let s=u+e.url; if(!s.endsWith("/")) s+="/"; return s; };
+  const padreDe=u=>u.replace(/[^/]+\/$/,"");
+  let DETECCION=null;
+  function detectarRutas(gesto){
+    const c=cacheRutas();
+    const faltan=Object.keys(MODULOS).filter(n=>!(c[n]&&c[n].url));
+    if(!gesto&&faltan.length&&faltan.every(n=>c[n]&&c[n].nohay&&Date.now()-c[n].nohay<NOHAY_MS)) return Promise.resolve({});   // se buscó hace poco y no existe
+    return DETECCION||(DETECCION=buscarRutas().finally(()=>{ setTimeout(()=>{ DETECCION=null; },2000); }));
+  }
+  async function buscarRutas(){
+    const t0=Date.now(); let listas=0; const memo=new Map(), prof=new Map(), cand=[];
+    const listar=u=>{ if(memo.has(u)) return memo.get(u); if(listas>=MAX_LISTAS||Date.now()-t0>MAX_MS) return Promise.resolve(null);
+      listas++; const r=listarLocal(u).catch(()=>null); memo.set(u,r); return r; };
+    // dónde buscar: la carpeta del usuario de Windows (C:\Users\<usuario>) a partir de la ruta del acceso directo
+    const base=location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"");
+    const m=base.match(/^(file:\/\/\/(?:[A-Za-z]:\/)?)(.*)$/)||["","file:///",""]; const pre=m[1], segs=m[2].split("/").filter(Boolean);
+    const iu=segs.findIndex(s=>/^(users|home|usuarios)$/i.test(decodeURIComponent(s)));
+    let casas=[];
+    if(iu>=0&&segs.length>iu+1) casas=[pre+segs.slice(0,iu+2).join("/")+"/"];
+    else for(const d of ["Users/","home/"]){ const l=await listar(pre+d); if(l) for(const e of l) if(e.dir&&!/^(public|default|default user|all users|defaultapppool)$/i.test(e.name)) casas.push(hijo(pre+d,e)); }
+    // 1) alrededor del acceso directo  2) carpetas OneDrive  3) el resto de la carpeta del usuario (SharePoint sincronizado, Escritorio, Documentos)
+    const fases=[[],[],[]];
+    const dentroDeCasa=u=>casas.some(h=>u.startsWith(h)&&u!==h);
+    let a=padreDe(base);
+    if(casas.some(h=>base.startsWith(h))) for(let i=0;i<3&&dentroDeCasa(a);i++){ fases[0].push({u:a,p:2}); a=padreDe(a); }
+    else { fases[0].push({u:base,p:4}); for(let i=0;i<3&&a.length>pre.length;i++){ fases[0].push({u:a,p:4}); a=padreDe(a); } }   // OneDrive en otro disco (D:\OneDrive…)
+    for(const h of casas){ const l=await listar(h); if(!l) continue;
+      for(const e of l) if(e.dir&&!noEntrar(e.name)) fases[/^onedrive/i.test(e.name)?1:2].push({u:hijo(h,e),p:/^onedrive/i.test(e.name)?6:4,n:e.name}); }
+    // se deja de buscar cuando aparecen las tres carpetas juntas (en la misma carpeta)
+    const listo=()=>cand.some(x=>Object.keys(MODULOS).every(n=>cand.some(y=>y.mod===n&&y.padre===x.padre)));
+    for(const fase of fases){
+      let nivel=fase.slice();
+      while(nivel.length){ const sig=[];
+        for(let i=0;i<nivel.length;i+=8){
+          await Promise.all(nivel.slice(i,i+8).map(async q=>{ if((prof.has(q.u)?prof.get(q.u):-1)>=q.p) return; prof.set(q.u,q.p);
+            const l=await listar(q.u); if(!l) return;
+            for(const e of l){ if(!e.dir||noEntrar(e.name)) continue; const u=hijo(q.u,e);
+              const mod=Object.keys(MODULOS).find(n=>nombresDe(n).includes(norm(e.name)));
+              if(mod){ if(!cand.some(x=>x.url===u)){ const dentro=await listar(u); if(dentro&&dentro.some(x=>x.dir&&esAnioN(x.name))&&!cand.some(x=>x.url===u)) cand.push({mod,url:u,name:e.name,padre:q.u,anios:dentro.some(x=>x.dir&&esAnioN(x.name)),orden:cand.length}); } continue; }
+              if(q.p>1&&!esAnioN(e.name)) sig.push({u,p:q.p-1}); } })); }
+        nivel=sig; if(listo()) break; }
+      if(listo()) break;
+    }
+    // elegir: con carpetas de año > junto a otras carpetas del dashboard > la que se encontró primero
+    const res={}, c=cacheRutas();
+    for(const n of Object.keys(MODULOS)){
+      const lista=cand.filter(x=>x.mod===n).map(x=>({...x,junto:new Set(cand.filter(y=>y.padre===x.padre&&y.mod!==n&&y.anios).map(y=>y.mod)).size}));
+      lista.sort((p,q)=>(q.anios-p.anios)||(q.junto-p.junto)||(p.orden-q.orden));
+      if(lista[0]){ res[n]={url:lista[0].url,name:lista[0].name}; c[n]={url:lista[0].url,name:lista[0].name,ruta:rutaLegible(lista[0].url),t:Date.now()}; }
+      else if(!(c[n]&&c[n].url)) c[n]={nohay:Date.now()};
+    }
+    guardarRutas(c);
+    try{ console.info("[Dashboard M&A] rutas detectadas en "+(Date.now()-t0)+" ms ("+listas+" carpetas revisadas):",Object.fromEntries(Object.entries(res).map(([k,v])=>[k,rutaLegible(v.url)]))); }catch(e){}
+    return res;
+  }
+
+  /* ---------- 2) Microsoft 365 (OneDrive en la nube) ---------- */
+  const GRAPH="https://graph.microsoft.com/v1.0", ALCANCE=["Files.ReadWrite.All"];
+  let msal=null, msalP=null;
+  function cargarMsal(){ if(window.msal) return Promise.resolve(window.msal); if(msalP) return msalP;
+    msalP=new Promise((ok,no)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js"; s.onload=()=>ok(window.msal); s.onerror=()=>no(new Error("No se pudo cargar el inicio de sesión de Microsoft.")); document.head.appendChild(s); });
+    return msalP; }
+  async function token(gesto){
+    const lib=await cargarMsal();
+    if(!msal){ msal=new lib.PublicClientApplication({auth:{clientId:MS.clientId,authority:"https://login.microsoftonline.com/"+MS.tenant,redirectUri:location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"")},cache:{cacheLocation:"localStorage"}}); if(msal.initialize) await msal.initialize(); }
+    const cuenta=msal.getAllAccounts()[0];
+    const pista=(window.MA&&MA.ctx()&&MA.ctx().email)||undefined;
+    if(cuenta){ try{ return (await msal.acquireTokenSilent({scopes:ALCANCE,account:cuenta})).accessToken; }catch(e){} }
+    else if(pista){ try{ return (await msal.ssoSilent({scopes:ALCANCE,loginHint:pista})).accessToken; }catch(e){} }
+    if(!gesto) return null;
+    return (await msal.acquireTokenPopup({scopes:ALCANCE,loginHint:pista})).accessToken;
+  }
+  async function g(tok,ruta,op){ op=op||{}; const r=await fetch(ruta.startsWith("http")?ruta:GRAPH+ruta,{method:op.method||"GET",headers:{Authorization:"Bearer "+tok,...(op.tipo?{"Content-Type":op.tipo}:{})},body:op.body});
+    if(r.status===404){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; }
+    if(!r.ok){ let m=r.statusText; try{ m=(await r.json()).error.message; }catch(e){} throw new Error("Microsoft 365: "+m); }
+    return op.crudo?r:(r.status===204?null:r.json()); }
+  const b64u=s=>"u!"+btoa(unescape(encodeURIComponent(s))).replace(/=+$/,"").replace(/\//g,"_").replace(/\+/g,"-");
+  function dirMS(tok,drive,item){
+    const hijos=async()=>{ let url=`/drives/${drive}/items/${item.id}/children?$top=999`, out=[]; while(url){ const j=await g(tok,url); out.push(...(j.value||[])); url=j["@odata.nextLink"]||null; } return out; };
+    return {kind:"directory",name:item.name,auto:"ms365",
+      async *entries(){ for(const c of await hijos()) yield [c.name,c.folder?dirMS(tok,drive,c):fileMS(tok,drive,c,item.id)]; },
+      async getDirectoryHandle(n,o){ const c=(await hijos()).find(x=>x.folder&&x.name===n); if(c) return dirMS(tok,drive,c);
+        if(!(o&&o.create)){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; }
+        return dirMS(tok,drive,await g(tok,`/drives/${drive}/items/${item.id}/children`,{method:"POST",tipo:"application/json",body:JSON.stringify({name:n,folder:{},"@microsoft.graph.conflictBehavior":"fail"})})); },
+      async getFileHandle(n,o){ const c=(await hijos()).find(x=>x.file&&x.name===n); if(c) return fileMS(tok,drive,c,item.id);
+        if(!(o&&o.create)){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; }
+        return fileMS(tok,drive,{name:n,size:0,lastModifiedDateTime:new Date().toISOString()},item.id); },
+      async removeEntry(n){ const c=(await hijos()).find(x=>x.name===n); if(!c){ const e=new Error("no existe"); e.name="NotFoundError"; throw e; } await g(tok,`/drives/${drive}/items/${c.id}`,{method:"DELETE"}); },
+      async queryPermission(){ return "granted"; }, async requestPermission(){ return "granted"; }};
+  }
+  function fileMS(tok,drive,c,padre){
+    const mod=Date.parse(c.lastModifiedDateTime)||0;
+    return {kind:"file",name:c.name,meta:{mod,size:c.size},
+      async getFile(){ const u=c["@microsoft.graph.downloadUrl"]; const r=u?await fetch(u):await g(tok,`/drives/${drive}/items/${c.id}/content`,{crudo:true}); return new File([await r.arrayBuffer()],c.name,{lastModified:mod}); },
+      async createWritable(){ const partes=[]; return {async write(d){ partes.push(d); }, async close(){ const blob=new Blob(partes);
+        await g(tok,`/drives/${drive}/items/${padre}:/${encodeURIComponent(c.name)}:/content`,{method:"PUT",tipo:"application/octet-stream",body:blob}); }}; }};
+  }
+  async function fuenteMS(nombre,gesto){
+    if(!msOn()) return null; const link=MS.carpetas[nombre]; if(!/^https?:\/\//.test(link||"")) return null;
+    const tok=await token(gesto); if(!tok) return null;
+    const it=await g(tok,`/shares/${b64u(link)}/driveItem`);
+    return dirMS(tok,it.parentReference.driveId,it);
+  }
+
+  // abierto desde la PC pero sin el permiso del acceso directo (el navegador ya estaba abierto): avisarlo claro
+  async function avisoLocal(){
+    if(location.protocol!=="file:"||document.getElementById("maAvisoLocal")) return;
+    try{ await listarLocal(location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"")); return; }catch(e){}
+    const d=document.createElement("div"); d.id="maAvisoLocal";
+    d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:9998;max-width:760px;width:calc(100% - 32px);background:#fdf6e6;border:1px solid #f0dcaa;border-left:5px solid #b98b2f;border-radius:12px;padding:14px 18px;box-shadow:0 18px 40px rgba(15,23,42,.22);font:13.5px Inter,system-ui,sans-serif;color:#6b4d12;line-height:1.5";
+    d.innerHTML='<b style="display:block;font-size:15px;color:#0f1c2e;margin-bottom:4px">El navegador ya estaba abierto y no tomó el permiso del acceso directo</b>Cierra <b>todas</b> las ventanas de Chrome (y en la bandeja junto al reloj, clic derecho en Chrome → Salir) y vuelve a abrir el acceso directo. Así lee la carpeta solo, sin pedirla.<br><button type="button" style="margin-top:8px;padding:6px 12px;border-radius:8px;border:none;background:#1b3a5c;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer">Entendido</button>';
+    d.querySelector("button").onclick=()=>d.remove(); document.body.appendChild(d);
+  }
+  window.MA.fuente=async(nombre,o)=>{ o=o||{};
+    const l=await fuenteLocal(nombre,o); if(l) return l;
+    avisoLocal();
+    try{ return await fuenteMS(nombre,!!o.gesto); }catch(e){ if(o.gesto) throw e; return null; } };
+  window.MA.rutasDetectadas=()=>{ const c=cacheRutas(), r={}; for(const k in c) if(c[k].ruta) r[k]=c[k].ruta; return r; };
+  window.MA.ms365=()=>msOn()&&Object.values(MS.carpetas).some(x=>/^https?:\/\//.test(x||""));
+})();
+</script>
+<script>
+/* ===== Consolidado de Excel conservando el formato =====
+   Copia cada hoja tal como está en el Excel original: anchos de columna, alto de filas, fuentes,
+   colores, bordes, formato de números, celdas combinadas y paneles fijos. Las fórmulas se pasan
+   con su valor (para que no queden apuntando a otros libros). Agrega una hoja "Índice" con enlaces.
+   lista: [{nombre, carpeta, getFile:async()=>File}] */
+(function(){
+  let P=null;
+  const cargar=()=>window.ExcelJS?Promise.resolve(window.ExcelJS):(P=P||new Promise((ok,no)=>{ const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"; s.onload=()=>ok(window.ExcelJS); s.onerror=()=>no(new Error("No se pudo cargar el armador de Excel (revisa internet).")); document.head.appendChild(s); }));
+  const limpio=s=>String(s).replace(/[\\/?*[\]:]/g," ").replace(/\s+/g," ").trim();
+  const valor=v=>{ if(v&&typeof v==="object"&&!(v instanceof Date)){ if("formula" in v||"sharedFormula" in v) return v.result===undefined?null:(v.result&&typeof v.result==="object"&&v.result.error?null:v.result); } return v; };
+  const copia=o=>o?JSON.parse(JSON.stringify(o)):o;
+  window.MA.consolidarExcel=async(lista,nombreSalida,titulo,progreso)=>{
+    const ExcelJS=await cargar(); const out=new ExcelJS.Workbook(); out.creator="M&A Capital · Dashboard";
+    const ind=out.addWorksheet("Índice",{views:[{showGridLines:false}]});
+    const usados=new Set(["índice"]), filas=[], fallos=[]; let n=0;
+    for(let k=0;k<lista.length;k++){ const it=lista[k]; progreso&&progreso(`Armando ${k+1} de ${lista.length}: ${it.nombre}`);
+      try{
+        let buf=await (await it.getFile()).arrayBuffer();
+        const wbx=XLSX.read(buf,{type:"array"});   // valores guardados en el archivo (sirve para fórmulas cuyo resultado es 0)
+        if(!/\.(xlsx|xlsm)$/i.test(it.nombre)) buf=XLSX.write(wbx,{bookType:"xlsx",type:"array"});   // .xls/.csv
+        const src=new ExcelJS.Workbook(); await src.xlsx.load(buf);
+        const hojas=src.worksheets.filter(w=>w.state!=="hidden"&&w.state!=="veryHidden"&&w.actualRowCount>0);
+        const base=limpio(it.nombre.replace(/\.[^.]+$/,""));
+        for(const ws of hojas){ n++;
+          let nom=(String(n).padStart(2,"0")+" "+(hojas.length>1?base.slice(0,14).trim()+" · "+limpio(ws.name):base)).slice(0,31).trim(), i=2;
+          while(usados.has(nom.toLowerCase())){ nom=nom.slice(0,28)+" "+(i++); } usados.add(nom.toLowerCase());
+          const dst=out.addWorksheet(nom,{properties:copia(ws.properties),pageSetup:copia(ws.pageSetup),views:copia(ws.views)});
+          if(ws.properties&&ws.properties.tabColor) dst.properties.tabColor=copia(ws.properties.tabColor);
+          (ws.columns||[]).forEach((c,ci)=>{ const d=dst.getColumn(ci+1); if(c.width) d.width=c.width; if(c.hidden) d.hidden=true; if(c.style&&Object.keys(c.style).length) d.style=copia(c.style); });
+          ws.eachRow({includeEmpty:true},(row,ri)=>{ const r=dst.getRow(ri); if(row.height) r.height=row.height; if(row.hidden) r.hidden=true;
+            row.eachCell({includeEmpty:true},(cell,ci)=>{ const c=r.getCell(ci); let v=valor(cell.value);
+              if((v===null||v===undefined)&&cell.value&&typeof cell.value==="object"&&("formula" in cell.value||"sharedFormula" in cell.value)){ const sx=wbx.Sheets[ws.name]&&wbx.Sheets[ws.name][cell.address]; if(sx&&sx.v!==undefined&&sx.t!=="e") v=sx.v; } if(v!==null&&v!==undefined) c.value=(v instanceof Date||typeof v!=="object")?v:copia(v); c.style=copia(cell.style)||{}; }); });
+          ((ws.model&&ws.model.merges)||[]).forEach(m=>{ try{ dst.mergeCells(m); }catch(e){} });
+          filas.push([it.carpeta||"",it.nombre,ws.name,nom]);
+        }
+      }catch(e){ fallos.push(it.nombre); }
+    }
+    // Índice
+    ind.columns=[{width:6},{width:16},{width:58},{width:30},{width:34}];
+    ind.mergeCells("A1:E1"); const t=ind.getCell("A1"); t.value=titulo||"Consolidado"; t.font={bold:true,size:16,color:{argb:"FF0F2440"}};
+    ind.mergeCells("A2:E2"); ind.getCell("A2").value=`${filas.length} hoja(s) de ${lista.length-fallos.length} archivo(s) · generado ${new Date().toLocaleString("es-PA")}`; ind.getCell("A2").font={color:{argb:"FF8792A4"},size:10};
+    const h=ind.getRow(4); ["#","Carpeta","Archivo original","Hoja original","Hoja en este libro"].forEach((x,i)=>{ const c=h.getCell(i+1); c.value=x; c.font={bold:true,color:{argb:"FFFFFFFF"}}; c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF1B3A5C"}}; c.alignment={vertical:"middle"}; }); h.height=20;
+    filas.forEach((f,i)=>{ const r=ind.getRow(5+i); r.getCell(1).value=i+1; r.getCell(2).value=f[0]; r.getCell(3).value=f[1]; r.getCell(4).value=f[2];
+      r.getCell(5).value={text:f[3],hyperlink:"#'"+f[3].replace(/'/g,"''")+"'!A1"}; r.getCell(5).font={color:{argb:"FF1A3FBF"},underline:true};
+      if(i%2) for(let c=1;c<=5;c++) r.getCell(c).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF3F5F9"}}; });
+    if(fallos.length){ const r=ind.getRow(6+filas.length); r.getCell(3).value="No se pudieron leer: "+fallos.join(", "); r.getCell(3).font={color:{argb:"FFB03A32"}}; }
+    ind.views=[{state:"frozen",ySplit:4,showGridLines:false}];
+    const blob=new Blob([await out.xlsx.writeBuffer()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=nombreSalida; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+    return {hojas:filas.length,fallos};
+  };
+})();
+</script>
+<script>
+/* ===== Instalar el dashboard como app (solo en línea, desde GitHub) =====
+   Una app instalada guarda el permiso de las carpetas: después de darlo una vez, ya no vuelve a pedir "Abrir carpeta". */
+(function(){
+  if(!/^https:/.test(location.protocol)&&location.hostname!=="localhost") { window.MA.instalable=()=>false; window.MA.instalar=async()=>false; window.MA.esApp=()=>false; return; }
+  const l=document.createElement("link"); l.rel="manifest"; l.href="manifest.webmanifest"; document.head.appendChild(l);
+  try{ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
+  let ev=null; const avisar=()=>document.dispatchEvent(new CustomEvent("ma-instalable"));
+  window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); ev=e; avisar(); });
+  window.addEventListener("appinstalled",()=>{ ev=null; avisar(); });
+  window.MA.esApp=()=>{ try{ return matchMedia("(display-mode: standalone)").matches||matchMedia("(display-mode: window-controls-overlay)").matches; }catch(e){ return false; } };
+  window.MA.instalable=()=>!!ev;
+  window.MA.instalar=async()=>{ if(!ev) return false; ev.prompt(); const r=await ev.userChoice.catch(()=>({})); ev=null; avisar(); return r&&r.outcome==="accepted"; };
+  // Botón en la cabecera común
+  function boton(){ const der=document.getElementById("maExtra"); if(!der) return;
+    let b=document.getElementById("maInstalar");
+    if(!window.MA.instalable()){ if(b) b.remove(); return; }
+    if(!b){ b=document.createElement("button"); b.id="maInstalar"; b.className="ma-hbtn"; b.title="Instalar el dashboard como app: así no vuelve a pedir la carpeta"; b.textContent="⬇ Instalar app"; b.onclick=()=>window.MA.instalar(); der.appendChild(b); } }
+  document.addEventListener("ma-instalable",boton); setTimeout(boton,1500);
+})();
+</script>
+
+<script>MA.iniciar({modulo:"tareas",titulo:"Seguimiento de tareas"});</script>
+<div id="sinSesion" class="cargando">Conectando con el dashboard…</div>
+
+<div class="app hidden" id="app">
+  <aside class="side">
+    <div class="sec">Mis tareas</div>
+    <button class="nav" data-v="plan">🗓 Plan de trabajo <span class="n" id="nPlan"></span></button>
+    <button class="nav" data-v="todas">📋 Todas por proyecto</button>
+    <div class="sec">Mis carpetas</div>
+    <div id="arbol"></div>
+    <button class="linkbtn" id="btnNuevaCarpeta">＋ Nueva carpeta</button>
+    <button class="linkbtn" id="btnImportar">⇪ Importar desde Excel</button>
+    <div id="secAdmin" class="hidden">
+      <div class="sec">Administración</div>
+      <button class="nav" data-v="usuarios">👥 Usuarios y jerarquía</button>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+/* ============================ sesión que pasa el inicio ============================ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let SB=null, YO=null, ROL=null, LISTO=false;
+window.addEventListener("message",ev=>{
+  if(ev.source!==window.parent) return;
+  const d=ev.data||{};
+  if(d.type!=="MA_SESSION") return;
+  SB=window.supabase.createClient(d.url,d.anon,{global:{headers:{Authorization:"Bearer "+d.token}},auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  YO=d.email; ROL=d.rol;
+  if(!LISTO){ LISTO=true; iniciar(); }
+});
+if(window.parent!==window) window.parent.postMessage({type:"MA_APP_READY"},"*");
+let ultAct=0;
+["mousemove","mousedown","keydown","wheel","touchstart"].forEach(e=>addEventListener(e,()=>{
+  if(Date.now()-ultAct>10000){ ultAct=Date.now(); try{ window.parent.postMessage({type:"MA_ACTIVITY"},"*"); }catch(_){} }
+},{passive:true,capture:true}));
+
+/* ============================ utilidades ============================ */
+const PRIOS=["Crítica","Alta","Media","Baja"], PRIO_N={"Crítica":0,"Alta":1,"Media":2,"Baja":3};
+const ESTADOS=["Pendiente","En progreso","Esperando respuesta","Completada"];
+const TIPOS=["Proyecto","Empresa","Área"];
+const COLORES=["#1b3a5c","#0f6f6e","#2f7d4f","#b98b2f","#c2410c","#b03a32","#7c3aed","#64748b"];
+const hoyISO=()=>{ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+const sumarDias=(iso,n)=>{ const d=new Date(iso+"T12:00:00"); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const fCorta=iso=>iso?new Date(iso+"T12:00:00").toLocaleDateString("es-PA",{day:"2-digit",month:"short",year:"numeric"}):"—";
+const fDia=iso=>new Date(iso+"T12:00:00").toLocaleDateString("es-PA",{weekday:"long",day:"numeric",month:"long"});
+const fHora=t=>t?new Date(t).toLocaleString("es-PA",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";
+const diasEntre=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/86400000);
+function toast(t,mal){ const d=document.createElement("div"); d.className="toast"+(mal?" bad":""); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),mal?5000:2600); }
+async function q(p){ const {data,error}=await p; if(error) throw new Error(error.message); return data; }
+
+/* ============================ datos ============================ */
+let CARPETAS=[], TAREAS=[], GENTE=[], VISTA={v:"plan"}, FILTRO_PLAN="hoy";
+async function cargar(){
+  const [c,t,g]=await Promise.all([
+    q(SB.from("ta_carpetas").select("*").order("nombre")),
+    q(SB.from("ta_tareas").select("*").order("fecha_tentativa",{ascending:true,nullsFirst:false})),
+    q(SB.rpc("ma_directorio"))
+  ]);
+  CARPETAS=c||[]; TAREAS=t||[]; GENTE=g||[];
+}
+const nombreDe=e=>{ if(!e) return "—"; const p=GENTE.find(x=>x.email===String(e).toLowerCase()); return p?(p.nombre||p.email):e; };
+const carpeta=id=>CARPETAS.find(c=>c.id===id);
+function rutaCarpeta(id){ const r=[]; let c=carpeta(id), n=0; while(c&&n++<20){ r.unshift(c.nombre); c=carpeta(c.padre_id); } return r.join(" › "); }
+function descendientes(id){ const out=[id]; CARPETAS.filter(c=>c.padre_id===id).forEach(h=>out.push(...descendientes(h.id))); return out; }
+const abierta=t=>t.estado!=="Completada";
+const vencida=t=>abierta(t)&&t.fecha_tentativa&&t.fecha_tentativa<hoyISO();
+const ordenar=(a,b)=>{ // fecha tentativa; mismo día → mayor prioridad; sin fecha al final; completadas al final
+  if(abierta(a)!==abierta(b)) return abierta(a)?-1:1;
+  const fa=a.fecha_tentativa||"9999", fb=b.fecha_tentativa||"9999";
+  return fa.localeCompare(fb)||(PRIO_N[a.prioridad]-PRIO_N[b.prioridad])||a.titulo.localeCompare(b.titulo,"es");
+};
+
+/* ============================ arranque ============================ */
+async function iniciar(){
+  try{ await cargar(); }
+  catch(e){ $("sinSesion").innerHTML=`<b>No se pudo abrir Seguimiento de tareas</b>${esc(e.message)}<br><br>Si dice que no existe la tabla, falta correr <b>BASE_DE_DATOS_FINAL.sql</b> en Supabase.`; return; }
+  $("sinSesion").classList.add("hidden"); $("app").classList.remove("hidden");
+  $("secAdmin").classList.toggle("hidden",ROL!=="admin");
+  document.querySelectorAll(".nav[data-v]").forEach(b=>b.onclick=()=>ir({v:b.dataset.v}));
+  $("btnNuevaCarpeta").onclick=()=>dlgCarpeta();
+  $("btnImportar").onclick=dlgImportar;
+  pintar();
+  setInterval(async()=>{ if(document.hidden||document.querySelector(".bg")) return; try{ await cargar(); pintar(); }catch(e){} },60000);
+}
+function ir(v){ VISTA=v; pintar(); $("main").scrollTop=0; }
+function pintar(){
+  pintarArbol();
+  document.querySelectorAll(".nav[data-v]").forEach(b=>b.classList.toggle("on",VISTA.v===b.dataset.v));
+  $("nPlan").textContent=TAREAS.filter(abierta).length||"";
+  if(VISTA.v==="plan") vistaPlan();
+  else if(VISTA.v==="todas") vistaTodas();
+  else if(VISTA.v==="carpeta") vistaCarpeta(VISTA.id);
+  else if(VISTA.v==="usuarios") vistaUsuarios();
+}
+
+/* ============================ árbol de carpetas ============================ */
+function pintarArbol(){
+  const rama=padre=>CARPETAS.filter(c=>(c.padre_id||null)===padre).map(c=>{
+    const n=TAREAS.filter(t=>abierta(t)&&descendientes(c.id).includes(t.carpeta_id)).length;
+    const hijos=rama(c.id);
+    return `<div class="fold"><button class="nav${VISTA.v==="carpeta"&&VISTA.id===c.id?" on":""}" data-c="${c.id}"><span class="dot" style="background:${esc(c.color||"#64748b")}"></span>${esc(c.nombre)}<span class="n">${n||""}</span></button>
+      <span class="acts"><button title="Nueva subcarpeta" data-sub="${c.id}">＋</button><button title="Editar" data-ed="${c.id}">✎</button></span></div>
+      ${hijos?`<div class="kids">${hijos}</div>`:""}`;
+  }).join("");
+  $("arbol").innerHTML=rama(null)||`<div class="nota" style="margin:4px 10px">Todavía no hay carpetas.</div>`;
+  $("arbol").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>ir({v:"carpeta",id:+b.dataset.c}));
+  $("arbol").querySelectorAll("[data-sub]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); dlgCarpeta(null,+b.dataset.sub); });
+  $("arbol").querySelectorAll("[data-ed]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); dlgCarpeta(carpeta(+b.dataset.ed)); });
+}
+
+/* ============================ Plan de trabajo ============================ */
+function finDe(periodo){
+  const h=hoyISO(), d=new Date(h+"T12:00:00");
+  if(periodo==="hoy") return h;
+  if(periodo==="semana"){ const dow=(d.getDay()+6)%7; return sumarDias(h,6-dow); }
+  if(periodo==="mes") return new Date(d.getFullYear(),d.getMonth()+1,0,12).toISOString().slice(0,10);
+  if(periodo==="semestre") return d.getMonth()<6?`${d.getFullYear()}-06-30`:`${d.getFullYear()}-12-31`;
+  return null;
+}
+function delPeriodo(p){ const fin=finDe(p); return TAREAS.filter(t=>abierta(t)&&(p==="todo"||(t.fecha_tentativa&&t.fecha_tentativa<=fin))).sort(ordenar); }
+function vistaPlan(){
+  const P=[["hoy","Hoy"],["semana","Esta semana"],["mes","Este mes"],["semestre","Este semestre"],["todo","Todo lo pendiente"]];
+  const lista=delPeriodo(FILTRO_PLAN), h=hoyISO();
+  const grupos=[]; let ult=null;
+  lista.forEach(t=>{ const k=!t.fecha_tentativa?"sin":t.fecha_tentativa<h?"venc":t.fecha_tentativa;
+    if(k!==ult){ grupos.push({k,items:[]}); ult=k; } grupos[grupos.length-1].items.push(t); });
+  const titulo=k=>k==="venc"?"Vencidas":k==="sin"?"Sin fecha":k===h?"Hoy · "+fDia(k):fDia(k);
+  $("main").innerHTML=`
+    <div class="top"><div><div class="k">Mi agenda</div><h1>Plan de trabajo</h1><div class="sub">Todas las carpetas</div></div>
+      <button class="btn pri" id="btnNueva">＋ Nueva tarea</button></div>
+    <div class="chips">${P.map(([k,l])=>`<button class="chip${FILTRO_PLAN===k?" on":""}" data-p="${k}">${l}<span class="c">${delPeriodo(k).length}</span></button>`).join("")}</div>
+    <div class="nota">Ordenado por fecha tentativa; si dos tareas vencen el mismo día, va primero la de mayor prioridad (Crítica → Alta → Media → Baja). Las vencidas aparecen primero.</div>
+    <div class="card">${grupos.length?grupos.map(g=>`<div class="plan-day${g.k==="venc"?" bad":""}">${esc(titulo(g.k))} · ${g.items.length}</div>${g.items.map(filaPlan).join("")}`).join("")
+      :`<div class="vacio"><b>Nada pendiente en este periodo</b>Las tareas con fecha tentativa aparecen aquí.</div>`}</div>`;
+  $("main").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ FILTRO_PLAN=b.dataset.p; vistaPlan(); });
+  $("btnNueva").onclick=()=>dlgTarea(null);
+  conectarFilas();
+}
+function filaPlan(t){
+  return `<div class="plan-row" data-t="${t.id}"><span class="tick" data-done="${t.id}" title="Marcar como completada"></span>
+    <span class="prio ${t.prioridad}">${t.prioridad}</span>
+    <div style="flex:1;min-width:0"><div class="tt">${esc(t.titulo)}</div><div class="meta">${esc(rutaCarpeta(t.carpeta_id)||"Sin carpeta")} · ${esc(nombreDe(t.responsable))}${t.estado!=="Pendiente"?" · "+esc(t.estado):""}</div></div>
+    <span class="meta${vencida(t)?" venc":""}">${fCorta(t.fecha_tentativa)}</span></div>`;
+}
+function conectarFilas(){
+  $("main").querySelectorAll("[data-t]").forEach(r=>r.onclick=()=>dlgTarea(TAREAS.find(t=>t.id===+r.dataset.t)));
+  $("main").querySelectorAll("[data-done]").forEach(b=>b.onclick=async e=>{ e.stopPropagation(); await completar(+b.dataset.done); });
+  $("main").querySelectorAll("select[data-est]").forEach(s=>{ s.onclick=e=>e.stopPropagation(); s.onchange=async()=>{
+    try{ const cambio={estado:s.value}; const t=TAREAS.find(x=>x.id===+s.dataset.est);
+      if(s.value==="Completada"&&!t.fecha_real) cambio.fecha_real=hoyISO();
+      await q(SB.from("ta_tareas").update(cambio).eq("id",+s.dataset.est)); await cargar(); pintar(); toast("Estado actualizado"); }
+    catch(err){ toast("No se pudo: "+err.message,true); } }; });
+}
+async function completar(id){
+  try{ await q(SB.from("ta_tareas").update({estado:"Completada",fecha_real:hoyISO()}).eq("id",id)); await cargar(); pintar(); toast("✓ Tarea completada"); }
+  catch(e){ toast("No se pudo: "+e.message,true); }
+}
+
+/* ============================ tablas de tareas ============================ */
+function tablaTareas(lista,conCarpeta){
+  if(!lista.length) return `<div class="vacio"><b>Sin tareas aquí todavía</b>Usa “Nueva tarea” para agregar la primera.</div>`;
+  return `<table class="t"><thead><tr><th style="width:90px">Prioridad</th><th>Tarea</th><th>Responsable</th><th>Fecha tentativa</th><th style="width:170px">Estado</th></tr></thead><tbody>${
+    lista.map(t=>`<tr class="row${abierta(t)?"":" done"}" data-t="${t.id}"><td><span class="prio ${t.prioridad}">${t.prioridad}</span></td>
+      <td><div class="tt">${esc(t.titulo)}</div>${conCarpeta?`<div class="meta">${esc(rutaCarpeta(t.carpeta_id)||"Sin carpeta")}</div>`:""}</td>
+      <td>${esc(nombreDe(t.responsable))}</td>
+      <td class="${vencida(t)?"venc":""}">${fCorta(t.fecha_tentativa)}</td>
+      <td><select class="est" data-est="${t.id}">${ESTADOS.map(e=>`<option${e===t.estado?" selected":""}>${e}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table>`;
+}
+function vistaTodas(){
+  const grupos=[...CARPETAS.map(c=>({c,items:TAREAS.filter(t=>t.carpeta_id===c.id)})),{c:null,items:TAREAS.filter(t=>!t.carpeta_id||!carpeta(t.carpeta_id))}].filter(g=>g.items.length);
+  $("main").innerHTML=`
+    <div class="top"><div><div class="k">Mis tareas</div><h1>Todas por proyecto</h1><div class="sub">${TAREAS.filter(abierta).length} abiertas · ${TAREAS.length} en total</div></div>
+      <button class="btn pri" id="btnNueva">＋ Nueva tarea</button></div>
+    ${grupos.length?grupos.map(g=>`<div class="card" style="margin-bottom:12px"><div class="plan-day"><span class="dot" style="display:inline-block;margin-right:6px;background:${esc(g.c?g.c.color||"#64748b":"#94a3b8")}"></span>${esc(g.c?rutaCarpeta(g.c.id):"Sin carpeta")} · ${g.items.filter(abierta).length} abiertas</div>${tablaTareas(g.items.sort(ordenar),false)}</div>`).join("")
+      :`<div class="card"><div class="vacio"><b>Todavía no hay tareas</b>Crea una carpeta y agrega tareas, o impórtalas desde Excel.</div></div>`}`;
+  $("btnNueva").onclick=()=>dlgTarea(null);
+  conectarFilas();
+}
+
+/* ============================ carpeta ============================ */
+let FC={q:"",estado:"todas",prio:"",orden:"fecha",subs:true};
+function vistaCarpeta(id){
+  const c=carpeta(id); if(!c){ ir({v:"plan"}); return; }
+  const ids=FC.subs?descendientes(id):[id];
+  const todas=TAREAS.filter(t=>ids.includes(t.carpeta_id));
+  const h=hoyISO(), hace7=sumarDias(h,-7), hace30=sumarDias(h,-30);
+  const compl=todas.filter(t=>!abierta(t));
+  const conFechas=compl.filter(t=>t.fecha_tentativa&&t.fecha_real);
+  const aTiempo=conFechas.filter(t=>t.fecha_real<=t.fecha_tentativa).length;
+  const tarde=conFechas.filter(t=>t.fecha_real>t.fecha_tentativa);
+  const atraso=tarde.length?Math.round(tarde.reduce((s,t)=>s+diasEntre(t.fecha_tentativa,t.fecha_real),0)/tarde.length):null;
+  let lista=todas.filter(t=>(!FC.q||(t.titulo+" "+(t.descripcion||"")).toLowerCase().includes(FC.q.toLowerCase()))
+    &&(FC.estado==="todas"||t.estado===FC.estado)&&(!FC.prio||t.prioridad===FC.prio));
+  lista.sort(FC.orden==="prioridad"?((a,b)=>(abierta(a)!==abierta(b)?(abierta(a)?-1:1):0)||(PRIO_N[a.prioridad]-PRIO_N[b.prioridad])||ordenar(a,b))
+    :FC.orden==="creacion"?((a,b)=>String(b.creado).localeCompare(String(a.creado))):ordenar);
+  $("main").innerHTML=`
+    <div class="top"><div><div class="k">Carpeta</div><h1><span class="dot" style="width:12px;height:12px;background:${esc(c.color||"#64748b")}"></span>${esc(c.nombre)} <span class="tipo">${esc(c.tipo)}</span></h1>
+      <div class="sub">${esc(rutaCarpeta(c.id))}</div></div>
+      <div style="display:flex;gap:8px"><button class="btn" id="btnEdC">✎ Editar carpeta</button><button class="btn pri" id="btnNueva">＋ Nueva tarea</button></div></div>
+    <div class="kpis">
+      <div class="card kpi"><div class="l">Abiertas</div><div class="v">${todas.filter(abierta).length}</div><div class="s">${todas.filter(t=>t.creado&&t.creado.slice(0,10)>=hace7).length} creadas en 7 días</div></div>
+      <div class="card kpi bad"><div class="l">Vencidas</div><div class="v">${todas.filter(vencida).length}</div><div class="s">fecha tentativa ya pasó</div></div>
+      <div class="card kpi good"><div class="l">Completadas</div><div class="v">${compl.length}</div><div class="s">${compl.filter(t=>t.fecha_real&&t.fecha_real>=hace30).length} en los últimos 30 días</div></div>
+      <div class="card kpi"><div class="l">A tiempo</div><div class="v">${conFechas.length?Math.round(aTiempo*100/conFechas.length)+"%":"—"}</div><div class="s">de las completadas con fecha</div></div>
+      <div class="card kpi"><div class="l">Atraso prom.</div><div class="v">${atraso==null?"—":atraso+" d"}</div><div class="s">en las completadas tarde</div></div>
+    </div>
+    <div class="filtros">
+      <input class="inp grow" id="fq" placeholder="Buscar tarea…" value="${esc(FC.q)}">
+      <select class="inp" id="fe"><option value="todas">Todas (completadas al final)</option>${ESTADOS.map(e=>`<option${FC.estado===e?" selected":""}>${e}</option>`).join("")}</select>
+      <select class="inp" id="fp"><option value="">Toda prioridad</option>${PRIOS.map(p=>`<option${FC.prio===p?" selected":""}>${p}</option>`).join("")}</select>
+      <select class="inp" id="fo"><option value="fecha"${FC.orden==="fecha"?" selected":""}>Ordenar: fecha + prioridad</option><option value="prioridad"${FC.orden==="prioridad"?" selected":""}>Ordenar: prioridad</option><option value="creacion"${FC.orden==="creacion"?" selected":""}>Ordenar: más recientes</option></select>
+      <label class="ck"><input type="checkbox" id="fs"${FC.subs?" checked":""}> Incluir subcarpetas</label>
+    </div>
+    <div class="card">${tablaTareas(lista,FC.subs)}</div>`;
+  $("fq").oninput=e=>{ FC.q=e.target.value; const pos=e.target.selectionStart; vistaCarpeta(id); $("fq").focus(); $("fq").setSelectionRange(pos,pos); };
+  $("fe").onchange=e=>{ FC.estado=e.target.value; vistaCarpeta(id); };
+  $("fp").onchange=e=>{ FC.prio=e.target.value; vistaCarpeta(id); };
+  $("fo").onchange=e=>{ FC.orden=e.target.value; vistaCarpeta(id); };
+  $("fs").onchange=e=>{ FC.subs=e.target.checked; vistaCarpeta(id); };
+  $("btnNueva").onclick=()=>dlgTarea(null,id);
+  $("btnEdC").onclick=()=>dlgCarpeta(c);
+  conectarFilas();
+}
+
+/* ============================ diálogos ============================ */
+function abrirDlg(html,cls){ cerrarDlg(); const bg=document.createElement("div"); bg.className="bg"; bg.innerHTML=`<div class="dlg ${cls||""}">${html}</div>`; document.body.appendChild(bg); bg.onclick=e=>{ if(e.target===bg) cerrarDlg(); }; return bg; }
+function cerrarDlg(){ document.querySelectorAll(".bg").forEach(b=>b.remove()); }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") cerrarDlg(); });
+const opcionesCarpetas=(sel,excluir)=>{ const out=[]; const rama=(padre,n)=>CARPETAS.filter(c=>(c.padre_id||null)===padre&&!(excluir||[]).includes(c.id)).forEach(c=>{ out.push(`<option value="${c.id}"${sel===c.id?" selected":""}>${"  ".repeat(n)}${n?"└ ":""}${esc(c.nombre)}</option>`); rama(c.id,n+1); }); rama(null,0); return out.join(""); };
+
+function dlgCarpeta(c,padre){
+  let color=(c&&c.color)||COLORES[0];
+  const bg=abrirDlg(`<div class="dlg-h"><h3>${c?"Editar carpeta":"Nueva carpeta"}</h3><button class="x" data-x>Cerrar</button></div>
+    <div class="dlg-b">
+      <label class="f"><span>Nombre</span><input class="inp" id="cn" value="${esc(c?c.nombre:"")}" placeholder="Ej.: nombre de la empresa, proyecto o área"></label>
+      <div class="g2"><label class="f"><span>Tipo</span><select class="inp" id="ct">${TIPOS.map(t=>`<option${c&&c.tipo===t?" selected":""}>${t}</option>`).join("")}</select></label>
+      <label class="f"><span>Dentro de</span><select class="inp" id="cp"><option value="">— Nivel principal —</option>${opcionesCarpetas(c?c.padre_id:padre,c?descendientes(c.id):[])}</select></label></div>
+      <div class="f"><span>Color</span><div class="colores" id="cc">${COLORES.map(k=>`<span class="color${k===color?" on":""}" data-k="${k}" style="background:${k}"></span>`).join("")}</div></div>
+      <div class="err" id="cerr"></div>
+    </div>
+    <div class="dlg-f">${c?`<button class="btn danger" id="cdel">Eliminar</button>`:""}<span class="sp"></span><button class="btn" data-x>Cancelar</button><button class="btn pri" id="cok">Guardar</button></div>`,"sm");
+  bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrarDlg);
+  bg.querySelectorAll(".color").forEach(s=>s.onclick=()=>{ color=s.dataset.k; bg.querySelectorAll(".color").forEach(x=>x.classList.toggle("on",x===s)); });
+  setTimeout(()=>$("cn").focus(),30);
+  $("cok").onclick=async()=>{
+    const fila={nombre:$("cn").value.trim(),tipo:$("ct").value,padre_id:$("cp").value?+$("cp").value:null,color};
+    if(!fila.nombre){ $("cerr").textContent="Ponle un nombre."; return; }
+    try{ if(c) await q(SB.from("ta_carpetas").update(fila).eq("id",c.id)); else await q(SB.from("ta_carpetas").insert(fila));
+      cerrarDlg(); await cargar(); pintar(); toast(c?"Carpeta guardada":"Carpeta creada"); }
+    catch(e){ $("cerr").textContent=e.message; }
+  };
+  if(c) $("cdel").onclick=async()=>{
+    const n=TAREAS.filter(t=>descendientes(c.id).includes(t.carpeta_id)).length;
+    if(!confirmar(`¿Eliminar “${c.nombre}”${CARPETAS.some(x=>x.padre_id===c.id)?" y sus subcarpetas":""}? ${n?`Sus ${n} tarea(s) quedan sin carpeta.`:""}`)) return;
+    try{ await q(SB.from("ta_carpetas").delete().eq("id",c.id)); cerrarDlg(); if(VISTA.id===c.id) VISTA={v:"plan"}; await cargar(); pintar(); toast("Carpeta eliminada"); }
+    catch(e){ $("cerr").textContent=e.message; }
+  };
+}
+// confirmación dentro de la página (sin ventanas del navegador)
+let CONF_OK=false;
+function confirmar(texto){
+  const err=document.querySelector(".bg .err");
+  if(CONF_OK){ CONF_OK=false; return true; }
+  if(err){ err.innerHTML=esc(texto)+' <button class="btn sm danger" id="confSi">Sí, eliminar</button>'; $("confSi").onclick=()=>{ CONF_OK=true; (document.getElementById("cdel")||document.getElementById("tdel")).click(); }; }
+  return false;
+}
+
+async function dlgTarea(t,carpetaId){
+  const nueva=!t;
+  t=t||{titulo:"",carpeta_id:carpetaId||(VISTA.v==="carpeta"?VISTA.id:null),prioridad:"Media",estado:"Pendiente",responsable:YO,fecha_tentativa:"",fecha_real:"",descripcion:""};
+  const bg=abrirDlg(`<div class="dlg-h"><h3>${nueva?"Nueva tarea":"Tarea"}</h3><button class="x" data-x>Cerrar</button></div>
+    <div class="dlg-b">
+      ${nueva?"":`<div class="info">Creada por <b>${esc(nombreDe(t.creado_por))}</b> el ${fHora(t.creado)} · Último cambio: ${fHora(t.actualizado)}</div>`}
+      <label class="f"><span>Título</span><input class="inp" id="tt" value="${esc(t.titulo)}"></label>
+      <div class="g2"><label class="f"><span>Carpeta / proyecto</span><select class="inp" id="tc"><option value="">— Sin carpeta —</option>${opcionesCarpetas(t.carpeta_id)}</select></label>
+      <label class="f"><span>Prioridad</span><select class="inp" id="tp">${PRIOS.map(p=>`<option${p===t.prioridad?" selected":""}>${p}</option>`).join("")}</select></label></div>
+      <div class="g3"><label class="f"><span>Estado</span><select class="inp" id="te">${ESTADOS.map(e=>`<option${e===t.estado?" selected":""}>${e}</option>`).join("")}</select></label>
+      <label class="f"><span>Fecha tentativa de culminación</span><input class="inp" type="date" id="tf" value="${esc(t.fecha_tentativa||"")}"></label>
+      <label class="f"><span>Fecha real de culminación</span><input class="inp" type="date" id="tr" value="${esc(t.fecha_real||"")}"></label></div>
+      <label class="f"><span>Responsable</span><select class="inp" id="tu"><option value="">— Sin asignar —</option>${GENTE.map(g=>`<option value="${esc(g.email)}"${g.email===String(t.responsable||"").toLowerCase()?" selected":""}>${esc(g.nombre||g.email)}${g.cargo?" · "+esc(g.cargo):""}</option>`).join("")}</select></label>
+      <label class="f"><span>Descripción / detalle</span><textarea class="inp" id="td">${esc(t.descripcion||"")}</textarea></label>
+      ${nueva?`<div class="nota">Después de guardar puedes reportar avances, subir archivos y comentar.</div>`:`
+      <div class="tabs"><button class="tab on" data-tab="av">Avances y archivos (<span id="nAv">…</span>)</button><button class="tab" data-tab="co">Comentarios (<span id="nCo">…</span>)</button><button class="tab" data-tab="hi">Historial</button></div>
+      <div id="tabBody"></div>`}
+      <div class="err" id="terr"></div>
+    </div>
+    <div class="dlg-f">${!nueva&&(ROL==="admin"||String(t.creado_por).toLowerCase()===YO)?`<button class="btn danger" id="tdel">Eliminar</button>`:""}<span class="sp"></span>
+      ${!nueva&&abierta(t)?`<button class="btn" id="tdone">✓ Marcar como completada</button>`:""}
+      <button class="btn" data-x>Cancelar</button><button class="btn pri" id="tok">Guardar</button></div>`);
+  bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrarDlg);
+  setTimeout(()=>$("tt").focus(),30);
+  $("te").onchange=()=>{ if($("te").value==="Completada"&&!$("tr").value) $("tr").value=hoyISO(); };
+  const leer=()=>({titulo:$("tt").value.trim(),carpeta_id:$("tc").value?+$("tc").value:null,prioridad:$("tp").value,estado:$("te").value,
+    fecha_tentativa:$("tf").value||null,fecha_real:$("tr").value||null,responsable:$("tu").value||null,descripcion:$("td").value.trim()||null});
+  $("tok").onclick=async()=>{
+    const f=leer(); if(!f.titulo){ $("terr").textContent="Ponle un título."; return; }
+    try{ if(nueva) await q(SB.from("ta_tareas").insert(f)); else await q(SB.from("ta_tareas").update(f).eq("id",t.id));
+      cerrarDlg(); await cargar(); pintar(); toast(nueva?"Tarea creada":"Tarea guardada"); }
+    catch(e){ $("terr").textContent=e.message; }
+  };
+  if($("tdone")) $("tdone").onclick=async()=>{ $("te").value="Completada"; if(!$("tr").value) $("tr").value=hoyISO(); $("tok").click(); };
+  if($("tdel")) $("tdel").onclick=async()=>{
+    if(!confirmar(`¿Eliminar la tarea “${t.titulo}” con sus avances y comentarios?`)) return;
+    try{ await q(SB.from("ta_tareas").delete().eq("id",t.id)); cerrarDlg(); await cargar(); pintar(); toast("Tarea eliminada"); }
+    catch(e){ $("terr").textContent=e.message; }
+  };
+  if(!nueva){
+    let TAB="av";
+    const pintarTab=async()=>{
+      bg.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.tab===TAB));
+      const body=$("tabBody"); if(!body) return;
+      try{
+        const [av,co]=await Promise.all([q(SB.from("ta_avances").select("*").eq("tarea_id",t.id).order("creado",{ascending:false})),q(SB.from("ta_comentarios").select("*").eq("tarea_id",t.id).order("creado",{ascending:true}))]);
+        $("nAv").textContent=av.length; $("nCo").textContent=co.length;
+        if(TAB==="av") body.innerHTML=`
+          <div class="f"><span>Reportar avance</span><div style="display:flex;gap:8px;flex-wrap:wrap"><input type="file" id="af" class="inp" style="max-width:260px"><input class="inp grow" id="an" placeholder="Nota breve: qué cambió, qué se entregó, qué falta…"><button class="btn teal" id="aok">⇪ Subir</button></div></div>
+          ${av.length?av.map(a=>`<div class="item">${a.nota?esc(a.nota):""}${a.archivo_path?` ${a.nota?"· ":""}<a href="#" data-arch="${esc(a.archivo_path)}" data-nom="${esc(a.archivo_nombre||"archivo")}">📎 ${esc(a.archivo_nombre||"archivo")}</a>`:""}<div class="who">${esc(nombreDe(a.usuario))} · ${fHora(a.creado)}</div></div>`).join(""):`<div class="nota">Aún no hay avances reportados en esta tarea.</div>`}`;
+        else if(TAB==="co") body.innerHTML=`
+          ${co.length?co.map(c=>`<div class="item">${esc(c.texto)}<div class="who">${esc(nombreDe(c.usuario))} · ${fHora(c.creado)}</div></div>`).join(""):`<div class="nota">Sin comentarios todavía.</div>`}
+          <div style="display:flex;gap:8px;margin-top:10px"><input class="inp grow" id="cm" placeholder="Escribe un comentario…"><button class="btn teal" id="cok2">Enviar</button></div>`;
+        else{ const hi=await q(SB.from("ta_historial").select("*").eq("tarea_id",t.id).order("creado",{ascending:false}));
+          body.innerHTML=hi.length?hi.map(h=>`<div class="item">${esc(h.detalle)}<div class="who">${esc(nombreDe(h.usuario))} · ${fHora(h.creado)}</div></div>`).join(""):`<div class="nota">Sin historial.</div>`; }
+        if($("aok")) $("aok").onclick=async()=>{
+          const file=$("af").files[0], nota=$("an").value.trim(); if(!file&&!nota){ $("terr").textContent="Escribe una nota o elige un archivo."; return; }
+          $("aok").disabled=true;
+          try{ let path=null;
+            if(file){ path=`${t.id}/${Date.now()}-${file.name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w.\-]/g,"_")}`;
+              const up=await SB.storage.from("tareas").upload(path,file,{upsert:false,contentType:file.type||"application/octet-stream"}); if(up.error) throw new Error(up.error.message); }
+            await q(SB.from("ta_avances").insert({tarea_id:t.id,nota:nota||null,archivo_path:path,archivo_nombre:file?file.name:null,usuario:YO}));
+            toast("Avance reportado"); pintarTab(); }
+          catch(e){ $("terr").textContent=e.message; $("aok").disabled=false; }
+        };
+        body.querySelectorAll("[data-arch]").forEach(a=>a.onclick=async e=>{ e.preventDefault();
+          const {data,error}=await SB.storage.from("tareas").download(a.dataset.arch); if(error){ toast(error.message,true); return; }
+          const u=URL.createObjectURL(data); const l=document.createElement("a"); l.href=u; l.download=a.dataset.nom; l.click(); setTimeout(()=>URL.revokeObjectURL(u),2000); });
+        if($("cok2")){ const enviar=async()=>{ const tx=$("cm").value.trim(); if(!tx) return;
+          try{ await q(SB.from("ta_comentarios").insert({tarea_id:t.id,texto:tx,usuario:YO})); pintarTab(); }catch(e){ $("terr").textContent=e.message; } };
+          $("cok2").onclick=enviar; $("cm").onkeydown=e=>{ if(e.key==="Enter") enviar(); }; }
+      }catch(e){ body.innerHTML=`<div class="err">${esc(e.message)}</div>`; }
+    };
+    bg.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{ TAB=b.dataset.tab; pintarTab(); });
+    pintarTab();
+  }
+}
+
+/* ============================ importar desde Excel ============================ */
+const MAPEO={titulo:/^(task|tarea|t[ií]tulo|nombre|actividad)$/i,fecha:/^(due ?date|fecha|fecha tentativa|vence|vencimiento|deadline)$/i,
+  estado:/^(status|estado)$/i,prioridad:/^(priority|prioridad)$/i,responsable:/^(owner|responsable|asignado|assigned ?to|encargado)$/i,
+  carpeta:/^(project|proyecto|carpeta|empresa|[aá]rea)$/i,descripcion:/^(description|descripci[oó]n|detalle|notas?)$/i};
+const EST_MAP=s=>{ s=String(s||"").trim().toLowerCase(); if(!s) return "Pendiente";
+  if(/complet|done|terminad|finaliz|hecho/.test(s)) return "Completada"; if(/progres|curso/.test(s)) return "En progreso";
+  if(/espera|waiting|respuesta/.test(s)) return "Esperando respuesta"; return "Pendiente"; };
+const PRIO_MAP=s=>{ s=String(s||"").trim().toLowerCase(); if(/cr[ií]t|urgent/.test(s)) return "Crítica"; if(/alta|high/.test(s)) return "Alta"; if(/baja|low/.test(s)) return "Baja"; return "Media"; };
+function fechaISO(v){
+  if(v==null||v==="") return null;
+  if(v instanceof Date&&!isNaN(v)) return new Date(v.getTime()-v.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  if(typeof v==="number"){ const d=XLSX.SSF.parse_date_code(v); return d?`${d.y}-${String(d.m).padStart(2,"0")}-${String(d.d).padStart(2,"0")}`:null; }
+  const s=String(v).trim(); let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
+  m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/); if(m){ const y=m[3].length===2?"20"+m[3]:m[3]; return `${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; }
+  return null;
+}
+function dlgImportar(){
+  let FILAS=[];
+  const bg=abrirDlg(`<div class="dlg-h"><h3>Importar tareas desde Excel</h3><button class="x" data-x>Cerrar</button></div>
+    <div class="dlg-b">
+      <div class="info">Sube la lista de tareas en Excel (.xlsx) o CSV. Se reconocen columnas como <b>Task / Tarea</b>, <b>Due date / Fecha</b>, <b>Status / Estado</b>, <b>Priority / Prioridad</b>, <b>Responsable / Owner</b>, <b>Proyecto / Carpeta</b> y <b>Descripción</b>. Los estados en inglés se traducen (“In progress” → En progreso, “Waiting” → Esperando respuesta, “Done” → Completada).</div>
+      <label class="f"><span>Archivo</span><input class="inp" type="file" id="xf" accept=".xlsx,.xls,.csv"></label>
+      <label class="f"><span>Carpeta para las filas sin proyecto</span><select class="inp" id="xc"><option value="">— Sin carpeta —</option>${opcionesCarpetas(VISTA.v==="carpeta"?VISTA.id:null)}</select></label>
+      <div id="xprev" class="nota"></div><div class="err" id="xerr"></div>
+    </div>
+    <div class="dlg-f"><span class="sp"></span><button class="btn" data-x>Cancelar</button><button class="btn pri" id="xok" disabled>Importar</button></div>`,"sm");
+  bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrarDlg);
+  $("xf").onchange=async()=>{
+    $("xerr").textContent=""; $("xprev").textContent=""; $("xok").disabled=true; FILAS=[];
+    try{
+      const f=$("xf").files[0]; if(!f) return;
+      const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});   // fechas como número de Excel (sin desfase de zona horaria)
+      const ws=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:""});
+      const hi=rows.findIndex(r=>r.some(c=>MAPEO.titulo.test(String(c).trim())));
+      if(hi<0) throw new Error("No encontré una columna de tarea (Task / Tarea / Título).");
+      const cab=rows[hi].map(c=>String(c).trim()); const col=k=>cab.findIndex(c=>MAPEO[k].test(c));
+      const C={}; Object.keys(MAPEO).forEach(k=>C[k]=col(k));
+      FILAS=rows.slice(hi+1).filter(r=>String(r[C.titulo]||"").trim()).map(r=>({
+        titulo:String(r[C.titulo]).trim(), fecha_tentativa:C.fecha>=0?fechaISO(r[C.fecha]):null,
+        estado:C.estado>=0?EST_MAP(r[C.estado]):"Pendiente", prioridad:C.prioridad>=0?PRIO_MAP(r[C.prioridad]):"Media",
+        responsable:C.responsable>=0?String(r[C.responsable]||"").trim():"", carpeta:C.carpeta>=0?String(r[C.carpeta]||"").trim():"",
+        descripcion:C.descripcion>=0?String(r[C.descripcion]||"").trim():"" }));
+      const nuevas=[...new Set(FILAS.map(x=>x.carpeta).filter(n=>n&&!CARPETAS.some(c=>c.nombre.toLowerCase()===n.toLowerCase())))];
+      $("xprev").innerHTML=`<b>${FILAS.length}</b> tarea(s) encontradas.${nuevas.length?` Se crearán ${nuevas.length} carpeta(s): ${nuevas.map(esc).join(", ")}.`:""}`;
+      $("xok").disabled=!FILAS.length;
+    }catch(e){ $("xerr").textContent=e.message; }
+  };
+  $("xok").onclick=async()=>{
+    $("xok").disabled=true;
+    try{
+      const porNombre=new Map(CARPETAS.map(c=>[c.nombre.toLowerCase(),c.id]));
+      for(const n of [...new Set(FILAS.map(x=>x.carpeta).filter(Boolean))]){
+        if(!porNombre.has(n.toLowerCase())){ const r=await q(SB.from("ta_carpetas").insert({nombre:n,tipo:"Proyecto",color:COLORES[porNombre.size%COLORES.length]}).select("id").single()); porNombre.set(n.toLowerCase(),r.id); } }
+      const resp=v=>{ if(!v) return YO; const l=v.toLowerCase(); const g=GENTE.find(p=>p.email===l||(p.nombre||"").toLowerCase()===l); return g?g.email:YO; };
+      const def=$("xc").value?+$("xc").value:null;
+      const filas=FILAS.map(x=>({titulo:x.titulo,fecha_tentativa:x.fecha_tentativa,estado:x.estado,prioridad:x.prioridad,responsable:resp(x.responsable),
+        carpeta_id:x.carpeta?porNombre.get(x.carpeta.toLowerCase()):def,descripcion:x.descripcion||null,fecha_real:x.estado==="Completada"?(x.fecha_tentativa||hoyISO()):null}));
+      for(let i=0;i<filas.length;i+=200) await q(SB.from("ta_tareas").insert(filas.slice(i,i+200)));
+      cerrarDlg(); await cargar(); pintar(); toast(`✓ ${filas.length} tarea(s) importadas`);
+    }catch(e){ $("xerr").textContent=e.message; $("xok").disabled=false; }
+  };
+}
+
+/* ============================ usuarios y jerarquía (administradora) ============================ */
+let SEL_P=null;
+function vistaUsuarios(){
+  if(ROL!=="admin"){ ir({v:"plan"}); return; }
+  const ini=p=>(p.nombre||p.email).split(/[\s@.]+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join("");
+  const raiz=GENTE.filter(p=>!p.jefe||!GENTE.some(x=>x.email===p.jefe));
+  const rama=p=>{ const hijos=GENTE.filter(x=>x.jefe===p.email); return `<li><span class="persona${SEL_P===p.email?" on":""}" data-p="${esc(p.email)}"><span class="av">${esc(ini(p))}</span><span><b>${esc(p.nombre||p.email)}</b><div class="meta">${esc(p.cargo||"Sin cargo")} · ${esc(p.email)}</div></span></span>${hijos.length?`<ul>${hijos.map(rama).join("")}</ul>`:""}</li>`; };
+  const sel=GENTE.find(p=>p.email===SEL_P);
+  $("main").innerHTML=`
+    <div class="top"><div><div class="k">Administración</div><h1>Usuarios y jerarquía</h1><div class="sub">${GENTE.length} personas activas</div></div></div>
+    <div class="info">Cada persona ve sus tareas, las que creó y las de quienes tiene por debajo en la jerarquía. Para crear usuarios o cambiar a qué dashboards entran, usa el botón <b>Usuarios</b> del inicio.</div>
+    <div class="org-layout">
+      <div class="card org"><b style="display:block;margin-bottom:6px">Organigrama</b><ul>${raiz.map(rama).join("")}</ul></div>
+      <div class="card" style="padding:14px">${sel?`
+        <b>Editar · ${esc(sel.nombre||sel.email)}</b><div class="meta" style="margin-bottom:10px">${esc(sel.email)}</div>
+        <label class="f"><span>Cargo</span><input class="inp" id="pc" value="${esc(sel.cargo||"")}"></label>
+        <label class="f"><span>Jefe directo</span><select class="inp" id="pj"><option value="">— Nadie (nivel superior) —</option>${GENTE.filter(x=>x.email!==sel.email).map(x=>`<option value="${esc(x.email)}"${sel.jefe===x.email?" selected":""}>${esc(x.nombre||x.email)}</option>`).join("")}</select></label>
+        <div class="err" id="perr"></div><button class="btn pri" id="pok">Guardar</button>`
+        :`<div class="nota">Elige una persona del organigrama para cambiar su cargo o su jefe directo.</div>`}</div>
+    </div>`;
+  $("main").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ SEL_P=b.dataset.p; vistaUsuarios(); });
+  if(sel) $("pok").onclick=async()=>{
+    try{ await q(SB.rpc("ma_jerarquia_guardar",{p_email:sel.email,p_cargo:$("pc").value,p_jefe:$("pj").value||null})); await cargar(); vistaUsuarios(); toast("Guardado"); }
+    catch(e){ $("perr").textContent=e.message; }
+  };
+}
+</script>
+</body>
+</html>
