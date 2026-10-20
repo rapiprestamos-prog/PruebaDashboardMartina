@@ -1,0 +1,21 @@
+DASHBOARD M&A · PROGRAMA LOCAL (DashboardMA.exe)
+
+Qué hace: corre escondido en la PC, sirve el dashboard en http://localhost:8765 (trae las páginas de GitHub,
+con copia por si no hay internet) y entrega las carpetas de OneDrive PruebaDashboard, Contabilidad y Legal
+(las busca solo) para leer y guardar, sin permisos del navegador.
+
+Uso:
+  DashboardMA.exe            arranca (si no estaba) y abre el dashboard
+  DashboardMA.exe --fondo    arranca escondido sin abrir el navegador (acceso directo en shell:startup)
+  DashboardMA.exe --detener  lo detiene
+Datos: %LOCALAPPDATA%\DashboardMA (rutas.json = carpetas encontradas, registro.txt, copia\ = páginas sin internet)
+
+No abre otros programas, no toca el registro, no se copia ni se agrega solo al inicio (así Sophos no lo bloquea).
+
+Dónde se cambia cada cosa (codigo/main.go):
+  ORIGEN    sitio de GitHub del que trae las páginas
+  PUERTO    8765
+  MODULOS   nombres de carpeta que busca por módulo (por ejemplo "PruebaDashboard","Pantera")
+  buscar()  dónde busca (OneDrive y carpetas del usuario) y cuántas carpetas revisa
+Compilar (Go 1.22+):  GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H=windowsgui" -o DashboardMA.exe .
+Si se cambia el código, revisar que el .exe siga sin abrir otros programas (powershell, reg, taskkill).
