@@ -1,0 +1,1285 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M&amp;A Capital Ultimate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===================== CONFIGURACIÓN SUPABASE =====================
+   Pega aquí la URL y la clave anon (pública) del proyecto. Con esto el
+   dashboard lee los archivos desde la base: el usuario solo entra con
+   su correo y clave. Si se dejan vacías, funciona en modo carpeta local. */
+const SUPABASE_URL  = "__SUPABASE_URL__";
+const SUPABASE_ANON = "__SUPABASE_ANON__";
+</script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#f0f3f8; --surface-3:#e7ecf3; --border:#dde3ec;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#8792a4;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --grid:#edf1f6; --zebra:#f8fafc;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+.wrap{max-width:none;margin:0;padding:12px 14px}
+.hidden{display:none!important}
+
+/* ---------- Home ---------- */
+.home-hdr{position:relative;overflow:hidden;border-radius:18px;padding:28px 30px;margin-bottom:20px;color:#fff;
+  background:radial-gradient(120% 160% at 12% 0%,#2b5a86 0%,#1b3a5c 40%,#0f2440 80%);box-shadow:var(--shadow)}
+.home-hdr .eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 6px}
+.home-hdr h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.015em}
+.home-hdr p{margin:6px 0 0;font-size:13.5px;opacity:.8;max-width:640px;line-height:1.55}
+.home-bar{height:4px;border-radius:999px;margin-top:20px;background:linear-gradient(90deg,var(--gold),#7dd3fc 45%,rgba(255,255,255,.15))}
+.search-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:24px;box-shadow:var(--shadow)}
+.search-count{font-weight:700;font-size:13.5px;color:var(--text-2);white-space:nowrap}
+.search-box{flex:1;display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:9px 12px}
+.search-box input{flex:1;border:none;background:transparent;font:inherit;color:var(--text);outline:none}
+.cat-hdr{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.cat-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#e8eef6;border:1px solid #d6e0ec}
+.cat-title{font-size:17px;font-weight:800;margin:0}
+.pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)}
+.cat-line{flex:1;height:2px;border-radius:999px;background:var(--grid)}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:22px}
+.cat{margin-bottom:30px}
+.cat-ic svg{width:19px;height:19px;stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mod-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 20px;text-align:center;cursor:pointer;box-shadow:var(--shadow);
+  transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+.mod-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(15,23,42,.12);border-color:#c9d4e3}
+.mod-ic{width:60px;height:60px;border-radius:18px;margin:0 auto 14px;display:grid;place-items:center;font-size:28px;background:linear-gradient(135deg,#f8e7b9,var(--gold))}
+.mod-card h3{margin:0 0 6px;font-size:15.5px;font-weight:800}
+.mod-card p{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.mod-card.sin{cursor:default}.mod-card.sin .mod-tag{background:var(--muted)}
+.mod-card.sin h3{margin-bottom:14px}
+.mod-tag{display:inline-block;font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;color:#fff;background:var(--navy)}
+
+/* ---------- Módulo ---------- */
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--text-2);font-size:12.5px;font-weight:600;cursor:pointer;margin-bottom:8px;background:none;border:none;padding:0}
+.back:hover{color:var(--navy)}
+.mhdr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border-radius:14px;padding:12px 18px;margin-bottom:10px;color:#fff;
+  background:linear-gradient(115deg,var(--navy-d),var(--navy) 55%,#0f5560);box-shadow:var(--shadow)}
+.mhdr .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.mhdr h1{margin:1px 0 0;font-size:19px;font-weight:800}
+.mhdr .sub{margin-top:3px;font-size:12.5px;color:rgba(255,255,255,.75)}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.16)}
+.hbtn.pri{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+.hbtn:disabled{opacity:.5;cursor:not-allowed}
+
+.mtabs{display:flex;gap:4px;padding:4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:11px;max-width:100%;overflow-x:auto}
+.kback{background:none;border:none;padding:0;cursor:pointer;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.kback:hover{color:#fff}
+.mtab{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.8);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.mtab:hover{background:rgba(255,255,255,.1)}
+.mtab[aria-selected="true"]{background:var(--gold);color:var(--navy-d)}
+.mtab .cnt{font-size:11px;padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.08)}
+.mtab[aria-selected="true"] .cnt{background:rgba(255,255,255,.2)}
+
+.banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 8px 6px 14px;border-radius:10px;margin-bottom:10px;font-size:12.5px;background:#fdf6e6;border:1px solid #f0dcaa;color:#6b4d12}
+.banner.err{background:#fbeceb;border-color:#efc4c0;color:#7c2620}
+.banner.ok{background:#e9f6ef;border-color:#bfe3cf;color:#155a35}
+.banner .grow{flex:1;min-width:220px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.pri:hover{filter:brightness(1.12)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+
+/* ---------- Lector ---------- */
+.lector{display:grid;grid-template-columns:270px minmax(0,1fr);gap:12px;align-items:stretch;height:100%}
+.sideoff .lector{grid-template-columns:1fr}
+.sideoff .lector>.panel:first-child{display:none}
+#viewer{min-width:0}
+#viewer.full{position:fixed;inset:10px;height:auto;z-index:60;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(15,23,42,.35)}
+#viewer.full .tbl-wrap{flex:1;max-height:none}
+.fullbg{position:fixed;inset:0;background:rgba(15,28,46,.45);z-index:55}
+@media (max-width:900px){.lector{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.side-top{padding:12px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.side-top input{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font:inherit;color:var(--text);outline:none}
+.side-top input:focus{border-color:var(--navy)}
+/* El módulo ocupa exactamente la pantalla: sin desplazar la página, cada panel se desplaza por dentro */
+#viewModulo:not(.hidden),#viewUsuarios:not(.hidden),#viewApp:not(.hidden){display:flex;flex-direction:column;position:fixed;top:16px;right:24px;bottom:16px;left:24px}
+#viewUsuarios>*{flex:none}
+#viewApp:not(.hidden){display:flex;flex-direction:column;position:fixed;top:16px;right:24px;bottom:16px;left:24px}
+#viewApp>*{flex:none}
+#appFrame{flex:1;min-height:0;width:100%;border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:var(--shadow)}
+#appFrame.hidden{display:none}
+#viewUsuarios>#usrPanel:not(.hidden){flex:1;min-height:0;display:flex;flex-direction:column}
+body.enModulo{overflow:hidden}
+#viewModulo>*{flex:none}
+#viewModulo>#moduloBody:not(.hidden){flex:1;min-height:0;display:flex;flex-direction:column}
+#moduloBody>section:not(.hidden){flex:1;min-height:0}
+.lector>.panel{display:flex;flex-direction:column;min-height:0}
+.lector>.panel>*{flex:none}
+.lector>.panel>.tree{flex:1;min-height:0;overflow-y:auto;padding:6px 0}
+#viewer>.tbl-wrap{flex:1;min-height:0}
+#viewer>.empty{flex:1}
+@media (max-width:900px){#viewModulo:not(.hidden){position:static}body.enModulo{overflow:auto}.lector{height:auto}.lector>.panel>.tree{max-height:60vh}#viewer>.tbl-wrap{max-height:75vh}}
+.y-row{display:flex;align-items:center;gap:8px;padding:9px 14px;font-weight:800;font-size:13.5px;color:var(--navy);cursor:pointer;user-select:none}
+.y-row:hover{background:var(--surface-2)}
+.chev{display:inline-block;width:12px;transition:transform .15s;color:var(--muted);font-size:10px}
+.closed>.y-row .chev,.closed>.m-row .chev{transform:rotate(-90deg)}
+.closed>.kids{display:none}
+.m-row{display:flex;align-items:center;gap:8px;padding:7px 14px 7px 30px;font-weight:700;font-size:12.5px;color:var(--text-2);cursor:pointer;user-select:none;letter-spacing:.02em}
+.m-row:hover{background:var(--surface-2)}
+.m-row .pill{margin-left:auto;font-size:10.5px;padding:1px 8px}
+.f-row{display:flex;align-items:flex-start;gap:9px;padding:8px 14px 8px 48px;cursor:pointer;border-left:3px solid transparent}
+.f-row:hover{background:var(--surface-2)}
+.f-row.sel{background:#eaf0f7;border-left-color:var(--navy)}
+.f-ic{flex:none;width:22px;height:22px;border-radius:5px;background:#1d6f42;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.f-ic.csv{background:#5a6b80}
+.f-name{font-size:12.8px;line-height:1.35;color:var(--text);word-break:break-word}
+.f-date{font-size:11px;color:var(--muted);margin-top:2px}
+.empty{padding:40px 24px;text-align:center;color:var(--text-2)}
+.empty b{display:block;font-size:15.5px;color:var(--text);margin-bottom:6px}
+.empty .big{font-size:34px;margin-bottom:10px}
+
+.viewer-hdr{padding:10px 14px 8px;border-bottom:1px solid var(--border)}
+.crumbs{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.crumbs b{color:var(--gold-d)}
+.viewer-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:4px}
+.viewer-title h2{margin:0;font-size:18px;font-weight:800;line-height:1.3;word-break:break-word}
+.viewer-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.stabs{display:flex;gap:5px;flex-wrap:wrap;align-items:flex-end;padding:8px 14px 0;border-bottom:1px solid var(--border)}
+.stab{padding:6px 12px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;background:var(--surface-2);color:var(--text-2);font-size:12.5px;font-weight:600;cursor:pointer}
+.stab[aria-selected="true"]{background:var(--surface);color:var(--navy);box-shadow:inset 0 3px 0 var(--gold)}
+.sheet-info{margin-left:auto;align-self:center;padding:0 2px 6px;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.tbl-wrap{overflow:auto}
+table.x{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+table.x th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-weight:600;font-size:11.5px;text-align:left;padding:8px 10px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.12)}
+table.x th.n,table.x td.n{text-align:right}
+table.x td{padding:4px 9px;font-size:12.5px;border-bottom:1px solid var(--grid);border-right:1px solid #e1e7ef;white-space:nowrap;max-width:340px;overflow:hidden;text-overflow:ellipsis}
+table.x tbody tr:nth-child(even) td{background:var(--zebra)}
+table.x tbody tr:hover td{background:#eef3fa}
+table.x td.rn,table.x th.rn{position:sticky;left:0;z-index:1;width:44px;min-width:44px;text-align:right;color:var(--muted);font-size:11px;background:var(--surface-2)}
+table.x th.rn{z-index:3;background:var(--navy-d);color:rgba(255,255,255,.6)}
+table.x td.neg{color:var(--bad)}
+table.x tr.totrow td{font-weight:700;background:#eef2f7!important;border-top:2px solid var(--navy)}
+.more{padding:10px 18px;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
+
+/* ---------- Pantera ---------- */
+.pframe-wrap{position:relative;height:100%}
+#panteraFrame{display:block;width:100%;height:100%;min-height:480px;border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:var(--shadow)}
+.ploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(243,245,249,.92);border-radius:14px;font-weight:600;color:var(--text-2)}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--surface-3);border-top-color:var(--navy);animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- Conectar ---------- */
+.connect{max-width:560px;margin:40px auto;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 30px;box-shadow:var(--shadow)}
+.connect .big{font-size:42px;margin-bottom:10px}
+.connect h2{margin:0 0 8px;font-size:19px;font-weight:800}
+.connect p{margin:0 0 18px;color:var(--text-2);font-size:13.5px;line-height:1.55}
+.connect code{display:inline-block;margin-bottom:18px;padding:6px 10px;border-radius:8px;background:var(--surface-2);font-size:12px;color:var(--text-2)}
+
+/* ---------- Marca Pantera / Martina ---------- */
+.home-hdr>*:not(.home-mark){position:relative;z-index:1}
+.home-mark{position:absolute;right:40px;top:50%;transform:translateY(-50%);height:104px;opacity:.95;pointer-events:none;filter:drop-shadow(0 2px 10px rgba(0,0,0,.25))}
+.home-hdr p{max-width:calc(100% - 260px)}
+.home-bar{margin-right:250px}
+@media (max-width:760px){.home-bar{margin-right:0}.home-hdr p{max-width:none}}
+@media (max-width:760px){.home-mark{display:none}}
+.mod-logo{height:92px;margin:2px auto 16px;display:flex;align-items:center;justify-content:center;border-radius:14px;
+  background:linear-gradient(180deg,#fbf6ea,#f3e6c4);border:1px solid #ecdcb2;padding:12px}
+.mod-logo img{max-height:68px;max-width:100%}
+.mart{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:600;color:var(--gold-d);letter-spacing:.01em}
+.mhdr .mart{color:var(--gold)}
+.mbrand{display:flex;align-items:center;gap:16px;min-width:0}
+.mlogo{height:56px;width:auto;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.msep{width:1px;align-self:stretch;margin:4px 0;background:linear-gradient(180deg,transparent,rgba(227,194,122,.7),transparent)}
+.mhdr h1{font-size:21px}
+@media (max-width:640px){.mlogo{height:40px}.msep{display:none}}
+
+/* ---------- Barras de desplazamiento visibles (tabla y lista) ---------- */
+.tbl-wrap,.tree{scrollbar-gutter:stable}
+.tbl-wrap::-webkit-scrollbar,.tree::-webkit-scrollbar{width:14px;height:14px}
+.tbl-wrap::-webkit-scrollbar-track,.tree::-webkit-scrollbar-track{background:#eef2f7}
+.tbl-wrap::-webkit-scrollbar-thumb,.tree::-webkit-scrollbar-thumb{background:#9fb0c6;border-radius:999px;border:3px solid #eef2f7}
+.tbl-wrap::-webkit-scrollbar-thumb:hover,.tree::-webkit-scrollbar-thumb:hover{background:var(--navy)}
+.tbl-wrap::-webkit-scrollbar-corner{background:#eef2f7}
+
+table.x td.wrap{white-space:normal;max-width:520px;min-width:220px;line-height:1.4;text-overflow:clip}
+table.x td.span{max-width:none;color:var(--text-2);font-style:italic}
+.banner .bx{background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:14px;padding:4px 6px;border-radius:6px}
+.banner .bx:hover{opacity:1;background:rgba(0,0,0,.06)}
+.banner .btn.sm{padding:4px 10px}
+
+/* ---------- Compacto: más pantalla para los datos ---------- */
+.mhdr{padding:7px 14px;border-radius:12px;margin-bottom:8px;gap:10px}
+.mlogo{height:40px}
+.mbrand{gap:12px}
+.mhdr h1{font-size:17px;margin:0}
+.mhdr .sub{font-size:11.5px;margin-top:1px}
+.kback{font-size:10px}
+.hbtn{padding:7px 12px;font-size:12.5px;border-radius:9px}
+.mtab{padding:6px 12px;font-size:13px}
+.mtabs{padding:3px}
+.viewer-hdr{padding:8px 12px 6px}
+.viewer-title{align-items:center;margin-top:0;flex-wrap:nowrap}
+.vt-left{min-width:0;flex:1}
+.viewer-title h2{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer-title h2 .crumbs{font-size:11px;margin-right:4px}
+.viewer-meta{margin-top:1px;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vt-btns{display:flex;gap:6px;flex:none}
+.stabs{padding:6px 12px 0}
+@media (max-width:1100px){.viewer-title{flex-wrap:wrap}.vt-btns{flex-wrap:wrap}}
+
+/* ---------- Inicio con aire alrededor ---------- */
+#viewHome{max-width:1480px;margin:0 auto;padding:22px 28px 40px}
+table.x th{border-right:1px solid rgba(255,255,255,.18)}
+table.x td.rn{border-right:1px solid var(--border)}
+
+.modoAuto #btnCambiar{display:none}
+
+/* ---------- Sesión, roles, historial y usuarios ---------- */
+#viewLogin:not(.hidden){flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px}
+#viewLogin.hidden{display:none!important}
+.login-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 50px rgba(15,23,42,.12);overflow:hidden}
+.login-top{padding:26px 28px 20px;color:#fff;text-align:center;background:radial-gradient(120% 160% at 12% 0%,#2b5a86 0%,#1b3a5c 40%,#0f2440 80%)}
+.login-top img{height:62px;margin-bottom:10px}
+.login-top .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.login-top h1{margin:4px 0 0;font-size:19px;font-weight:800}
+.login-body{padding:24px 28px 26px}
+.login-body form{display:flex;flex-direction:column;gap:10px}
+.inp{padding:10px 12px;border-radius:9px;border:1px solid var(--border);font:inherit;color:var(--text);background:var(--surface);outline:none}
+.inp:focus{border-color:var(--navy)}
+.inp.sm{padding:6px 9px;font-size:12.5px;border-radius:8px}
+.login-note{margin:14px 0 0;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5}
+.home-user{position:absolute;top:16px;right:20px;z-index:2;display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.85)}
+.home-user .hbtn{padding:5px 11px;font-size:12px}
+.rolchip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(227,194,122,.2);color:var(--gold);border:1px solid rgba(227,194,122,.45)}
+.rolchip.lt{background:#eef2f7;color:var(--navy);border-color:var(--border)}
+.idle{position:fixed;right:22px;bottom:22px;z-index:90;max-width:360px;background:var(--surface);border:1px solid #f0dcaa;border-left:5px solid var(--gold-d);border-radius:12px;padding:14px 16px;box-shadow:0 18px 40px rgba(15,23,42,.22);font-size:13px;color:var(--text)}
+.idle b{display:block;margin-bottom:4px;font-size:14px}
+.idle .btn{margin-top:10px}
+.dlg-bg{position:fixed;inset:0;z-index:95;background:rgba(15,28,46,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+.dlg{width:100%;max-width:440px;background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,.35);padding:20px 22px}
+.dlg h3{margin:0 0 8px;font-size:16px;font-weight:800}
+.dlg p{margin:0 0 14px;color:var(--text-2);line-height:1.5;font-size:13px}
+.dlg .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.adm{display:flex;flex-direction:column;height:100%;min-height:0}
+.adm>.panel{display:flex;flex-direction:column;flex:1;min-height:0}
+.adm-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.adm-top h2{margin:0;font-size:15.5px;font-weight:800;margin-right:auto}
+.adm-top .lbl{font-size:12px;color:var(--text-2);font-weight:600}
+.adm .tbl-wrap{flex:1;min-height:0}
+.adm table.x td{white-space:normal;max-width:none;vertical-align:top}
+.adm table.x td.nw{white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);white-space:nowrap}
+.tag.carga{background:#e8f0fa;border-color:#c7d8ee;color:var(--navy)}
+.tag.quitar_mes{background:#fbeceb;border-color:#efc4c0;color:var(--bad)}
+.tag.reversion{background:#fdf6e6;border-color:#f0dcaa;color:#6b4d12}
+.tag.ok{background:#e9f6ef;border-color:#bfe3cf;color:var(--good)}
+.cnts{white-space:nowrap;font-variant-numeric:tabular-nums}
+.cnts .a{color:var(--good)}.cnts .c{color:var(--navy)}.cnts .q{color:var(--bad)}
+tr.det td{background:#f6f8fb!important;padding:8px 14px 12px}
+.items{width:100%;border-collapse:collapse;font-size:12px}
+.items td,.items th{padding:4px 8px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
+.items th{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.newuser{display:grid;grid-template-columns:2fr 1.4fr 1.2fr 110px auto auto;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+@media (max-width:900px){.newuser{grid-template-columns:1fr 1fr}}
+
+/* ---------- Tarjetas de módulos (inicio) ---------- */
+.mod-card{padding:0;text-align:left;overflow:hidden;display:flex;flex-direction:column;border-radius:18px;border:1px solid #e1e7f0;background:var(--surface);
+  box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.mod-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(15,36,64,.16);border-color:#c8d4e4}
+.mod-card.sin:hover{transform:none;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);border-color:#e1e7f0}
+.mod-ban{position:relative;height:124px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:radial-gradient(130% 150% at 0% 0%,#2b5a86 0%,#1b3a5c 42%,#0f2440 100%)}
+.mod-ban::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 16px)}
+.mod-ban::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--gold),rgba(227,194,122,.15))}
+.ban-legal{background:radial-gradient(130% 150% at 0% 0%,#4a4178 0%,#2a2c56 45%,#0f2440 100%)}
+.ban-gestion{background:radial-gradient(130% 150% at 0% 0%,#178079 0%,#0f5560 45%,#0f2440 100%)}
+.mod-ban img{position:relative;z-index:1;height:74px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35));transition:transform .25s ease}
+.mod-ico{position:relative;z-index:1;width:66px;height:66px;border-radius:18px;display:grid;place-items:center;
+  background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04));border:1px solid rgba(227,194,122,.5);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 10px 24px rgba(0,0,0,.25);transition:transform .25s ease}
+.mod-ico svg{width:34px;height:34px;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.mod-card:hover .mod-ico,.mod-card:hover .mod-ban img{transform:scale(1.06)}
+.mod-card.sin .mod-ban{filter:grayscale(.85) brightness(1.15);opacity:.75}
+.mod-body{padding:16px 18px 16px;display:flex;flex-direction:column;flex:1}
+.mod-k{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold-d);font-weight:800;margin-bottom:5px}
+.mod-card h3{margin:0 0 6px;font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:var(--navy-d)}
+.mod-card p{flex:1;margin:0 0 14px;font-size:12.8px;color:var(--text-2);line-height:1.55}
+.mod-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:1px solid var(--grid)}
+.mod-tag{display:inline-block;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;color:var(--navy);background:#eef2f7;border:1px solid #dbe3ee}
+.mod-card.sin .mod-tag{color:var(--muted);background:var(--surface-2)}
+.mod-go{font-size:12.5px;font-weight:800;color:var(--navy);transition:color .15s,transform .15s}
+.mod-card:hover .mod-go{color:var(--teal);transform:translateX(3px)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- =============================== HOME =============================== -->
+<div id="viewHome">
+  <div class="home-hdr">
+    <p class="eyebrow">M&amp;A Capital · Uso interno</p>
+    <h1>M&amp;A Capital — Dashboard Interno Ultimate</h1>
+    <p>Módulos de consulta y reportería conectados a tus carpetas de OneDrive. Elige uno para empezar.</p>
+    <div class="home-bar"></div>
+    <div class="home-user" id="homeUser"><span id="homeUserTxt"></span><button class="hbtn hidden" id="btnUsuariosHome" title="Usuarios y permisos (administradora)">👥 Usuarios</button><button class="hbtn hidden" id="btnSalirHome" title="Cerrar sesión">⎋ Salir</button></div>
+    <img class="home-mark" src="__LOGO_MYA__" alt="M&amp;A Capital Inc">
+  </div>
+  <div class="search-card">
+    <span class="search-count" id="homeCount"></span>
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8792a4" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="buscadorModulos" placeholder="Buscar módulo… (Pantera, legal, tareas, reportería)">
+    </div>
+  </div>
+  <div id="secciones">
+  <section class="cat" data-cat="rep">
+    <div class="cat-hdr"><div class="cat-ic"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h2 class="cat-title">Reportería</h2><span class="pill"></span><div class="cat-line"></div></div>
+    <div class="mod-grid">
+      <div class="mod-card" id="cardMartina" data-tags="pantera reporteria reportería martina onedrive excel cartera">
+        <div class="mod-ban ban-rep"><img src="__LOGO_GOLD__" alt="Pantera Real Estate Fund"></div>
+        <div class="mod-body"><div class="mod-k">Pantera Real Estate Fund</div><h3>Pantera Reportería — <span class="mart">Martina</span></h3><p>Lector de la carpeta OneDrive por año y mes, y el reporte gerencial Pantera armado automáticamente.</p><div class="mod-foot"><span class="mod-tag">OneDrive · Excel</span><span class="mod-go">Entrar →</span></div></div>
+      </div>
+      <div class="mod-card" id="cardContabilidad" data-app="contabilidad" data-tags="contabilidad contable dashboard">
+        <div class="mod-ban ban-rep"><span class="mod-ico"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6M9 11h4"/></svg></span></div>
+        <div class="mod-body"><div class="mod-k">Contabilidad</div><h3>Dashboard Contabilidad</h3><p>Lector de la carpeta de Contabilidad de OneDrive por año y mes.</p><div class="mod-foot"><span class="mod-tag">OneDrive · Excel</span><span class="mod-go">Entrar →</span></div></div>
+      </div>
+    </div>
+  </section>
+  <section class="cat" data-cat="legal">
+    <div class="cat-hdr"><div class="cat-ic"><svg viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3.5 3.5 0 0 0 6 0L5 7zM19 7l-3 7a3.5 3.5 0 0 0 6 0l-3-7z"/></svg></div><h2 class="cat-title">Legal</h2><span class="pill"></span><div class="cat-line"></div></div>
+    <div class="mod-grid">
+      <div class="mod-card" id="cardAgenteLegal" data-tags="agente legal due diligence redaccion redacción cierre contratos" data-app="agente_legal">
+        <div class="mod-ban ban-legal"><span class="mod-ico"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M8.5 13h5M8.5 16.5h4"/><path d="M17.5 12.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg></span></div>
+        <div class="mod-body"><div class="mod-k">Agente legal · IA</div><h3>Agente Legal</h3><p>Due diligence, redacción asistida y cierre de procesos sobre la carpeta Legal.</p><div class="mod-foot"><span class="mod-tag">OneDrive · IA</span><span class="mod-go">Entrar →</span></div></div>
+      </div>
+      <div class="mod-card" id="cardLegal" data-app="legal" data-tags="legal dashboard">
+        <div class="mod-ban ban-legal"><span class="mod-ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3.5 3.5 0 0 0 6 0L5 7zM19 7l-3 7a3.5 3.5 0 0 0 6 0l-3-7z"/></svg></span></div>
+        <div class="mod-body"><div class="mod-k">Legal</div><h3>Dashboard de Legal</h3><p>Lector de la carpeta Legal de OneDrive por año y mes.</p><div class="mod-foot"><span class="mod-tag">OneDrive · Excel</span><span class="mod-go">Entrar →</span></div></div>
+      </div>
+    </div>
+  </section>
+  <section class="cat" data-cat="gestion">
+    <div class="cat-hdr"><div class="cat-ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7.5 14l2 2 4-4"/></svg></div><h2 class="cat-title">Gestión</h2><span class="pill"></span><div class="cat-line"></div></div>
+    <div class="mod-grid">
+      <div class="mod-card" id="cardTareas" data-tags="seguimiento tareas plan de trabajo proyectos" data-app="tareas">
+        <div class="mod-ban ban-gestion"><span class="mod-ico"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg></span></div>
+        <div class="mod-body"><div class="mod-k">Equipo</div><h3>Seguimiento de tareas</h3><p>Plan de trabajo, carpetas por proyecto y avances de cada tarea.</p><div class="mod-foot"><span class="mod-tag">Equipo</span><span class="mod-go">Entrar →</span></div></div>
+      </div>
+    </div>
+  </section>
+  </div>
+</div>
+
+
+<!-- =============================== USUARIOS (inicio · solo administradora) =============================== -->
+<div id="viewUsuarios" class="hidden">
+  <div class="mhdr">
+    <div class="mbrand">
+      <img class="mlogo" src="__LOGO_MYA__" alt="M&amp;A Capital Inc">
+      <div class="msep"></div>
+      <div>
+        <button class="kback" id="btnVolverU" title="Volver al inicio">← M&amp;A Capital · Inicio</button>
+        <h1>Usuarios y permisos</h1>
+        <div class="sub" id="hdrSubU">Quién entra a cada dashboard</div>
+      </div>
+    </div>
+    <div class="hbtns">
+      <button class="btn sm" id="btnUsrRef" style="padding:7px 12px">↻ Actualizar</button>
+      <button class="hbtn hidden" id="btnSalirU" title="Cerrar sesión">⎋ Salir</button>
+    </div>
+  </div>
+  <div id="bannerBoxU"></div>
+  <div id="usrPanel" class="adm hidden"><div class="panel">
+        <form class="newuser" id="formNuevo" autocomplete="off">
+          <input class="inp sm" type="email" id="nuEmail" placeholder="Correo" required>
+          <input class="inp sm" type="text" id="nuNombre" placeholder="Nombre">
+          <input class="inp sm" type="password" id="nuPass" placeholder="Contraseña (mín. 8)" minlength="8" required autocomplete="new-password">
+          <select class="inp sm" id="nuRol"><option value="lector">Lector</option><option value="admin">Administradora</option></select>
+          <span id="nuMods" class="lbl" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"></span>
+          <button class="btn sm pri" type="submit" id="btnCrear">＋ Crear usuario</button>
+        </form>
+        <div class="tbl-wrap" id="usrBox"></div>
+  </div></div>
+</div>
+
+<!-- =============================== APP (Agente Legal / Seguimiento de tareas) =============================== -->
+<div id="viewApp" class="hidden">
+  <div class="mhdr">
+    <div class="mbrand">
+      <img class="mlogo" src="__LOGO_MYA__" alt="M&amp;A Capital Inc">
+      <div class="msep"></div>
+      <div>
+        <button class="kback" id="btnVolverA" title="Volver al inicio">← M&amp;A Capital · Inicio</button>
+        <h1 id="appTitulo"></h1>
+        <div class="sub" id="appSub"></div>
+      </div>
+    </div>
+    <div class="hbtns"><span class="rolchip hidden" id="rolChipA"></span><button class="hbtn hidden" id="btnSalirA" title="Cerrar sesión">⎋ Salir</button></div>
+  </div>
+  <div id="bannerBoxA"></div>
+  <iframe id="appFrame" title="Aplicación"></iframe>
+</div>
+
+<!-- =============================== MÓDULO =============================== -->
+<div id="viewModulo" class="hidden">
+  <div class="mhdr">
+    <div class="mbrand">
+      <img class="mlogo" src="__LOGO_GOLD__" alt="Pantera Real Estate Fund">
+      <div class="msep"></div>
+      <div>
+        <button class="kback" id="btnVolver" title="Volver al inicio">← M&amp;A Capital · Pantera Real Estate Fund</button>
+        <h1>Reportería <span class="mart">Martina</span></h1>
+        <div class="sub" id="hdrSub">Conectando con la carpeta…</div>
+      </div>
+    </div>
+    <div class="mtabs hidden" role="tablist" id="mtabs">
+      <button class="mtab" data-tab="lector" aria-selected="true">📁 Lector de carpeta <span class="cnt" id="cntArchivos">0</span></button>
+      <button class="mtab" data-tab="pantera" aria-selected="false">🐆 Reportería Pantera</button>
+    </div>
+    <div class="hbtns">
+      <button class="hbtn pri" id="btnActualizar" disabled>↻ Actualizar</button>
+      <button class="hbtn" id="btnCambiar">📁 Cambiar carpeta</button>
+      <span class="rolchip hidden" id="rolChip"></span>
+      <button class="hbtn hidden" id="btnSalir" title="Cerrar sesión">⎋ Salir</button>
+    </div>
+  </div>
+
+  <div id="bannerBox"></div>
+
+  <!-- pantalla de ingreso del módulo (modo Supabase) -->
+<div id="viewLogin" class="hidden">
+  <div class="login-card">
+    <div class="login-top">
+      <img src="__LOGO_MYA__" alt="M&amp;A Capital Inc">
+      <div class="eyebrow">M&amp;A Capital · Uso interno</div>
+      <h1>Dashboard Interno Ultimate</h1>
+    </div>
+    <div class="login-body">
+      <form id="loginForm">
+        <input class="inp" type="email" id="loginEmail" placeholder="correo@empresa.com" autocomplete="username" required>
+        <input class="inp" type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password" required>
+        <button class="btn gold" type="submit" id="btnLogin" style="font-size:14px;padding:11px 22px;justify-content:center">Entrar</button>
+        <div id="loginError" style="color:var(--bad);min-height:16px;font-size:12.5px;text-align:center"></div>
+      </form>
+      <p class="login-note">La sesión no se guarda en este navegador: se cierra al pulsar “Salir” o tras 10 minutos sin actividad.</p>
+    </div>
+  </div>
+</div>
+
+
+  <!-- pantalla de conexión (solo si el navegador no recuerda la carpeta) -->
+  <div id="connectBox" class="connect hidden">
+    <div class="big">📂</div>
+    <h2 id="connectTitle">Conectar la carpeta de OneDrive</h2>
+    <p id="connectText">Selecciona la carpeta raíz donde están los años y los meses. Solo se hace la primera vez: después entra directo.</p>
+    <code>OneDrive › PruebaDashboard</code><br>
+    <button class="btn gold" id="btnConectar" style="font-size:14px;padding:11px 22px">📂 Conectar carpeta</button>
+  </div>
+
+  <div id="moduloBody" class="hidden">
+
+    <!-- ---------- Pestaña: Lector ---------- -->
+    <section id="tab-lector">
+      <div class="lector">
+        <div class="panel">
+          <div class="side-top"><input type="text" id="buscador" placeholder="🔍  Buscar archivo…"></div>
+          <div class="tree" id="tree"></div>
+        </div>
+        <div class="panel" id="viewer">
+          <div class="empty"><div class="big">📊</div><b>Elige un archivo</b>Selecciona un Excel del panel izquierdo para verlo aquí, organizado por hojas.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Pestaña: Reportería Pantera ---------- -->
+    <section id="tab-pantera" class="hidden">
+      <div class="pframe-wrap">
+        <iframe id="panteraFrame" title="Reportería Pantera"></iframe>
+        <div class="ploading hidden" id="pLoading"><div class="spin"></div><div id="pLoadingTxt">Armando la reportería Pantera…</div></div>
+      </div>
+    </section>
+
+
+  </div>
+</div>
+
+</div>
+
+<script>
+/* =====================================================================
+   Motor de Reportería Pantera embebido (mismo HTML que el dashboard Pantera)
+   ===================================================================== */
+const PANTERA_B64 = "__PANTERA_B64__";
+
+/* ============================ utilidades ============================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+const norm = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase();
+function mesIndex(nombre){
+  const n = norm(nombre).replace("SETIEMBRE","SEPTIEMBRE");
+  for(let i=0;i<12;i++) if(n.includes(MESES[i])) return i;
+  const m = n.match(/(?:^|[^0-9])(0?[1-9]|1[0-2])(?:[^0-9]|$)/);
+  return m ? (+m[1]-1) : 99;
+}
+const esAnio = s => /^(19|20)\d{2}$/.test(s);
+// nombre de carpeta que ES un mes (AGOSTO, 08, 08-AGOSTO, AGOSTO 2026…), no solo que lo contenga
+const esMesNombre = s => { const n=norm(s).replace("SETIEMBRE","SEPTIEMBRE").trim();
+  return /^(0?[1-9]|1[0-2])$/.test(n) || new RegExp("^(\\d{1,2}[\\s._-]*)?("+MESES.join("|")+")([\\s._-]*\\d{2,4})?$").test(n); };
+// Solo cuentan los archivos que están dentro de AÑO › MES (p. ej. 2026/AGOSTO/...).
+// Lo que está fuera de esa estructura (una carpeta de mes movida a la raíz, archivos sueltos) no se muestra ni se usa.
+function enFecha(ruta, raiz){
+  let c=String(ruta).split("/").slice(0,-1);
+  if(raiz&&esAnio(raiz)) c=[raiz,...c];
+  const i=c.findIndex(esAnio);
+  return i>=0 && !!c[i+1] && esMesNombre(c[i+1]);
+}
+const fFecha = t => t ? new Date(t).toLocaleString("es-PA",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "—";
+const fTam = b => b==null ? "" : b<1024 ? b+" B" : b<1048576 ? (b/1024).toFixed(0)+" KB" : (b/1048576).toFixed(1)+" MB";
+
+/* ============================ estado ============================ */
+const DB_NAME="carpeta_dashboard_db", STORE="handles", KEY="carpeta";
+let SAVED_HANDLE=null, DIR_HANDLE=null, ARCHIVOS=[], ARBOL={}, SEL=null, TAB="lector";
+
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1);
+  r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function guardarHandle(h){try{const db=await openDB();await new Promise((res,rej)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(h,KEY);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});}catch(e){}}
+async function leerHandle(){try{const db=await openDB();return await new Promise(res=>{const tx=db.transaction(STORE,"readonly");const r=tx.objectStore(STORE).get(KEY);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}catch(e){return null;}}
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+
+/* ============================ navegación ============================ */
+// v: "home" | "modulo" | "login" (el ingreso aparece dentro del módulo, como antes)
+// v: "home" | "modulo" | "login" (ingreso dentro del módulo) | "usuarios" | "loginU" (ingreso dentro de Usuarios)
+function mostrar(v){
+  const enMod=v==="modulo"||v==="login", enUsr=v==="usuarios"||v==="loginU", enApp=v==="app"||v==="loginA";
+  $("viewHome").classList.toggle("hidden",enMod||enUsr||enApp); $("viewModulo").classList.toggle("hidden",!enMod); $("viewUsuarios").classList.toggle("hidden",!enUsr); $("viewApp").classList.toggle("hidden",!enApp);
+  if(v==="loginA"){ $("viewApp").insertBefore($("viewLogin"),$("appFrame")); $("appFrame").classList.add("hidden"); $("appSub").textContent="Inicia sesión para entrar"; setTimeout(()=>{try{$("loginEmail").focus();}catch(e){}},50); }
+  if(v==="app") $("appFrame").classList.remove("hidden");
+  if(!enApp) cerrarApp();
+  if(v==="login") $("viewModulo").insertBefore($("viewLogin"),$("connectBox"));
+  if(v==="loginU"){ $("viewUsuarios").insertBefore($("viewLogin"),$("usrPanel")); $("hdrSubU").textContent="Inicia sesión como administradora"; setTimeout(()=>{try{$("loginEmail").focus();}catch(e){}},50); }
+  $("usrPanel").classList.toggle("hidden",v!=="usuarios");
+  $("viewLogin").classList.toggle("hidden",!(v==="login"||v==="loginU"||v==="loginA"));
+  if(v==="login"){ $("moduloBody").classList.add("hidden"); $("mtabs").classList.add("hidden"); $("connectBox").classList.add("hidden");
+    $("hdrSub").textContent="Inicia sesión para ver los reportes"; $("btnActualizar").disabled=true; $("btnActualizar").classList.add("hidden"); setTimeout(()=>{try{$("loginEmail").focus();}catch(e){}},50); }
+  document.body.classList.toggle("enModulo",enMod||enUsr||enApp);
+}
+let LOGIN_DEST="modulo";
+$("cardMartina").onclick = () => { if(SB_ON){ LOGIN_DEST="modulo"; if(!SB_USER){ mostrar("login"); return; } if(!tieneModulo("martina")) return; mostrar("modulo"); if(DIR_HANDLE) usarHandle(DIR_HANDLE); else conectarAuto(true); } else { mostrar("modulo"); conectarAuto(true); } };
+$("btnVolver").onclick = () => mostrar("home");
+$("btnVolverU").onclick = () => mostrar("home");
+$("btnUsuariosHome").onclick = () => { if(!SB_ON) return; LOGIN_DEST="usuarios"; if(!SB_USER){ mostrar("loginU"); return; } if(esAdmin()) abrirUsuarios(); };
+/* ---------- Apps en su propio HTML (Agente Legal, Seguimiento de tareas) ----------
+   Se abren en un marco con la misma sesión: el inicio les pasa el token por mensaje
+   (nunca la contraseña) y les avisa cuando se renueva. Si se sale o vence la sesión, el marco se cierra. */
+let APP_ACTUAL=null;
+function moduloDe(id){ return MODULOS.find(m=>m.id===id); }
+function abrirApp(id){
+  const m=moduloDe(id); if(!m) return;
+  APP_ACTUAL=id; $("appTitulo").textContent=m.nombre;
+  if(SB_ON&&!SB_USER){ LOGIN_DEST="app:"+id; mostrar("loginA"); return; }
+  if(SB_ON&&!tieneModulo(id)) return;
+  mostrar("app"); $("appSub").textContent=SB_USER?SB_USER.email:"";
+  $("rolChipA").textContent=ROL_TXT[SB_ROL]||""; $("rolChipA").classList.toggle("hidden",!SB_USER); $("btnSalirA").classList.toggle("hidden",!SB_USER);
+  const f=$("appFrame"); if(f.dataset.app!==id){ f.dataset.app=id; f.src=m.app+"?v="+encodeURIComponent("__VERSION__"); }
+}
+function cerrarApp(){ const f=$("appFrame"); if(f&&f.dataset.app){ f.dataset.app=""; f.src="about:blank"; } }
+async function enviarSesionApp(){
+  const f=$("appFrame"); if(!f||!f.contentWindow||!SB_USER) return;
+  const {data:{session}}=await SB.auth.getSession(); if(!session) return;
+  f.contentWindow.postMessage({type:"MA_SESSION",url:SUPABASE_URL,anon:SUPABASE_ANON,token:session.access_token,
+    email:SB_USER.email.toLowerCase(),rol:SB_ROL,modulos:SB_MODS,app:APP_ACTUAL},"*");
+}
+window.addEventListener("message",ev=>{
+  const f=$("appFrame"); if(!f||ev.source!==f.contentWindow) return;
+  const d=ev.data||{};
+  if(d.type==="MA_APP_READY") enviarSesionApp();
+  else if(d.type==="MA_ACTIVITY") actividad();
+  else if(d.type==="MA_BANNER") banner(d.html||"",d.tipo||"");
+});
+document.querySelectorAll(".mod-card[data-app]").forEach(c=>c.onclick=()=>abrirApp(c.dataset.app));
+$("btnVolverA").onclick=()=>mostrar("home");
+$("btnSalirA").onclick=()=>cerrarSesion();
+function abrirUsuarios(){ mostrar("usuarios"); $("hdrSubU").textContent=`Quién entra a cada dashboard · ${SB_USER.email}`; cargarUsuarios(); }
+// Cuenta las tarjetas visibles por sección (permisos + búsqueda) y oculta las secciones vacías
+function contarModulos(){
+  let total=0;
+  document.querySelectorAll("#secciones .cat").forEach(sec=>{
+    const n=[...sec.querySelectorAll(".mod-card")].filter(c=>!c.classList.contains("hidden")&&c.style.display!=="none").length;
+    sec.querySelector(".pill").textContent=n+" módulo"+(n===1?"":"s"); sec.classList.toggle("hidden",!n); total+=n; });
+  $("homeCount").textContent=total+" módulo"+(total===1?"":"s");
+  return total;
+}
+contarModulos();
+$("buscadorModulos").oninput = e => {
+  const q=norm(e.target.value.trim());
+  document.querySelectorAll(".mod-card").forEach(c=>{ const ok=!q||norm(c.dataset.tags+" "+c.textContent).includes(q); c.style.display=ok?"":"none"; });
+  contarModulos();
+};
+const TABS=["lector","pantera"];
+function setTab(t){
+  // una pestaña que el rol no tiene (o desconocida) vuelve al lector
+  const btn=document.querySelector(`.mtab[data-tab="${t}"]`);
+  if(!TABS.includes(t)||!btn||btn.classList.contains("hidden")) t="lector";
+  TAB=t; lsSet("martina_tab",t);
+  document.querySelectorAll(".mtab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  TABS.forEach(x=>$("tab-"+x).classList.toggle("hidden",x!==t));
+  if(t==="pantera"){ try{ pFrame.contentWindow.dispatchEvent(new Event("resize")); }catch(e){} }
+}
+document.querySelectorAll(".mtab").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+
+function banner(html,tipo,clave){
+  if(clave && lsGet("martina_aviso_"+clave)==="1") html="";
+  const box=!$("viewUsuarios").classList.contains("hidden")?$("bannerBoxU"):!$("viewApp").classList.contains("hidden")?$("bannerBoxA"):$("bannerBox");
+  box.innerHTML = html ? `<div class="banner ${tipo||""}">${html}<button class="bx" title="Cerrar aviso">✕</button></div>` : "";
+  const b=box.querySelector(".bx"); if(b) b.onclick=()=>{ if(clave) lsSet("martina_aviso_"+clave,"1"); box.innerHTML=""; };
+}
+
+/* ============================ conexión automática ============================ */
+// gesto=true cuando viene de un clic (permite pedir el permiso sin abrir el explorador de Windows)
+async function conectarAuto(gesto){
+  if(DIR_HANDLE){ return; }
+  if(AUTO_PEND){ await AUTO_PEND; if(DIR_HANDLE) return; }
+  if(!window.showDirectoryPicker){
+    pantallaConectar("Este navegador no puede leer carpetas","Abre este archivo con Google Chrome o Microsoft Edge.",false); return;
+  }
+  const h = SAVED_HANDLE || await leerHandle();
+  SAVED_HANDLE = h;
+  if(!h){ if(gesto){ await elegirCarpeta(); } else { pantallaConectar(); } return; }
+  try{
+    let perm = await h.queryPermission({mode:"read"});
+    if(perm!=="granted" && gesto) perm = await h.requestPermission({mode:"read"});
+    if(perm==="granted"){ await usarHandle(h); return; }
+  }catch(e){}
+  pantallaConectar("Abrir la carpeta "+h.name,"Haz clic para abrir la carpeta guardada. Si Chrome te ofrece <b>“Permitir en cada visita”</b>, elígelo y no volverá a preguntar.",true);
+}
+function pantallaConectar(titulo,texto,reabrir){
+  $("hdrSub").textContent="Sin carpeta conectada";
+  $("moduloBody").classList.add("hidden"); $("mtabs").classList.add("hidden");
+  $("connectBox").classList.remove("hidden");
+  $("connectTitle").textContent = titulo || "Conectar la carpeta de OneDrive";
+  $("connectText").innerHTML = texto || "Selecciona la carpeta raíz donde están los años y los meses. Solo se hace la primera vez: después entra directo.";
+  $("btnConectar").textContent = reabrir ? "🔓 Abrir carpeta" : "📂 Conectar carpeta";
+  $("btnConectar").onclick = reabrir ? ()=>conectarAuto(true) : elegirCarpeta;
+}
+async function elegirCarpeta(){
+  try{
+    const opts={mode:"read", id:"martina_onedrive"};
+    if(SAVED_HANDLE) opts.startIn=SAVED_HANDLE;
+    const h=await window.showDirectoryPicker(opts);
+    // nunca se fija un mes ni un año: hay que conectar la carpeta que los contiene
+    if(esMesNombre(h.name) || esAnio(h.name)){
+      pantallaConectar("Elegiste “"+esc(h.name)+"”, que es un "+(esAnio(h.name)?"año":"mes"),
+        "Para que lea todos los años y meses que existan (y los que agregues o renombres), elige la carpeta de arriba: <b>PruebaDashboard</b>.",false);
+      return;
+    }
+    SAVED_HANDLE=h; await guardarHandle(h);
+    DIR_HANDLE=null; await usarHandle(h);
+  }catch(e){
+    if(!DIR_HANDLE) pantallaConectar();
+    if(e && (e.name==="AbortError"||e.name==="SecurityError"||e.name==="NotAllowedError")) return;
+    banner("No se pudo abrir la carpeta: "+esc(e.message),"err");
+  }
+}
+$("btnCambiar").onclick = elegirCarpeta;
+$("btnActualizar").onclick = () => escanear(true);
+
+async function usarHandle(h){
+  DIR_HANDLE=h;
+  $("connectBox").classList.add("hidden"); $("viewLogin").classList.add("hidden");
+  $("btnActualizar").classList.remove("hidden"); $("btnActualizar").onclick=()=>escanear(true);
+  if(!AUTO) $("btnCambiar").classList.remove("hidden");
+  $("moduloBody").classList.remove("hidden"); $("mtabs").classList.remove("hidden");
+  $("btnActualizar").disabled=false;
+  await escanear(false);
+}
+
+/* ============================ escaneo ============================ */
+/* ===== Modo automático: lectura directa de la carpeta del propio archivo =====
+   Funciona cuando el navegador se abre con el acceso directo "Abrir Dashboard M&A"
+   (permiso --allow-file-access-from-files en un perfil aparte). No hay que elegir carpeta:
+   se leen los años, meses y archivos que existan en ese momento. */
+let AUTO=false, AUTO_PEND=null;
+async function listarAuto(url){
+  const r=await fetch(url); const t=await r.text(); const out=[]; const re=/addRow\((.*?)\);<\/script>/g; let m;
+  while((m=re.exec(t))){ try{ const a=JSON.parse("["+m[1]+"]"); if(a[0]==="."||a[0]==="..") continue;
+    let nombre=a[0]; try{ nombre=decodeURIComponent(String(a[1]).replace(/\/$/,""))||a[0]; }catch(e){}   // nombres con tildes
+    if(!nombre) continue;
+    out.push({name:nombre,url:a[1],dir:!!a[2],size:a[3],mod:(a[5]||0)*1000}); }catch(e){} }
+  return out;
+}
+function dirAuto(url,name){
+  return {kind:"directory",name,auto:true,
+    async *entries(){ for(const e of await listarAuto(url)){
+      if(e.dir){ let u=url+e.url; if(!u.endsWith("/")) u+="/"; yield [e.name, dirAuto(u,e.name)]; }
+      else yield [e.name, fileAuto(url+e.url,e)]; } },
+    async queryPermission(){return "granted";}, async requestPermission(){return "granted";}};
+}
+function fileAuto(u,e){
+  return {kind:"file",name:e.name,meta:{mod:e.mod,size:e.size},
+    async getFile(){ const r=await fetch(u); return new File([await r.arrayBuffer()], e.name, {lastModified:e.mod}); }};
+}
+async function detectarAuto(){
+  if(location.protocol!=="file:") return null;
+  AUTO_PEND=(async()=>{
+    try{ const base=location.href.replace(/[?#].*$/,"").replace(/[^/]*$/,"");
+      await listarAuto(base);   // falla si el navegador no tiene el permiso del acceso directo
+      const nombre=decodeURIComponent(base.split("/").filter(Boolean).pop()||"Carpeta");
+      return dirAuto(base,nombre);
+    }catch(e){ return null; }
+  })();
+  return await AUTO_PEND;
+}
+
+async function* recorrer(dir, ruta){
+  for await (const [nombre, h] of dir.entries()){
+    if(nombre.startsWith(".")||nombre.startsWith("~$")) continue;
+    if(h.kind==="directory") yield* recorrer(h, ruta+nombre+"/");
+    else if(/\.(xlsx|xlsm|xls|csv)$/i.test(nombre)) yield {nombre, ruta:ruta+nombre, handle:h};
+  }
+}
+async function escanear(forzar){
+  if(!DIR_HANDLE) return;
+  $("hdrSub").textContent="Leyendo la carpeta "+DIR_HANDLE.name+"…";
+  const lista=[];
+  try{ for await (const f of recorrer(DIR_HANDLE,"")) lista.push(f); }
+  catch(e){
+    const nombre=DIR_HANDLE.name;
+    if(e && (e.name==="NotFoundError" || /could not be found/i.test(e.message))){
+      // la carpeta guardada se renombró o se movió: hay que reconectar (mejor la raíz, para que no vuelva a pasar)
+      DIR_HANDLE=null; SAVED_HANDLE=null; banner("");
+      // si venimos de un clic, se abre directo el explorador para elegir la carpeta raíz (sin pantallas intermedias)
+      try{ await elegirCarpeta(); return; }
+      catch(err){ if(err && err.name==="AbortError"){} }
+      pantallaConectar("La carpeta “"+esc(nombre)+"” ya no existe",
+        "Se le cambió el nombre o se movió. Conecta la carpeta <b>raíz</b> (<b>PruebaDashboard</b>, la que tiene los años adentro). "+
+        "Así, aunque renombres o agregues meses como AGOSTO, SEPTIEMBRE u OCTUBRE, se detectan solos con <b>Actualizar</b>.",false);
+      return;
+    }
+    banner("Error leyendo la carpeta: "+esc(e.message),"err"); return;
+  }
+  const enLaFecha=lista.filter(f=>enFecha(f.ruta,DIR_HANDLE.name));
+  lista.length=0; lista.push(...enLaFecha);
+  for(const f of lista){
+    if(f.handle.meta){ f.mod=f.handle.meta.mod; f.size=f.handle.meta.size; continue; }
+    try{const file=await f.handle.getFile(); f.mod=file.lastModified; f.size=file.size;}catch(e){}
+  }
+  ARCHIVOS=lista;
+  construirArbol();
+  $("cntArchivos").textContent=ARCHIVOS.length;
+  $("hdrSub").textContent=`Carpeta: ${DIR_HANDLE.name}${AUTO?" (automática)":""} · ${ARCHIVOS.length} archivo(s) · actualizado ${new Date().toLocaleTimeString("es-PA",{hour:"2-digit",minute:"2-digit"})}`;
+  // aviso si se conectó un mes en vez de la carpeta raíz
+  if(!ARCHIVOS.length){ if(!SB_ON) banner(`La carpeta <b>${esc(DIR_HANDLE.name)}</b> no tiene archivos Excel dentro de carpetas de año y mes (por ejemplo <b>2026 › AGOSTO</b>).`,"err"); }
+  else if(!Object.keys(ARBOL).some(esAnio) && (esMesNombre(DIR_HANDLE.name) || esAnio(DIR_HANDLE.name)))
+    banner(`<span class="grow">Estás conectado solo a <b>${esc(DIR_HANDLE.name)}</b>. Para ver todos los años y meses, conecta la carpeta raíz <b>PruebaDashboard</b>.</span><button class="btn sm pri" onclick="elegirCarpeta()">Cambiar a PruebaDashboard</button>`,"","raiz_"+DIR_HANDLE.name);
+  else banner("");
+  renderTree();
+  if(SEL && !ARCHIVOS.some(a=>a.ruta===SEL)) SEL=null;
+  if(!SEL){ const ult=ultimoArchivo(); if(ult) abrirArchivo(ult.ruta); else $("viewer").innerHTML=vacioViewer(); }
+  else abrirArchivo(SEL);
+  generarPantera(forzar);
+}
+
+// Cada minuto (y al volver a la pestaña) revisa la carpeta y recarga solo si algo cambió
+async function revisarCarpeta(){
+  if(!DIR_HANDLE||document.hidden||$("viewModulo").classList.contains("hidden")||(SB_ON&&!SB_USER)) return;
+  try{ const l=[]; for await (const f of recorrer(DIR_HANDLE,"")) if(enFecha(f.ruta,DIR_HANDLE.name)) l.push(f);
+    for(const f of l){ if(f.handle.meta){ f.mod=f.handle.meta.mod; f.size=f.handle.meta.size; continue; } try{const x=await f.handle.getFile(); f.mod=x.lastModified; f.size=x.size;}catch(e){} }
+    const sig=l.map(a=>a.ruta+"|"+(a.mod||0)+"|"+(a.size||0)).sort().join(";");
+    if(sig!==firma()) await escanear(false);
+  }catch(e){}
+}
+setInterval(revisarCarpeta,60*1000);
+{ let ultFoco=0; const alVolver=()=>{ if(document.hidden||Date.now()-ultFoco<5000) return; ultFoco=Date.now(); revisarCarpeta(); };
+  window.addEventListener("focus",alVolver); document.addEventListener("visibilitychange",alVolver); }
+
+/* ============================ árbol año / mes ============================ */
+function construirArbol(){
+  const arbol={}; const raiz=DIR_HANDLE.name;
+  ARCHIVOS.forEach(f=>{
+    const partes=f.ruta.split("/"); const carpetas=partes.slice(0,-1);
+    let anio=carpetas.find(esAnio), mes;
+    if(anio){ mes=carpetas[carpetas.indexOf(anio)+1] || "General"; }
+    else if(esAnio(raiz)){ anio=raiz; mes=carpetas[0]||"General"; }
+    else { anio=esMesNombre(raiz) ? "Carpeta "+raiz : "Otros"; mes=carpetas[0]||(esMesNombre(raiz)?raiz:"General"); }
+    f.anio=anio; f.mes=mes;
+    ((arbol[anio]=arbol[anio]||{})[mes]=arbol[anio][mes]||[]).push(f);
+  });
+  ARBOL=arbol;
+}
+const aniosOrden = () => Object.keys(ARBOL).sort((a,b)=>(esAnio(b)?+b:0)-(esAnio(a)?+a:0)||a.localeCompare(b));
+const mesesOrden = a => Object.keys(ARBOL[a]).sort((x,y)=>mesIndex(y)-mesIndex(x)||x.localeCompare(y));
+function ultimoArchivo(){ const a=aniosOrden()[0]; if(!a) return null; const m=mesesOrden(a)[0]; return ARBOL[a][m].slice().sort((x,y)=>x.nombre.localeCompare(y.nombre,"es"))[0]; }
+
+const ABIERTOS=new Set();
+function renderTree(){
+  const q=norm($("buscador").value.trim());
+  const tree=$("tree"); let html="";
+  const anios=aniosOrden();
+  if(!ABIERTOS.size && anios.length){ ABIERTOS.add("y:"+anios[0]); ABIERTOS.add("m:"+anios[0]+"/"+mesesOrden(anios[0])[0]); }
+  anios.forEach(a=>{
+    let yHtml="", yCount=0;
+    mesesOrden(a).forEach(m=>{
+      const fs=ARBOL[a][m].filter(f=>!q||norm(f.ruta).includes(q)).sort((x,y)=>x.nombre.localeCompare(y.nombre,"es"));
+      if(!fs.length) return; yCount+=fs.length;
+      const mOpen = q || ABIERTOS.has("m:"+a+"/"+m);
+      yHtml+=`<div class="${mOpen?"":"closed"}"><div class="m-row" data-k="m:${esc(a+"/"+m)}"><span class="chev">▼</span>${esc(m)}<span class="pill">${fs.length}</span></div><div class="kids">`+
+        fs.map(f=>`<div class="f-row${SEL===f.ruta?" sel":""}" data-r="${esc(f.ruta)}"><span class="f-ic${/csv$/i.test(f.nombre)?" csv":""}">${/csv$/i.test(f.nombre)?"CSV":"X"}</span><div><div class="f-name">${esc(f.nombre.replace(/\.(xlsx|xlsm|xls|csv)$/i,""))}</div><div class="f-date">${fFecha(f.mod)} · ${fTam(f.size)}</div></div></div>`).join("")+
+        `</div></div>`;
+    });
+    if(!yCount) return;
+    const yOpen = q || ABIERTOS.has("y:"+a);
+    html+=`<div class="${yOpen?"":"closed"}"><div class="y-row" data-k="y:${esc(a)}"><span class="chev">▼</span>📅 ${esc(a)}<span class="pill" style="margin-left:auto">${yCount}</span></div><div class="kids">${yHtml}</div></div>`;
+  });
+  tree.innerHTML = html || `<div class="empty" style="padding:24px"><b>Sin resultados</b>Prueba con otro nombre.</div>`;
+  tree.querySelectorAll(".y-row,.m-row").forEach(r=>r.onclick=()=>{ const k=r.dataset.k; ABIERTOS.has(k)?ABIERTOS.delete(k):ABIERTOS.add(k); r.parentElement.classList.toggle("closed"); });
+  tree.querySelectorAll(".f-row").forEach(r=>r.onclick=()=>abrirArchivo(r.dataset.r));
+}
+$("buscador").oninput=renderTree;
+
+/* ============================ visor de archivo ============================ */
+const vacioViewer=()=>`<div class="empty"><div class="big">📊</div><b>Elige un archivo</b>Selecciona un Excel del panel izquierdo para verlo aquí, organizado por hojas.</div>`;
+let LIBRO=null;
+async function abrirArchivo(ruta){
+  const f=ARCHIVOS.find(a=>a.ruta===ruta); if(!f) return;
+  SEL=ruta;
+  document.querySelectorAll(".f-row").forEach(r=>r.classList.toggle("sel",r.dataset.r===ruta));
+  const v=$("viewer");
+  v.innerHTML=`<div class="empty"><div class="spin" style="margin:0 auto 12px"></div>Leyendo ${esc(f.nombre)}…</div>`;
+  try{
+    if(!window.XLSX) throw new Error("no se pudo cargar el lector de Excel (revisa la conexión a internet)");
+    const buf=await (await f.handle.getFile()).arrayBuffer();
+    const wb=XLSX.read(buf,{type:"array",cellDates:true});
+    LIBRO={f,wb};
+    pintarLibro(wb.SheetNames[0]);
+  }catch(e){ v.innerHTML=`<div class="empty"><div class="big">⚠️</div><b>No se pudo leer el archivo</b>${esc(e.message)}</div>`; }
+}
+function filasLimpias(ws){
+  // valores reales (para sumar y ordenar) + el texto tal como lo muestra Excel (%, fechas, años, monedas)
+  const crudo=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:"",blankrows:true});
+  const vista=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:"",blankrows:true});
+  let filas=crudo.map((r,i)=>{r.w=vista[i]||[];return r;}).filter(r=>r.some(c=>String(c).trim()!==""));
+  if(!filas.length) return {titulo:[],cab:[],cuerpo:[]};
+  const ncol=Math.max(...filas.map(r=>r.length));
+  const usadas=[]; for(let c=0;c<ncol;c++) if(filas.some(r=>String(r[c]??"").trim()!=="")) usadas.push(c);
+  filas=filas.map(r=>{const x=usadas.map(c=>r[c]??"");x.w=usadas.map(c=>r.w[c]??"");return x;});
+  // encabezado = primera fila con al menos la mitad de celdas con texto
+  let hi=filas.findIndex(r=>r.filter(c=>typeof c==="string"&&c.trim()).length>=Math.max(2,Math.ceil(usadas.length/2)));
+  // si la fila candidata trae números, no es un encabezado real: se usan letras de columna (A, B, C…) como en Excel
+  if(hi<0 || filas[hi].some(c=>typeof c==="number")){
+    const letra=i=>{let s="";i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;};
+    return {titulo:[], cab:usadas.map((_,i)=>letra(usadas[i])), cuerpo:filas};
+  }
+  const titulo=filas.slice(0,hi).map(r=>r.filter(c=>String(c).trim()).join(" · ")).filter(Boolean);
+  return {titulo, cab:filas[hi], cuerpo:filas.slice(hi+1)};
+}
+function celda(v,w){
+  w=String(w==null?"":w).trim();
+  if(v instanceof Date) return {t:w||v.toLocaleDateString("es-PA"),n:false};
+  if(typeof v==="number"){
+    let t;
+    if(w && /[%$€£,]|\d[\/-]\d|[a-z]/i.test(w)) t=w;                       // formato de Excel: 7.00%, $1,200, 30/06/2026
+    else if(Number.isInteger(v) && v>=1900 && v<=2100) t=String(v);          // años: 2032, no 2,032
+    else t=v.toLocaleString("en-US",{maximumFractionDigits:Math.abs(v)<1?4:2,minimumFractionDigits:Number.isInteger(v)?0:2});
+    return {t,n:true,neg:v<0};
+  }
+  return {t:String(v),n:false};
+}
+function pintarLibro(hoja){
+  const {f,wb}=LIBRO; const v=$("viewer");
+  const ws=wb.Sheets[hoja]; const {titulo=[],cab=[],cuerpo=[]}=ws?filasLimpias(ws):{};
+  const MAX=500;
+  const cols=cab.length;
+  const esNum=cab.map((_,i)=>{const vals=cuerpo.map(r=>r[i]).filter(x=>x!==""&&x!=null);return vals.length&&vals.filter(x=>typeof x==="number").length/vals.length>.6;});
+  const esFilaTot=r=>r.slice(0,3).some(c=>/^\s*(total|totales|gran total|suma)\b/i.test(String(c??"")));
+  // columnas de numeración (#, No., 1,2,3…) no se suman
+  const esConteo=i=>/^\s*(#|n[o°º]\.?|num|item|línea|linea)\s*$/i.test(String(cab[i]??""))||(()=>{const v=cuerpo.map(r=>r[i]).filter(x=>typeof x==="number");return v.length>2&&v.every((x,k)=>k===0||x===v[k-1]+1);})();
+  // columnas de años (2032, 2039…) o tasas/porcentajes no se suman
+  const noSumar=i=>{const v=cuerpo.filter(r=>!esFilaTot(r)).map(r=>r[i]).filter(x=>typeof x==="number");
+    return v.length>0&&(v.every(x=>Number.isInteger(x)&&x>=1900&&x<=2100)||/%|rate|tasa|año|year|maturity|vencimiento|plazo/i.test(String(cab[i]??"")));};
+  const sumas=cab.map((_,i)=>esNum[i]&&!esConteo(i)&&!noSumar(i)?cuerpo.filter(r=>!esFilaTot(r)).reduce((t,r)=>t+(typeof r[i]==="number"?r[i]:0),0):null);
+  const conRn=!esConteo(0);   // si la hoja ya trae su propia numeración, no se repite
+  const vacia=x=>x===""||x==null;
+  const filasHTML=cuerpo.slice(0,MAX).map((r,ri)=>{
+    const esTot=esFilaTot(r);
+    let tds="";
+    for(let i=0;i<cols;i++){
+      const c=celda(r[i]??"", r.w&&r.w[i]);
+      let span=1;
+      if(!c.n && c.t.length>28){ while(i+span<cols && vacia(r[i+span])) span++; }
+      const largo=!c.n && c.t.length>40;
+      tds+=`<td class="${c.n?"n":""}${c.neg?" neg":""}${largo?" wrap":""}${span>1?" span":""}"${span>1?` colspan="${span}"`:""}>${esc(c.t)}</td>`;
+      i+=span-1;
+    }
+    return `<tr${esTot?' class="totrow"':""}>${conRn?`<td class="rn">${ri+1}</td>`:""}${tds}</tr>`;
+  }).join("");
+  const hayTot=sumas.some(x=>x!=null)&&cuerpo.length>1&&!cuerpo.some(esFilaTot);
+  v.innerHTML=`
+    <div class="viewer-hdr">
+      <div class="viewer-title">
+        <div class="vt-left">
+          <h2><span class="crumbs"><b>${esc(f.anio)}</b> › ${esc(f.mes)} ›</span> ${esc(f.nombre)}</h2>
+          <div class="viewer-meta" title="${esc(titulo.join(" — "))}">${fFecha(f.mod)} · ${fTam(f.size)} · ${wb.SheetNames.length} hoja(s)${titulo.length?` · <span style="color:var(--text-2)">${esc(titulo.join(" — "))}</span>`:""}</div>
+        </div>
+        <div class="vt-btns">
+          <button class="btn sm" id="btnLista" title="Ocultar o mostrar la lista de archivos">${document.body.classList.contains("sideoff")?"☰ Lista":"⇤ Lista"}</button>
+          <button class="btn sm" id="btnFull" title="Ver la tabla en pantalla completa (Esc para salir)">${$("viewer").classList.contains("full")?"✕ Cerrar":"⛶ Ampliar"}</button>
+          <button class="btn sm" id="btnBajarArchivo" title="Descargar este archivo">⬇ Archivo</button>
+          <button class="btn sm pri" id="btnBajarMes" title="Descargar en un solo Excel todos los archivos de ${esc(f.mes)}">⬇ Todo ${esc(f.mes)}</button>
+        </div>
+      </div>
+    </div>
+    <div class="stabs">${wb.SheetNames.map(h=>`<button class="stab" data-h="${esc(h)}" aria-selected="${h===hoja}">${esc(h)}</button>`).join("")}<span class="sheet-info"><b>${cuerpo.length.toLocaleString("es-PA")}</b> filas · <b>${cols}</b> columnas${cuerpo.length>MAX?` · primeras ${MAX}`:""}</span></div>
+    ${cols?`<div class="tbl-wrap"><table class="x"><thead><tr>${conRn?`<th class="rn">#</th>`:""}${cab.map((c,i)=>`<th class="${esNum[i]?"n":""}">${esc(c===""?"Columna "+(i+1):celda(c).t)}</th>`).join("")}</tr></thead>
+      <tbody>${filasHTML}${hayTot?`<tr class="totrow">${conRn?`<td class="rn">Σ</td>`:""}${cab.map((_,i)=>i===0&&!esNum[0]?`<td>Total</td>`:`<td class="${esNum[i]?"n":""}">${sumas[i]!=null?esc(celda(sumas[i]).t):""}</td>`).join("")}</tr>`:""}</tbody></table></div>`
+      :`<div class="empty"><b>Hoja vacía</b>Esta hoja no tiene datos.</div>`}`;
+  v.querySelectorAll(".stab").forEach(b=>b.onclick=()=>pintarLibro(b.dataset.h));
+  $("btnLista").onclick=()=>{ const off=!document.body.classList.contains("sideoff"); document.body.classList.toggle("sideoff",off); lsSet("martina_sideoff",off?"1":""); $("btnLista").textContent=off?"☰ Lista":"⇤ Lista"; };
+  $("btnFull").onclick=()=>pantallaCompleta(!$("viewer").classList.contains("full"));
+  $("btnBajarArchivo").onclick=async()=>{ const file=await f.handle.getFile(); const a=document.createElement("a"); a.href=URL.createObjectURL(file); a.download=f.nombre; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); };
+  $("btnBajarMes").onclick=()=>descargarMes(f.anio,f.mes);
+}
+async function descargarMes(anio,mes){
+  const fs=(ARBOL[anio]||{})[mes]||[]; if(!fs.length) return;
+  const out=XLSX.utils.book_new(); const usados=new Set();
+  for(const f of fs){
+    try{ const wb=XLSX.read(await (await f.handle.getFile()).arrayBuffer(),{type:"array"});
+      wb.SheetNames.forEach(h=>{
+        let base=(f.nombre.replace(/\.[^.]+$/,"")+" - "+h).replace(/[\\/?*[\]:]/g,"").slice(0,31)||"Hoja", n=base, i=1;
+        while(usados.has(n.toLowerCase())){ i++; n=base.slice(0,28)+"_"+i; } usados.add(n.toLowerCase());
+        XLSX.utils.book_append_sheet(out, wb.Sheets[h], n);
+      });
+    }catch(e){}
+  }
+  XLSX.writeFile(out, `Consolidado_${mes}_${esAnio(anio)?anio:""}.xlsx`.replace(/\s+/g,"_").replace("_.",".") );
+}
+
+function pantallaCompleta(on){
+  $("viewer").classList.toggle("full",on);
+  let bg=document.querySelector(".fullbg");
+  if(on&&!bg){ bg=document.createElement("div"); bg.className="fullbg"; bg.onclick=()=>pantallaCompleta(false); document.body.appendChild(bg); }
+  if(!on&&bg) bg.remove();
+  const b=$("btnFull"); if(b) b.textContent=on?"✕ Cerrar":"⛶ Ampliar";
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") pantallaCompleta(false); });
+if(lsGet("martina_sideoff")==="1") document.body.classList.add("sideoff");
+
+/* ============================ Reportería Pantera ============================ */
+let pFrame=$("panteraFrame");
+let P_LISTO=false, P_READY=0, P_ENVIANDO=false, P_SIG=null, P_TIMER=null;
+// Datos que el motor Pantera guarda en el navegador (se borran al salir, al vencer la sesión y al abrir la página)
+const P_KEYS=["pantera_dashboard_ds_v1","martina_pantera_sig"];
+function borrarDatosPantera(){ P_KEYS.forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} }); }
+function cargarMotor(){
+  pFrame.addEventListener("load",()=>{ try{ escucharActividad(pFrame.contentWindow); }catch(e){} });
+  try{ const bin=atob(PANTERA_B64); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+    pFrame.srcdoc=new TextDecoder("utf-8").decode(u);
+  }catch(e){ pFrame.srcdoc="<p style='font-family:sans-serif;padding:20px'>No se pudo cargar el motor de reportería.</p>"; }
+}
+// Reinicia el motor desde cero (iframe nuevo: sin datos en memoria ni en window.name)
+function reiniciarPantera(cargar){
+  const nuevo=document.createElement("iframe"); nuevo.id="panteraFrame"; nuevo.title="Reportería Pantera";
+  pFrame.replaceWith(nuevo); pFrame=nuevo;
+  P_LISTO=false; P_READY=0; P_ENVIANDO=false; P_PENDIENTE=null; clearTimeout(P_TIMER); pCargando(false);
+  if(cargar) cargarMotor();
+}
+function firma(){ return ARCHIVOS.map(a=>a.ruta+"|"+(a.mod||0)+"|"+(a.size||0)).sort().join(";"); }
+function pCargando(on,txt){ $("pLoading").classList.toggle("hidden",!on); if(txt) $("pLoadingTxt").textContent=txt; }
+window.addEventListener("message",ev=>{
+  if(ev.source!==pFrame.contentWindow) return;
+  const d=ev.data||{};
+  if(d.type==="PANTERA_READY"){
+    P_LISTO=true; P_READY++;
+    if(P_ENVIANDO && P_READY>=1){ P_ENVIANDO=false; clearTimeout(P_TIMER); pCargando(false); lsSet("martina_pantera_sig",P_SIG); }
+    else if(P_PENDIENTE){ const p=P_PENDIENTE; P_PENDIENTE=null; enviarPantera(p); }
+  }else if(d.type==="PANTERA_LOADED" && d.ok===false){
+    P_ENVIANDO=false; clearTimeout(P_TIMER); pCargando(false);
+    if(TAB==="pantera") banner("Reportería Pantera: "+esc(d.error||"no se pudo generar"),"err");
+  }
+});
+let P_PENDIENTE=null;
+async function generarPantera(forzar){
+  const sig=firma();
+  if(!forzar && sig===lsGet("martina_pantera_sig")) return;   // ya está armada con estos mismos archivos
+  // Siempre se arma desde cero con los archivos que hay ahora: si se borró un mes, desaparece del reporte
+  borrarDatosPantera(); reiniciarPantera(true);
+  if(!ARCHIVOS.length){ lsSet("martina_pantera_sig",sig); return; }
+  P_SIG=sig;
+  pCargando(true,"Leyendo "+ARCHIVOS.length+" archivo(s) de la carpeta…");
+  const files=[];
+  for(const a of ARCHIVOS){ if(/\.csv$/i.test(a.nombre)) continue; try{ files.push(await a.handle.getFile()); }catch(e){} }
+  pCargando(true,"Armando la reportería Pantera con "+files.length+" archivo(s)…");
+  if(P_LISTO) enviarPantera(files); else P_PENDIENTE=files;
+}
+function enviarPantera(files){
+  P_READY=0; P_ENVIANDO=true;
+  pFrame.contentWindow.postMessage({type:"PANTERA_LOAD_FILES",files},"*");
+  clearTimeout(P_TIMER);
+  P_TIMER=setTimeout(()=>{ if(P_ENVIANDO){ P_ENVIANDO=false; pCargando(false); } },60000);
+}
+
+/* ============================ Modo Supabase ============================
+   - Sin sesión solo se ve la pantalla de ingreso. El HTML no trae datos ni usuarios.
+   - La sesión vive solo en memoria (no se guarda en el navegador) y se cierra sola
+     tras 10 minutos sin actividad o al pulsar "Salir".
+   - El navegador nunca escribe en las tablas: toda escritura pasa por funciones de la
+     base (ma_edicion_*, ma_quitar_mes, ma_usuario_guardar) que revisan el rol y dejan
+     cada edición en el historial. */
+const SB_ON = /^https?:\/\//.test(SUPABASE_URL) && SUPABASE_ANON.length>20 && !!window.supabase;
+const SB = SB_ON ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON,
+  {auth:{persistSession:false, autoRefreshToken:true, detectSessionInUrl:false}}) : null;
+let SB_USER=null, SB_ROL=null, SB_MODS=[], SB_CARPETA=null, SB_ARCH=[], SB_CARGADO=false, SB_TAB_PREF="lector";
+// Módulos del dashboard (id = valor en ma_usuarios.modulos y ma_carpetas.modulo)
+const MODULOS=[{id:"martina",nombre:"Pantera Reportería — Martina",card:"cardMartina"},
+  {id:"legal",nombre:"Dashboard de Legal",card:"cardLegal",app:"dashboard-legal.html"},
+  {id:"contabilidad",nombre:"Dashboard Contabilidad",card:"cardContabilidad",app:"contabilidad.html"},
+  {id:"agente_legal",nombre:"Agente Legal",card:"cardAgenteLegal",app:"legal.html"},
+  {id:"tareas",nombre:"Seguimiento de tareas",card:"cardTareas",app:"tareas.html"}];
+const tieneModulo=id=>esAdmin()||SB_MODS.includes(id);
+const ROL_TXT={admin:"Administradora",editor:"Editor",lector:"Lector"};
+const esEditor=()=>SB_ROL==="admin"||SB_ROL==="editor";
+const esAdmin=()=>SB_ROL==="admin";
+
+function sbPantalla(q){ // 'modulo' | 'vacio'
+  $("connectBox").classList.add("hidden");
+  $("btnActualizar").classList.toggle("hidden",q!=="modulo");
+  $("moduloBody").classList.toggle("hidden",q!=="modulo");
+  $("mtabs").classList.toggle("hidden",q!=="modulo");
+  $("btnCambiar").classList.add("hidden");
+  aplicarRol();
+}
+function aplicarRol(){
+  const dentro=!!SB_USER;
+  $("btnSalir").classList.toggle("hidden",!dentro);
+  if(!dentro) $("homeUserTxt").innerHTML="";
+  $("rolChip").classList.toggle("hidden",!dentro);
+  $("btnUsuariosHome").classList.toggle("hidden",!(SB_ON&&(!dentro||esAdmin())));
+  $("btnSalirHome").classList.toggle("hidden",!dentro); $("btnSalirU").classList.toggle("hidden",!dentro);
+  if(dentro){
+    $("rolChip").textContent=ROL_TXT[SB_ROL]||SB_ROL;
+    $("homeUserTxt").innerHTML=`${esc(SB_USER.email)} <span class="rolchip">${esc(ROL_TXT[SB_ROL]||SB_ROL)}</span>`;
+  }
+  // en el inicio solo aparecen los módulos asignados al usuario
+  let n=0; MODULOS.forEach(m=>{ const ok=!SB_ON||!dentro||tieneModulo(m.id); $(m.card).classList.toggle("hidden",!ok); if(ok) n++; });
+  contarModulos();
+  let v=$("sinModulos"); if(!v){ v=document.createElement("div"); v.id="sinModulos"; v.className="empty"; v.innerHTML="<div class='big'>🔒</div><b>No tienes módulos asignados</b>Pídele a la administradora que te asigne uno."; $("secciones").appendChild(v); }
+  v.classList.toggle("hidden",!(SB_ON&&dentro&&n===0));
+  const t=document.querySelector(`.mtab[data-tab="${TAB}"]`);
+  if(t&&t.classList.contains("hidden")) setTab("lector");
+}
+
+async function sbIniciar(){
+  const {data:{session}}=await SB.auth.getSession();
+  if(!session){ return; }
+  SB_USER=session.user;
+  // rol y módulos en ma_usuarios (si no tiene fila o está desactivado, no entra)
+  const {data:yo,error}=await SB.from("ma_usuarios").select("rol,modulos,activo").eq("email",SB_USER.email.toLowerCase()).maybeSingle();
+  if(error||!yo||!yo.activo){
+    await cerrarSesion(error?"No se pudo validar tu acceso: "+error.message:"Tu usuario no tiene acceso al dashboard o está desactivado. Pídele acceso a la administradora.");
+    return;
+  }
+  SB_ROL=yo.rol; SB_MODS=yo.modulos||[];
+  borrarDatosPantera(); reiniciarPantera(true);
+  aplicarRol(); actividad(); setTab(SB_TAB_PREF);
+  // entró por el botón Usuarios
+  if(LOGIN_DEST==="usuarios"){ if(esAdmin()) abrirUsuarios(); else mostrar("home"); return; }
+  if(LOGIN_DEST.startsWith("app:")){ const id=LOGIN_DEST.slice(4); if(tieneModulo(id)) abrirApp(id); else mostrar("home"); return; }
+  // entra directo al módulo
+  if(!tieneModulo("martina")){ mostrar("home"); return; }
+  mostrar("modulo"); await conectarAuto(true);
+}
+$("loginForm").onsubmit=async e=>{
+  e.preventDefault(); $("loginError").textContent=""; $("btnLogin").disabled=true;
+  const {error}=await SB.auth.signInWithPassword({email:$("loginEmail").value.trim(),password:$("loginPass").value});
+  $("btnLogin").disabled=false; $("loginPass").value="";
+  if(error){ $("loginError").textContent=/invalid/i.test(error.message)?"Correo o contraseña incorrectos.":error.message; return; }
+  await sbIniciar();
+};
+
+// Cierra la sesión y borra todo lo que quedó en pantalla y en el navegador
+async function cerrarSesion(motivo){
+  const habia=!!SB_USER;
+  SB_USER=null; SB_ROL=null; SB_MODS=[];
+  try{ await SB.auth.signOut(); }catch(e){}
+  DIR_HANDLE=null; ARCHIVOS=[]; ARBOL={}; SEL=null; LIBRO=null; ABIERTOS.clear();
+  $("tree").innerHTML=""; $("viewer").innerHTML=vacioViewer(); $("cntArchivos").textContent="0";
+  $("usrBox").innerHTML=""; $("bannerBox").innerHTML=""; $("bannerBoxU").innerHTML=""; $("hdrSub").textContent=""; USRS=[];
+  pantallaCompleta(false); cerrarDlg(); ocultarIdle();
+  borrarDatosPantera(); reiniciarPantera(false);
+  aplicarRol(); sbPantalla("vacio");
+  const enUsr=!$("viewUsuarios").classList.contains("hidden"), enHome=!$("viewHome").classList.contains("hidden"), enApp=!$("viewApp").classList.contains("hidden");
+  if(enApp){ cerrarApp(); LOGIN_DEST="app:"+APP_ACTUAL; }
+  mostrar(enUsr?"loginU":enHome?"home":enApp?"loginA":"login");
+  $("loginError").textContent=motivo||(habia?"Sesión cerrada.":"");
+}
+$("btnSalir").onclick=()=>cerrarSesion();
+$("btnSalirHome").onclick=()=>cerrarSesion();
+$("btnSalirU").onclick=()=>cerrarSesion();
+if(SB_ON) SB.auth.onAuthStateChange((ev)=>{ if(ev==="SIGNED_OUT"&&SB_USER) cerrarSesion("La sesión expiró. Vuelve a entrar."); if(ev==="TOKEN_REFRESHED") enviarSesionApp(); });
+window.addEventListener("pagehide",()=>{ if(SB_ON) borrarDatosPantera(); });
+
+/* ---------- Cierre por inactividad (10 minutos) ---------- */
+const IDLE_MS=10*60*1000, IDLE_AVISO_MS=60*1000;
+let ULT_ACT=Date.now(), IDLE_TIMER=null;
+function actividad(){ ULT_ACT=Date.now(); if($("idleBox")) ocultarIdle(); }
+function escucharActividad(w){
+  ["mousemove","mousedown","keydown","wheel","touchstart","scroll"].forEach(ev=>w.addEventListener(ev,actividad,{passive:true,capture:true}));
+}
+function ocultarIdle(){ const b=$("idleBox"); if(b) b.remove(); }
+function revisarIdle(){
+  if(!SB_ON||!SB_USER) return;
+  if(SB_SUBIENDO&&!SB_AUTO_SYNC){ ULT_ACT=Date.now(); return; }   // una subida manual en curso cuenta como actividad
+  const resta=IDLE_MS-(Date.now()-ULT_ACT);
+  if(resta<=0){ cerrarSesion("La sesión se cerró por 10 minutos sin actividad."); return; }
+  if(resta<=IDLE_AVISO_MS){
+    let b=$("idleBox");
+    if(!b){ b=document.createElement("div"); b.id="idleBox"; b.className="idle";
+      b.innerHTML=`<b>¿Sigues ahí?</b>La sesión se cerrará en <span id="idleSeg"></span> s por inactividad.<br><button class="btn sm pri" id="btnSeguir">Seguir conectado</button>`;
+      document.body.appendChild(b); $("btnSeguir").onclick=actividad; }
+    $("idleSeg").textContent=Math.ceil(resta/1000);
+  }
+}
+if(SB_ON){ escucharActividad(window); IDLE_TIMER=setInterval(revisarIdle,1000); }
+
+/* ---------- Diálogo simple (confirmar / pedir un dato) ---------- */
+function cerrarDlg(){ const d=document.querySelector(".dlg-bg"); if(d) d.remove(); }
+function dialogo({titulo,texto,ok="Aceptar",peligro=false,campo=null}){
+  return new Promise(res=>{
+    cerrarDlg();
+    const bg=document.createElement("div"); bg.className="dlg-bg";
+    bg.innerHTML=`<div class="dlg" role="dialog"><h3>${esc(titulo)}</h3><p>${texto}</p>
+      ${campo?`<input class="inp" id="dlgCampo" type="${campo.tipo||"text"}" placeholder="${esc(campo.ph||"")}" style="width:100%" autocomplete="new-password">`:""}
+      <div id="dlgErr" style="color:var(--bad);font-size:12px;min-height:14px;margin-top:6px"></div>
+      <div class="acts"><button class="btn" id="dlgNo">Cancelar</button><button class="btn ${peligro?"danger":"pri"}" id="dlgSi">${esc(ok)}</button></div></div>`;
+    document.body.appendChild(bg);
+    const fin=v=>{ cerrarDlg(); res(v); };
+    $("dlgNo").onclick=()=>fin(null);
+    bg.onclick=e=>{ if(e.target===bg) fin(null); };
+    $("dlgSi").onclick=()=>{
+      if(!campo) return fin(true);
+      const v=$("dlgCampo").value;
+      if(campo.min&&v.length<campo.min){ $("dlgErr").textContent=`Mínimo ${campo.min} caracteres.`; return; }
+      fin(v);
+    };
+    if(campo) setTimeout(()=>$("dlgCampo").focus(),30);
+  });
+}
+
+/* ---------- Archivos: se leen directo de la carpeta de OneDrive de cada usuario ----------
+   Supabase solo controla quién entra y a qué dashboards. Ningún archivo pasa por Supabase.
+   El dashboard es de solo lectura: muestra exactamente lo que hay en la carpeta (AÑO › MES). */
+let SB_SUBIENDO=false, SB_AUTO_SYNC=false;
+const mesTxt=m=>m?String(m).charAt(0).toUpperCase()+String(m).slice(1).toLowerCase():"";
+
+/* ---------- Usuarios (solo administradora) ---------- */
+let USRS=[], USR_FN_OK=true;
+async function fnUsuarios(body){
+  const {data,error}=await SB.functions.invoke("pantera-usuarios",{body});
+  if(error){
+    let msg=error.message;
+    try{ const j=await error.context.json(); if(j&&j.error) msg=j.error; }catch(e){}
+    const noPublicada=/Failed to send|not found|404/i.test(msg);
+    if(noPublicada) msg="La función pantera-usuarios no está publicada en Supabase (ver GUIA_SUPABASE.txt, paso 2).";
+    const err=new Error(msg); err.noPublicada=noPublicada; throw err;
+  }
+  if(data&&data.error) throw new Error(data.error);
+  return data;
+}
+async function cargarUsuarios(){
+  if(!esAdmin()) return;
+  const box=$("usrBox");
+  if(!USRS.length) box.innerHTML=`<div class="empty"><div class="spin" style="margin:0 auto 12px"></div>Leyendo usuarios…</div>`;
+  try{ USRS=(await fnUsuarios({accion:"listar"})).usuarios||[]; USR_FN_OK=true; }
+  catch(e){
+    // sin la Edge Function igual se pueden ver y cambiar roles (crear cuentas y claves necesita la función)
+    USR_FN_OK=false;
+    const {data,error}=await SB.from("ma_usuarios").select("*").order("email");
+    if(error){ box.innerHTML=`<div class="empty"><div class="big">⚠️</div><b>No se pudieron leer los usuarios</b>${esc(error.message)}</div>`; return; }
+    USRS=(data||[]).map(u=>({...u,cuenta:null,ultimo_ingreso:null}));
+    banner(esc(e.message)+(e.noPublicada?" Mientras tanto se pueden cambiar roles, pero no crear cuentas ni contraseñas.":""),"err");
+  }
+  pintarUsuarios();
+}
+const modsHTML=(sel,pref)=>MODULOS.map(m=>`<label class="lbl" style="white-space:nowrap"><input type="checkbox" data-mod="${m.id}"${(sel||[]).includes(m.id)?" checked":""}> ${esc(m.nombre)}</label>`).join(" ");
+function pintarUsuarios(){
+  const yo=SB_USER.email.toLowerCase();
+  $("nuMods").innerHTML=modsHTML(["martina"]);
+  const filas=USRS.map((u,i)=>`<tr data-i="${i}">
+    <td>${esc(u.email)}${u.email===yo?` <span class="tag">tú</span>`:""}${u.cuenta===false?` <span class="tag quitar_mes" title="Tiene permiso pero no cuenta para entrar">sin cuenta</span>`:""}</td>
+    <td><input class="inp sm" data-f="nombre" value="${esc(u.nombre||"")}" style="width:100%;min-width:140px"></td>
+    <td><select class="inp sm" data-f="rol">${["admin","lector"].concat(u.rol==="editor"?["editor"]:[]).map(r=>`<option value="${r}"${u.rol===r?" selected":""}>${ROL_TXT[r]}</option>`).join("")}${u.rol?"":`<option value="" selected>— sin permiso —</option>`}</select></td>
+    <td>${u.rol==="admin"?`<span class="tag ok">Todos</span>`:modsHTML(u.modulos)}</td>
+    <td class="nw"><label><input type="checkbox" data-f="activo"${u.activo?" checked":""}> Activo</label></td>
+    <td class="nw">${u.ultimo_ingreso?fFecha(Date.parse(u.ultimo_ingreso)):"—"}</td>
+    <td class="nw"><button class="btn sm pri" data-a="guardar">Guardar</button>
+      ${USR_FN_OK?`<button class="btn sm" data-a="clave">🔑 Clave</button>${u.email!==yo?`<button class="btn sm danger" data-a="eliminar">Eliminar</button>`:""}`:""}</td></tr>`).join("");
+  $("usrBox").innerHTML=USRS.length?`<table class="x"><thead><tr><th>Correo</th><th>Nombre</th><th>Rol</th><th>Módulos</th><th>Estado</th><th>Último ingreso</th><th></th></tr></thead><tbody>${filas}</tbody></table>`
+    :`<div class="empty"><b>Sin usuarios</b>Crea el primero con el formulario de arriba.</div>`;
+  $("formNuevo").querySelectorAll("input,select,button").forEach(x=>x.disabled=!USR_FN_OK);
+  $("usrBox").querySelectorAll("button[data-a]").forEach(b=>b.onclick=()=>accionUsuario(b.dataset.a,b.closest("tr")));
+}
+async function accionUsuario(a,tr){
+  const u=USRS[+tr.dataset.i]; const val=f=>tr.querySelector(`[data-f="${f}"]`);
+  try{
+    if(a==="guardar"){
+      const rol=val("rol").value; if(!rol) throw new Error("Elige un rol.");
+      const mods=[...tr.querySelectorAll("[data-mod]:checked")].map(x=>x.dataset.mod);
+      if(rol!=="admin"&&!mods.length) throw new Error("Marca al menos un módulo.");
+      await rpc("ma_usuario_guardar",{p_email:u.email,p_nombre:val("nombre").value.trim()||null,p_rol:rol,p_activo:val("activo").checked,p_modulos:rol==="admin"?MODULOS.map(m=>m.id):mods});
+      banner(`✓ Permisos de <b>${esc(u.email)}</b> guardados.`,"ok");
+    }else if(a==="clave"){
+      const p=await dialogo({titulo:"Cambiar contraseña",texto:`Nueva contraseña para <b>${esc(u.email)}</b>.`,ok:"Cambiar",campo:{tipo:"password",ph:"Mínimo 8 caracteres",min:8}});
+      if(p==null) return;
+      await fnUsuarios({accion:"clave",email:u.email,password:p});
+      banner(`✓ Contraseña de <b>${esc(u.email)}</b> cambiada.`,"ok"); return;
+    }else if(a==="eliminar"){
+      const ok=await dialogo({titulo:"Eliminar usuario",peligro:true,ok:"Eliminar",texto:`Se borra la cuenta de <b>${esc(u.email)}</b> y su permiso. Ya no podrá entrar.`});
+      if(!ok) return;
+      await fnUsuarios({accion:"eliminar",email:u.email});
+      banner(`✓ Usuario <b>${esc(u.email)}</b> eliminado.`,"ok");
+    }
+  }catch(e){ banner("No se pudo completar: "+esc(e.message),"err"); return; }
+  await cargarUsuarios();
+}
+$("formNuevo").onsubmit=async e=>{
+  e.preventDefault(); if(!esAdmin()) return;
+  const email=$("nuEmail").value.trim().toLowerCase();
+  $("btnCrear").disabled=true;
+  try{
+    const mods=[...$("nuMods").querySelectorAll("[data-mod]:checked")].map(x=>x.dataset.mod);
+    if($("nuRol").value!=="admin"&&!mods.length) throw new Error("Marca al menos un módulo.");
+    const r=await fnUsuarios({accion:"crear",email,nombre:$("nuNombre").value.trim(),password:$("nuPass").value,rol:$("nuRol").value,modulos:$("nuRol").value==="admin"?MODULOS.map(m=>m.id):mods});
+    banner(r&&r.yaExistia?`La cuenta <b>${esc(email)}</b> ya existía: se le asignó el rol.`:`✓ Usuario <b>${esc(email)}</b> creado.`,"ok");
+    $("formNuevo").reset();
+  }catch(err){ banner("No se pudo crear el usuario: "+esc(err.message),"err"); }
+  $("btnCrear").disabled=false;
+  await cargarUsuarios();
+};
+$("btnUsrRef").onclick=cargarUsuarios;
+
+/* ============================ arranque ============================ */
+(async()=>{
+  // MODO SUPABASE: sin sesión solo se ve la pantalla de ingreso; los datos vienen de la base
+  if(SB_ON){ borrarDatosPantera(); SB_TAB_PREF=lsGet("martina_tab")||"lector"; setTab("lector"); aplicarRol(); mostrar("home"); return; }
+  cargarMotor();
+  setTab(lsGet("martina_tab")==="pantera"?"pantera":"lector");
+  // MODO AUTOMÁTICO: abierto con el acceso directo, lee sola la carpeta donde está este archivo (sin elegir nada)
+  const auto=await detectarAuto();
+  if(auto){ AUTO=true; document.body.classList.add("modoAuto"); await usarHandle(auto); return; }
+  // Si el navegador ya tiene el permiso, todo carga solo en segundo plano (sin clics)
+  SAVED_HANDLE=await leerHandle();
+  if(SAVED_HANDLE){ try{ if(await SAVED_HANDLE.queryPermission({mode:"read"})==="granted") await usarHandle(SAVED_HANDLE); }catch(e){} }
+})();
+</script>
+</body>
+</html>

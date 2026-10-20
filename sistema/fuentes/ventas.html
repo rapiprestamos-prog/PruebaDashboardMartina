@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulso Comercial — M&amp;A Capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#fff; --surface-2:#f0f3f8; --border:#dde3ec; --grid:#edf1f6;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#7d889a;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --warn:#9a6b0f;
+  --c1:#2a62a0; --c2:#0d9488; --c3:#b7821c;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 6px 18px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+.hidden{display:none!important}
+.wrap{max-width:1380px;margin:0 auto;padding:18px 24px 50px}
+.hero{position:relative;overflow:hidden;border-radius:18px;padding:22px 28px;color:#fff;background:linear-gradient(115deg,#0f2440 0%,#1b3a5c 55%,#0f5560 100%);box-shadow:0 10px 30px rgba(15,36,64,.22)}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,#e3c27a,#b98b2f 60%,transparent)}
+.hero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.hero h1{margin:4px 0 2px;font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:30px}.hero h1 i{color:var(--gold)}
+.hero .sub{color:#c9d5e4;font-size:13.5px}
+.hero .acc{position:absolute;right:24px;top:22px;display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-weight:600;font-size:13px;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.16)}.hbtn.pri{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+@media (max-width:900px){.hero .acc{position:static;margin-top:12px}}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.chips{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;flex-wrap:wrap}
+.chip{border:0;background:none;padding:7px 12px;border-radius:9px;font-weight:600;font-size:13px;color:var(--text-2);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy);color:#fff}
+.inp{padding:8px 11px;border-radius:10px;border:1px solid var(--border);background:var(--surface);outline:none;font-size:13px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:13px;cursor:pointer}
+.per{font-size:12.5px;color:var(--text-2)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto}
+.tab{border:0;background:none;padding:10px 14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--gold-d)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media (max-width:1000px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold-d)}
+.kpi .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.kpi .v{font-size:25px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px;color:var(--text-2);margin-top:2px;display:flex;justify-content:space-between;gap:8px}
+.var{font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.var.up{background:#e9f6ef;color:var(--good)}.var.dn{background:#fbeceb;color:var(--bad)}.var.eq{background:var(--surface-2);color:var(--muted)}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.g2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.gh{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:1000px){.g2,.g3,.gh{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.pad{padding:16px 18px}
+.ch-t{font-weight:800;font-size:14px;margin:0 0 2px}.ch-s{font-size:12px;color:var(--muted);margin-bottom:10px}
+.box{position:relative;height:260px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin-bottom:6px}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.big{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--grid);font-size:13px}.li:last-child{border-bottom:0}.li b{font-variant-numeric:tabular-nums}
+.barra{height:10px;border-radius:5px;background:var(--grid);overflow:hidden;margin:10px 0 4px}.barra i{display:block;height:100%;background:var(--c3);border-radius:5px}
+.tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px}
+.tag.ok{background:#e9f6ef;color:var(--good)}.tag.rev{background:#fdf6e6;color:var(--warn)}.tag.bad{background:#fbeceb;color:var(--bad)}
+.nota{font-size:12px;color:var(--text-2);background:var(--surface-2);border-radius:10px;padding:9px 11px;margin-top:10px;line-height:1.5}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:right;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap;cursor:pointer}
+table.t th:first-child,table.t td:first-child{text-align:left}
+table.t td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums;white-space:nowrap}
+.inl{display:inline-block;height:6px;border-radius:3px;background:var(--c1);vertical-align:middle;margin-right:6px}
+.vacio{padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55}.vacio>b{display:block;color:var(--text);font-size:14.5px;margin-bottom:4px}
+.guia{line-height:1.7;font-size:14px;color:var(--text-2)}.guia h3{color:var(--text);font-size:16px;margin:18px 0 6px}.guia h3:first-child{margin-top:0}.guia b{color:var(--text)}.guia ul,.guia ol{padding-left:20px;margin:6px 0}
+.prompt{background:#0f1c2e;color:#e6ecf5;border-radius:12px;padding:16px 18px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.6;white-space:pre-wrap;max-height:480px;overflow:auto}
+.spin{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid #dbe3ee;border-top-color:var(--navy);animation:sp .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media print{.hero .acc,.ctrl,.tabs,#maHdr{display:none!important}.card,.kpi{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<!--MA_AUTH-->
+<!--GS_CONEXION-->
+<script>MA.iniciar({modulo:"ventas",titulo:"Pulso Comercial"});</script>
+<div class="wrap">
+  <header class="hero">
+    <div class="k">M&amp;A Capital · Gestión</div>
+    <h1>Pulso <i>Comercial</i></h1>
+    <div class="sub" id="heroSub">Ventas, márgenes, gastos e inventario</div>
+    <div class="acc hidden" id="acc"><button class="hbtn" id="btnHoja">📗 Abrir la hoja</button><button class="hbtn" id="btnXls">⬇ Excel</button><button class="hbtn" id="btnPdf">🖨 PDF</button><button class="hbtn pri" id="btnRec">↻ Actualizar</button></div>
+  </header>
+  <div id="app"><div class="vacio"><span class="spin"></span> Conectando…</div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt=v=>v==null||!isFinite(v)?"—":(v<0?"−":"")+"$"+Math.round(Math.abs(v)).toLocaleString("en-US");
+const fmtK=v=>{ if(v==null||!isFinite(v)) return "—"; const a=Math.abs(v),s=v<0?"−":""; return a>=1e6?s+"$"+(a/1e6).toFixed(2)+"M":a>=1e4?s+"$"+Math.round(a/1e3)+"K":s+"$"+Math.round(a).toLocaleString("en-US"); };
+const pct=v=>v==null||!isFinite(v)?"—":(v*100).toFixed(1)+"%";
+const num=v=>{ if(typeof v==="number") return v; const s=String(v==null?"":v).replace(/[^\d,.\-]/g,""); if(!s) return 0; const t=s.includes(",")&&s.lastIndexOf(",")>s.lastIndexOf(".")?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,""); return +t||0; };
+const fecha=v=>{ if(!v) return ""; const s=String(v); if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10); const m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/); return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:""; };
+const iso=d=>new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())).toISOString().slice(0,10);
+const hoy=()=>iso(new Date());
+const masDias=(s,n)=>new Date(Date.parse(s)+n*864e5).toISOString().slice(0,10);
+const difDias=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+const fCorta=s=>new Date(s+"T12:00:00").toLocaleDateString("es-PA",{day:"numeric",month:"short",year:"numeric"});
+const MC=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+let IGN={v:0,g:0}, V=[], G=[], S=[], HOJA="", DEMO=false, VISTA="general", PER="mes", DESDE="", HASTA="";
+const CH={};
+function grafico(id,cfg){ if(CH[id]) CH[id].destroy(); const el=$(id); if(el&&window.Chart) CH[id]=new Chart(el,cfg); }
+function base(x){ const g=css("--grid"),t=css("--text-2"); return Object.assign({responsive:true,maintainAspectRatio:false,animation:{duration:300},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:"#0f1c2e",padding:10,cornerRadius:8}},
+  scales:{x:{grid:{display:false},ticks:{color:t,font:{size:11.5}},border:{color:g}},y:{grid:{color:g},border:{display:false},ticks:{color:t,font:{size:11.5},callback:v=>fmtK(v)}}}},x||{}); }
+
+/* ============================ datos ============================ */
+function preparar(r){
+  const sinF=(l,k)=>(l||[]).filter(x=>!fecha(x.Fecha)&&Object.keys(x).some(c=>x[c]!==""&&x[c]!=null)).length; IGN={v:sinF(r.ventas),g:sinF(r.gastos)};
+  V=(r.ventas||[]).map(x=>({f:fecha(x.Fecha),p:String(x.Producto||"Sin producto"),c:String(x.Categoria||"Sin categoría"),cl:String(x.Cliente||""),ve:String(x.Vendedor||""),q:num(x.Cantidad)||1,pu:num(x.Precio_unitario),cu:num(x.Costo_unitario)}))
+    .filter(x=>x.f).map(x=>Object.assign(x,{ing:x.q*x.pu,cmv:x.q*x.cu}));
+  G=(r.gastos||[]).map(x=>({f:fecha(x.Fecha),con:String(x.Concepto||""),c:String(x.Categoria||"Sin categoría"),t:/fij/i.test(x.Tipo)?"Fijo":"Variable",m:num(x.Monto)})).filter(x=>x.f);
+  S=(r.stock||[]).map(x=>({p:String(x.Producto||""),c:String(x.Categoria||""),st:num(x.Stock),min:num(x.Stock_minimo),cu:num(x.Costo_unitario),pv:num(x.Precio_venta)})).filter(x=>x.p);
+  HOJA=r.hoja||"";
+}
+function alert0(t){ const d=document.createElement("div"); d.style.cssText="position:fixed;right:18px;bottom:18px;background:#b03a32;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;z-index:80"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),6000); }
+async function cargar(){
+  if(DEMO){ preparar(ejemplo()); pintar(); return; }
+  if(!$("app").querySelector(".kpis")) $("app").innerHTML=`<div class="card vacio"><span class="spin"></span> Leyendo la Hoja de Google… <span style="display:block;font-size:12px;margin-top:4px">puede tardar unos segundos</span></div>`;
+  try{ await GS.conCache("ventas.datos",r=>{ preparar(r); pintar(); }); }
+  catch(e){ if(e.tenia){ alert0("No se pudo actualizar: "+e.message+" (se muestra lo último que se vio)"); return; } $("app").innerHTML=`<div class="card vacio"><b>No se pudo leer la Hoja de Google</b>${esc(e.message)}<br><br><button class="btn" id="reint">Reintentar</button></div>`; $("reint").onclick=cargar; }
+}
+
+/* ============================ período ============================ */
+function rango(){
+  const h=hoy(), d=new Date(h+"T12:00:00");
+  if(PER==="hoy") return [h,h];
+  if(PER==="7d") return [masDias(h,-6),h];
+  if(PER==="30d") return [masDias(h,-29),h];
+  if(PER==="mes") return [iso(new Date(d.getFullYear(),d.getMonth(),1)),h];
+  if(PER==="mesant") return [iso(new Date(d.getFullYear(),d.getMonth()-1,1)),iso(new Date(d.getFullYear(),d.getMonth(),0))];
+  if(PER==="anio") return [iso(new Date(d.getFullYear(),0,1)),h];
+  if(PER==="rango") return [DESDE||h,HASTA||h];
+  return [h,h];
+}
+function anterior([a,b]){
+  const d=new Date(a+"T12:00:00");
+  if(PER==="mes"||PER==="mesant"){ const ini=iso(new Date(d.getFullYear(),d.getMonth()-1,1)); const largo=difDias(a,b); const fin=iso(new Date(d.getFullYear(),d.getMonth(),0)); const f2=masDias(ini,largo); return [ini,f2<fin?f2:fin]; }
+  if(PER==="anio"){ const y=d.getFullYear()-1; return [y+"-01-01",masDias(b,-365)]; }
+  const n=difDias(a,b)+1; return [masDias(a,-n),masDias(a,-1)];
+}
+const en=(x,[a,b])=>x.f>=a&&x.f<=b;
+function calc(r){
+  const v=V.filter(x=>en(x,r)), g=G.filter(x=>en(x,r));
+  const ing=v.reduce((s,x)=>s+x.ing,0), cmv=v.reduce((s,x)=>s+x.cmv,0);
+  const fij=g.filter(x=>x.t==="Fijo").reduce((s,x)=>s+x.m,0), vari=g.filter(x=>x.t==="Variable").reduce((s,x)=>s+x.m,0);
+  const mb=ing-cmv, gas=fij+vari, res=mb-gas, mc=ing-cmv-vari, rmc=ing?mc/ing:null, pe=rmc>0?fij/rmc:null;
+  return {v,g,ing,cmv,mb,mbP:ing?mb/ing:null,fij,vari,gas,res,resP:ing?res/ing:null,mc,rmc,pe,n:v.length,uds:v.reduce((s,x)=>s+x.q,0),ticket:v.length?ing/v.length:null};
+}
+function variacion(a,b,menosEsMejor){ if(b==null||!isFinite(b)||b===0) return `<span class="var eq">sin período anterior</span>`; const d=(a-b)/Math.abs(b); const bueno=menosEsMejor?d<=0:d>=0;
+  return `<span class="var ${Math.abs(d)<0.0005?"eq":bueno?"up":"dn"}">${d>=0?"▲":"▼"} ${pct(Math.abs(d))}</span>`; }
+
+/* ============================ pantalla ============================ */
+function pintar(){
+  $("acc").classList.remove("hidden"); $("btnHoja").classList.toggle("hidden",DEMO||!HOJA);
+  const r=rango(), ra=anterior(r), A=calc(r), B=calc(ra);
+  $("app").innerHTML=`
+    <div class="ctrl">
+      <div class="chips">${[["hoy","Hoy"],["7d","7 días"],["30d","30 días"],["mes","Mes actual"],["mesant","Mes anterior"],["anio","Año"],["rango","Rango"]].map(([k,l])=>`<button class="chip" data-p="${k}" aria-pressed="${PER===k}">${l}</button>`).join("")}</div>
+      ${PER==="rango"?`<input type="date" class="inp" id="dDesde" value="${r[0]}"><input type="date" class="inp" id="dHasta" value="${r[1]}">`:""}
+      <span class="per">${fCorta(r[0])} – ${fCorta(r[1])} · comparado con ${fCorta(ra[0])} – ${fCorta(ra[1])}</span>
+    </div>
+    <div class="tabs">${[["general","General"],["ventas","Ventas"],["gastos","Gastos"],["stock","Stock"],["guia","💡 Guía y prompt"]].map(([k,l])=>`<button class="tab" data-v="${k}" aria-selected="${VISTA===k}">${l}</button>`).join("")}</div>
+    <div id="vista"></div>`;
+  if(DEMO) GS.avisoDemo($("app"),()=>{ DEMO=false; arrancar(); });
+  const ej=/\(ejemplo\)\s*$/, nEj=V.filter(x=>ej.test(x.p)).length+G.filter(x=>ej.test(x.con)).length+S.filter(x=>ej.test(x.p)).length;
+  if(!DEMO&&nEj){ const w=document.createElement("div"); w.className="gs-demo"; w.innerHTML=`<span>👁 La hoja tiene <b>${nEj} fila(s) de ejemplo</b> (las que dicen «(ejemplo)»): son datos inventados para ver el dashboard funcionando. Cuando cargues los datos reales, bórralas en la hoja o pídele a la administradora que ejecute <b>borrarEjemplos</b> en Apps Script.</span>`; $("app").prepend(w); }
+  if(!DEMO&&(IGN.v||IGN.g)){ const w=document.createElement("div"); w.className="gs-demo"; w.style.background="#fbeceb"; w.style.borderColor="#f1c9c5"; w.style.color="#7c2620";
+    w.innerHTML=`<span>⚠ <b style="color:#7c2620">${[IGN.v&&IGN.v+" fila(s) de Ventas",IGN.g&&IGN.g+" fila(s) de Gastos"].filter(Boolean).join(" y ")}</b> no se cuentan porque no tienen <b style="color:#7c2620">Fecha</b> (columna A). Complétala en la hoja y pulsa Actualizar.</span>`; $("app").prepend(w); }
+  $("app").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ PER=b.dataset.p; if(PER==="rango"&&!DESDE){ DESDE=masDias(hoy(),-29); HASTA=hoy(); } pintar(); });
+  $("app").querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{ VISTA=b.dataset.v; pintar(); });
+  if($("dDesde")){ $("dDesde").onchange=e=>{ DESDE=e.target.value; pintar(); }; $("dHasta").onchange=e=>{ HASTA=e.target.value; pintar(); }; }
+  $("heroSub").textContent=`${V.length} ventas · ${G.length} gastos · ${S.length} productos en stock${DEMO?" · datos de ejemplo":""}`;
+  if(!V.length&&!G.length&&!S.length&&VISTA!=="guia"){ $("vista").innerHTML=`<div class="card vacio"><b>La hoja todavía no tiene datos</b>La conexión funciona, pero las pestañas <i>Ventas</i>, <i>Gastos</i> y <i>Stock</i> de la Hoja de Google están vacías.<br>Escribe o pega tus datos debajo de los encabezados (fila 1) y pulsa <i>Actualizar</i>.
+    <table style="margin:16px auto 0;border-collapse:collapse;font-size:12.5px;text-align:left">
+      <tr><td style="padding:5px 12px;font-weight:800;color:var(--text)">Ventas</td><td style="padding:5px 12px">Fecha · Producto · Categoria · Cliente · Vendedor · Cantidad · Precio_unitario · Costo_unitario</td></tr>
+      <tr><td style="padding:5px 12px;font-weight:800;color:var(--text)">Gastos</td><td style="padding:5px 12px">Fecha · Concepto · Categoria · Tipo (Fijo o Variable) · Monto</td></tr>
+      <tr><td style="padding:5px 12px;font-weight:800;color:var(--text)">Stock</td><td style="padding:5px 12px">Producto · Categoria · Stock · Stock_minimo · Costo_unitario · Precio_venta</td></tr></table>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">${HOJA?`<button class="btn pri" id="vAbrir">📗 Abrir la hoja</button>`:""}<button class="btn" id="vEj">👁 Ver con datos de ejemplo</button></div></div>`;
+    if($("vAbrir")) $("vAbrir").onclick=()=>window.open(HOJA,"_blank");
+    $("vEj").onclick=()=>{ DEMO=true; arrancar(); }; return; }
+  ({general:vGeneral,ventas:vVentas,gastos:vGastos,stock:vStock,guia:vGuia})[VISTA](A,B,r,ra);
+}
+
+/* ---------- General ---------- */
+function vGeneral(A,B,r){
+  const cubierto=A.pe?A.ing/A.pe:null, d=new Date(r[1]+"T12:00:00");
+  let proy=null; if(PER==="mes"){ const dm=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(), dt=d.getDate(); if(dt<dm&&A.ing) proy={ing:A.ing/dt*dm,res:A.res/dt*dm}; }
+  $("vista").innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="l">Ingresos totales ${variacion(A.ing,B.ing)}</div><div class="v">${fmt(A.ing)}</div><div class="d"><span>Período anterior</span><b>${fmt(B.ing)}</b></div></div>
+      <div class="kpi"><div class="l">Costo de mercadería (CMV) ${variacion(A.cmv,B.cmv,true)}</div><div class="v">${fmt(A.cmv)}</div><div class="d"><span>Período anterior</span><b>${fmt(B.cmv)}</b></div></div>
+      <div class="kpi"><div class="l">Margen bruto ${variacion(A.mb,B.mb)}</div><div class="v ${A.mb<0?"neg":"pos"}">${fmt(A.mb)}</div><div class="d"><span>Margen</span><b>${pct(A.mbP)}</b></div></div>
+      <div class="kpi"><div class="l">Resultado neto ${variacion(A.res,B.res)}</div><div class="v ${A.res<0?"neg":"pos"}">${fmt(A.res)}</div><div class="d"><span>Período anterior</span><b>${fmt(B.res)}</b></div></div>
+    </div>
+    <div class="g3">
+      <div class="card pad"><p class="ch-t">Estructura de gastos</p><div class="ch-s">Fijos y variables del período</div>
+        <div class="li"><span>Gastos fijos</span><b>${fmt(A.fij)} ${variacion(A.fij,B.fij,true)}</b></div>
+        <div class="li"><span>Gastos variables</span><b>${fmt(A.vari)} ${variacion(A.vari,B.vari,true)}</b></div>
+        <div class="li"><span><b>Total gastos operativos</b></span><b class="neg">${fmt(A.gas)}</b></div>
+        <div class="li"><span>Gastos / ingresos</span><b>${pct(A.ing?A.gas/A.ing:null)}</b></div></div>
+      <div class="card pad"><p class="ch-t">Margen de contribución</p><div class="ch-s">Lo que queda después del CMV y los gastos variables</div>
+        <div class="big" style="color:var(--c1)">${fmt(A.mc)}</div><div style="font-size:12.5px;color:var(--text-2)">Ratio MC: <b>${pct(A.rmc)}</b></div>
+        <div class="nota">Mide el aporte disponible para cubrir los gastos fijos y generar ganancia.</div></div>
+      <div class="card pad"><p class="ch-t">Punto de equilibrio</p><div class="ch-s">Ventas necesarias para cubrir los gastos fijos</div>
+        <div class="big">${A.pe!=null?fmt(A.pe):"—"}</div>
+        ${A.pe!=null?`<span class="tag ${cubierto>=1?"ok":"bad"}">${cubierto>=1?"SUPERÁVIT":"DÉFICIT"}</span> <span style="font-size:12.5px;color:var(--text-2)">${cubierto>=1?"Excedente":"Falta"}: <b>${fmt(Math.abs(A.ing-A.pe))}</b></span>
+        <div class="barra"><i style="width:${Math.min(100,Math.round(100*cubierto))}%;background:${cubierto>=1?css("--good"):css("--c3")}"></i></div><div style="font-size:11.5px;color:var(--muted)">${pct(cubierto)} cubierto</div>`:`<div class="nota">Se calcula cuando hay ventas con margen de contribución positivo.</div>`}</div>
+    </div>
+    <div class="g2" style="margin-top:12px">
+      <div class="card pad"><p class="ch-t">Evolución de ingresos, costos y gastos</p><div class="ch-s">${difDias(r[0],r[1])>62?"Por mes":"Por día"} · período elegido</div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>Ingresos</span><span><i style="background:var(--c3)"></i>Costos + gastos</span><span><i style="background:var(--c2)"></i>Resultado</span></div>
+        <div class="box"><canvas id="cEvo"></canvas></div></div>
+      <div class="card pad"><p class="ch-t">Indicadores del período</p><div class="ch-s">Comparados con el período anterior</div>
+        <div class="li"><span>Operaciones de venta</span><b>${A.n.toLocaleString("en-US")} ${variacion(A.n,B.n)}</b></div>
+        <div class="li"><span>Unidades vendidas</span><b>${Math.round(A.uds).toLocaleString("en-US")} ${variacion(A.uds,B.uds)}</b></div>
+        <div class="li"><span>Ticket promedio</span><b>${fmt(A.ticket)} ${variacion(A.ticket,B.ticket)}</b></div>
+        <div class="li"><span>Margen neto</span><b>${pct(A.resP)}</b></div>
+        ${proy?`<div class="nota">📈 <b>Proyección al cierre del mes</b> al ritmo actual: ingresos de <b>${fmt(proy.ing)}</b> y resultado de <b>${fmt(proy.res)}</b>. Es una estimación lineal, no un dato real.</div>`:""}
+      </div>
+    </div>`;
+  // evolución
+  const mensual=difDias(r[0],r[1])>62, clave=f=>mensual?f.slice(0,7):f;
+  const ks=[]; if(mensual){ let d=r[0].slice(0,7); while(d<=r[1].slice(0,7)){ ks.push(d); const [y,m]=d.split("-").map(Number); d=m===12?`${y+1}-01`:`${y}-${String(m+1).padStart(2,"0")}`; } } else { for(let d=r[0];d<=r[1];d=masDias(d,1)) ks.push(d); }
+  const ag=k=>({i:0,c:0}); const M={}; ks.forEach(k=>M[k]={i:0,c:0});
+  A.v.forEach(x=>{ const k=clave(x.f); if(M[k]){ M[k].i+=x.ing; M[k].c+=x.cmv; } }); A.g.forEach(x=>{ const k=clave(x.f); if(M[k]) M[k].c+=x.m; });
+  const lab=ks.map(k=>mensual?MC[+k.slice(5,7)-1]+" "+k.slice(2,4):(+k.slice(8,10))+" "+MC[+k.slice(5,7)-1]);
+  const ser=(l,c,f,dash)=>({label:l,data:ks.map(f),borderColor:c,backgroundColor:c,borderWidth:2,pointRadius:ks.length>40?0:2.5,pointHoverRadius:5,tension:.3,borderDash:dash||[]});
+  grafico("cEvo",{type:"line",data:{labels:lab,datasets:[ser("Ingresos",css("--c1"),k=>M[k].i),ser("Costos + gastos",css("--c3"),k=>M[k].c,[5,4]),ser("Resultado",css("--c2"),k=>M[k].i-M[k].c)]},
+    options:base({interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:"#0f1c2e",padding:10,cornerRadius:8,callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.raw)}`}}}})});
+}
+
+/* ---------- Ventas ---------- */
+function agrupar(v,k){ const m={}; v.forEach(x=>{ const g=x[k]||"—"; const o=m[g]=m[g]||{n:g,ing:0,cmv:0,q:0,ops:0}; o.ing+=x.ing; o.cmv+=x.cmv; o.q+=x.q; o.ops++; }); return Object.values(m).sort((a,b)=>b.ing-a.ing); }
+function hbar(id,rows,lab){ grafico(id,{type:"bar",data:{labels:rows.map(r=>r.n),datasets:[{label:lab,data:rows.map(r=>r.ing),backgroundColor:css("--c1"),borderRadius:4,borderSkipped:false,barPercentage:.7}]},
+  options:base({indexAxis:"y",plugins:{legend:{display:false},tooltip:{backgroundColor:"#0f1c2e",padding:10,cornerRadius:8,callbacks:{label:c=>` ${lab}: ${fmt(c.raw)}`}}},scales:{x:{grid:{color:css("--grid")},border:{display:false},ticks:{color:css("--text-2"),callback:v=>fmtK(v)}},y:{grid:{display:false},ticks:{color:css("--text-2")}}}})}); }
+function vVentas(A,B){
+  const pr=agrupar(A.v,"p"), ca=agrupar(A.v,"c"), ve=agrupar(A.v.filter(x=>x.ve),"ve"), cl=agrupar(A.v.filter(x=>x.cl),"cl");
+  const prB=Object.fromEntries(agrupar(B.v,"p").map(x=>[x.n,x.ing])), mx=Math.max(1,...pr.map(x=>x.ing));
+  const top=pr.slice(0,10), conc=A.ing&&pr.length?pr.slice(0,Math.max(1,Math.ceil(pr.length*0.2))).reduce((s,x)=>s+x.ing,0)/A.ing:null;
+  $("vista").innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="l">Ingresos ${variacion(A.ing,B.ing)}</div><div class="v">${fmt(A.ing)}</div><div class="d"><span>Unidades</span><b>${Math.round(A.uds).toLocaleString("en-US")}</b></div></div>
+      <div class="kpi"><div class="l">Ticket promedio ${variacion(A.ticket,B.ticket)}</div><div class="v">${fmt(A.ticket)}</div><div class="d"><span>Operaciones</span><b>${A.n}</b></div></div>
+      <div class="kpi"><div class="l">Margen bruto</div><div class="v">${pct(A.mbP)}</div><div class="d"><span>Anterior</span><b>${pct(B.mbP)}</b></div></div>
+      <div class="kpi"><div class="l">Concentración (regla 80/20)</div><div class="v">${pct(conc)}</div><div class="d"><span>de los ingresos viene del 20% de productos</span></div></div>
+    </div>
+    <div class="gh">
+      <div class="card pad"><p class="ch-t">Ventas por categoría</p><div class="ch-s">Ingresos del período</div><div class="box" style="height:${Math.max(200,ca.slice(0,10).length*34+40)}px"><canvas id="cCat"></canvas></div></div>
+      <div class="card pad"><p class="ch-t">Ventas por vendedor</p><div class="ch-s">${ve.length?"Ingresos del período":"La hoja no tiene la columna Vendedor llena"}</div><div class="box" style="height:${Math.max(200,ve.slice(0,10).length*34+40)}px"><canvas id="cVen"></canvas></div></div>
+    </div>
+    <div class="card pad" style="margin-top:12px"><p class="ch-t">Productos más vendidos</p><div class="ch-s">Los 10 de mayores ingresos · margen y variación frente al período anterior</div>
+      <div style="overflow-x:auto"><table class="t"><thead><tr><th>Producto</th><th>Ingresos</th><th>vs anterior</th><th>Unidades</th><th>Margen bruto</th><th>Margen %</th><th>% del total</th></tr></thead><tbody>
+      ${top.map(x=>`<tr><td><b>${esc(x.n)}</b></td><td><span class="inl" style="width:${Math.round(70*x.ing/mx)}px"></span>${fmt(x.ing)}</td><td>${variacion(x.ing,prB[x.n])}</td><td>${Math.round(x.q).toLocaleString("en-US")}</td><td>${fmt(x.ing-x.cmv)}</td><td class="${x.ing-x.cmv<0?"neg":""}">${pct(x.ing?(x.ing-x.cmv)/x.ing:null)}</td><td>${pct(A.ing?x.ing/A.ing:null)}</td></tr>`).join("")||`<tr><td colspan="7" class="vacio">Sin ventas en el período.</td></tr>`}
+      </tbody></table></div></div>
+    ${cl.length?`<div class="card pad" style="margin-top:12px"><p class="ch-t">Mejores clientes</p><div class="ch-s">Los 8 de mayores compras del período</div>${cl.slice(0,8).map(x=>`<div class="li"><span>${esc(x.n)} <span style="color:var(--muted);font-size:12px">· ${x.ops} compra(s)</span></span><b>${fmt(x.ing)}</b></div>`).join("")}</div>`:""}`;
+  hbar("cCat",ca.slice(0,10),"Ingresos"); if(ve.length) hbar("cVen",ve.slice(0,10),"Ingresos");
+}
+
+/* ---------- Gastos ---------- */
+function vGastos(A,B){
+  const m={}; A.g.forEach(x=>{ const o=m[x.c]=m[x.c]||{n:x.c,ing:0,t:x.t}; o.ing+=x.m; }); const cs=Object.values(m).sort((a,b)=>b.ing-a.ing);
+  const mB={}; B.g.forEach(x=>mB[x.c]=(mB[x.c]||0)+x.m);
+  $("vista").innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="l">Gastos totales ${variacion(A.gas,B.gas,true)}</div><div class="v">${fmt(A.gas)}</div><div class="d"><span>Anterior</span><b>${fmt(B.gas)}</b></div></div>
+      <div class="kpi"><div class="l">Fijos ${variacion(A.fij,B.fij,true)}</div><div class="v">${fmt(A.fij)}</div><div class="d"><span>del total</span><b>${pct(A.gas?A.fij/A.gas:null)}</b></div></div>
+      <div class="kpi"><div class="l">Variables ${variacion(A.vari,B.vari,true)}</div><div class="v">${fmt(A.vari)}</div><div class="d"><span>del total</span><b>${pct(A.gas?A.vari/A.gas:null)}</b></div></div>
+      <div class="kpi"><div class="l">Gastos / ingresos</div><div class="v">${pct(A.ing?A.gas/A.ing:null)}</div><div class="d"><span>Anterior</span><b>${pct(B.ing?B.gas/B.ing:null)}</b></div></div>
+    </div>
+    <div class="gh">
+      <div class="card pad"><p class="ch-t">Gastos por categoría</p><div class="ch-s">Del período</div><div class="box" style="height:${Math.max(200,cs.slice(0,12).length*32+40)}px"><canvas id="cGas"></canvas></div></div>
+      <div class="card pad"><p class="ch-t">Detalle por categoría</p><div class="ch-s">Con variación frente al período anterior</div>
+        ${cs.map(x=>`<div class="li"><span>${esc(x.n)} <span class="tag ${x.t==="Fijo"?"rev":"ok"}" style="margin-left:4px">${x.t}</span></span><b>${fmt(x.ing)} ${variacion(x.ing,mB[x.n],true)}</b></div>`).join("")||`<div class="vacio">Sin gastos en el período.</div>`}</div>
+    </div>
+    <div class="card pad" style="margin-top:12px"><p class="ch-t">Últimos gastos</p><div style="overflow-x:auto"><table class="t"><thead><tr><th>Fecha</th><th style="text-align:left">Concepto</th><th style="text-align:left">Categoría</th><th>Tipo</th><th>Monto</th></tr></thead><tbody>
+      ${A.g.slice().sort((a,b)=>b.f.localeCompare(a.f)).slice(0,15).map(x=>`<tr><td>${fCorta(x.f)}</td><td style="text-align:left">${esc(x.con)}</td><td style="text-align:left">${esc(x.c)}</td><td>${x.t}</td><td>${fmt(x.m)}</td></tr>`).join("")}
+    </tbody></table></div></div>`;
+  hbar("cGas",cs.slice(0,12),"Gasto");
+}
+
+/* ---------- Stock ---------- */
+function vStock(A){
+  const h=hoy(), v30=V.filter(x=>x.f>masDias(h,-30)&&x.f<=h), porDia={}; v30.forEach(x=>porDia[x.p]=(porDia[x.p]||0)+x.q/30);
+  const it=S.map(s=>{ const d=porDia[s.p]||0, cob=d?s.st/d:null; const est=s.st<=0?["bad","Agotado"]:s.min&&s.st<=s.min?["bad","Reponer"]:cob!=null&&cob<15?["rev","Pronto"]:["ok","OK"]; return Object.assign({},s,{d,cob,est,val:s.st*s.cu,valV:s.st*s.pv}); })
+    .sort((a,b)=>({bad:0,rev:1,ok:2}[a.est[0]]-{bad:0,rev:1,ok:2}[b.est[0]])||(a.cob??1e9)-(b.cob??1e9));
+  const tv=it.reduce((s,x)=>s+x.val,0), aVen=it.filter(x=>x.pv>0), tvv=aVen.reduce((s,x)=>s+x.valV,0), mPot=aVen.reduce((s,x)=>s+x.st*(x.pv-x.cu),0), rep=it.filter(x=>x.est[0]==="bad").length, sinMov=aVen.filter(x=>x.st>0&&!x.d).length;
+  $("vista").innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="l">Valor del inventario</div><div class="v">${fmt(tv)}</div><div class="d"><span>a costo</span><b>${it.length} productos</b></div></div>
+      <div class="kpi"><div class="l">A precio de venta</div><div class="v">${fmt(tvv)}</div><div class="d"><span>${aVen.length} producto(s) a la venta · margen potencial</span><b>${fmt(mPot)}</b></div></div>
+      <div class="kpi"><div class="l">Para reponer</div><div class="v ${rep?"neg":""}">${rep}</div><div class="d"><span>agotados o bajo el mínimo</span></div></div>
+      <div class="kpi"><div class="l">Sin movimiento</div><div class="v">${sinMov}</div><div class="d"><span>a la venta, con stock y sin ventas en 30 días</span></div></div>
+    </div>
+    <div class="card pad"><p class="ch-t">Inventario y cobertura</p><div class="ch-s">Cobertura = días que alcanza el stock al ritmo de venta de los últimos 30 días</div>
+      <div style="overflow-x:auto"><table class="t"><thead><tr><th>Producto</th><th style="text-align:left">Categoría</th><th>Stock</th><th>Mínimo</th><th>Venta diaria</th><th>Cobertura</th><th>Valor a costo</th><th>Estado</th></tr></thead><tbody>
+      ${it.map(x=>`<tr><td><b>${esc(x.p)}</b></td><td style="text-align:left">${esc(x.c)}</td><td>${x.st.toLocaleString("en-US")}</td><td>${x.min||"—"}</td><td>${x.d?x.d.toFixed(1):"—"}</td><td>${x.cob!=null?Math.round(x.cob)+" días":"—"}</td><td>${fmt(x.val)}</td><td><span class="tag ${x.est[0]}">${x.est[1]}</span></td></tr>`).join("")||`<tr><td colspan="8" class="vacio">La pestaña Stock está vacía.</td></tr>`}
+      </tbody></table></div></div>`;
+}
+
+/* ---------- Guía y prompt ---------- */
+const PROMPT=`Actúa como desarrollador senior de Google Apps Script y analista financiero.
+Quiero un dashboard comercial ejecutivo, "Pulso Comercial", conectado a una Hoja de cálculo de Google, para M&A Capital (estilo azul marino y dorado).
+
+DATOS (pestañas de la hoja, fila 1 = encabezados):
+- Ventas: Fecha, Producto, Categoria, Cliente, Vendedor, Cantidad, Precio_unitario, Costo_unitario
+- Gastos: Fecha, Concepto, Categoria, Tipo (Fijo/Variable), Monto
+- Stock: Producto, Categoria, Stock, Stock_minimo, Costo_unitario, Precio_venta
+
+SERVIDOR (Codigo.gs, aplicación web): doPost con acción "ventas.datos" que devuelve las tres tablas; valida la sesión del usuario (token de Supabase) y el módulo "ventas"; crea las pestañas si no existen.
+
+PÁGINA:
+- Filtros de período: Hoy, 7 días, 30 días, Mes actual, Mes anterior, Año y Rango; todo se compara con el período anterior equivalente (▲/▼ en verde o rojo según si es bueno o malo).
+- General: ingresos, CMV, margen bruto, resultado neto; estructura de gastos fijos/variables; margen de contribución y su ratio; punto de equilibrio = gastos fijos / ratio MC con barra de cobertura y DÉFICIT/SUPERÁVIT; evolución diaria o mensual de ingresos, costos+gastos y resultado; ticket promedio; proyección lineal al cierre del mes (marcada como estimación).
+- Ventas: por categoría, por vendedor, top 10 productos con margen y variación, concentración 80/20, mejores clientes.
+- Gastos: por categoría con variación, fijos vs variables, últimos gastos.
+- Stock: valor del inventario a costo y a precio de venta, cobertura en días al ritmo de los últimos 30 días, alertas de reponer y productos sin movimiento.
+- Exportar a Excel e imprimir/PDF. Nunca inventar datos: si la hoja está vacía, decirlo.`;
+function vGuia(){
+  $("vista").innerHTML=`<div class="gh">
+    <div class="card pad guia">
+      <h3>¿Para qué sirve?</h3>
+      <p>Es el <b>tablero comercial</b>: cuánto se vende, cuánto se gana, en qué se gasta y qué hay en inventario, comparado siempre con el período anterior. Responde en segundos preguntas como «¿estamos por encima del punto de equilibrio?» o «¿qué producto deja más margen?».</p>
+      <ul><li><b>General:</b> ingresos, costo, margen, resultado, margen de contribución y punto de equilibrio con su cobertura, y la proyección del cierre del mes.</li>
+        <li><b>Ventas:</b> categorías, vendedores, productos estrella con su margen, clientes principales y concentración 80/20.</li>
+        <li><b>Gastos:</b> fijos y variables, por categoría y con variación.</li>
+        <li><b>Stock:</b> valor del inventario, días de cobertura al ritmo de venta y qué hay que reponer.</li></ul>
+      <h3>¿Por qué va más allá de Power BI?</h3>
+      <p>No necesita licencias, ni gateway, ni actualizar un modelo: se llena la Hoja de Google (a mano, pegando un Excel o con un formulario) y el tablero se actualiza al pulsar <b>Actualizar</b>. Los cálculos financieros (margen de contribución, punto de equilibrio, cobertura de stock, proyección) ya vienen hechos, con comparación automática contra el período anterior, y se entra con el mismo usuario del dashboard M&amp;A.</p>
+      <h3>Cómo hacerlo funcionar</h3>
+      <ol><li>Usar la misma Hoja de Google de la Bitácora (o una nueva) con el código de Apps Script pegado e implementado como aplicación web.</li>
+        <li>Al conectarse por primera vez se crean solas las pestañas <b>Ventas</b>, <b>Gastos</b> y <b>Stock</b> con sus encabezados.</li>
+        <li>Llenar esas pestañas o pegar los datos desde Excel con los mismos encabezados.</li>
+        <li>Dar el módulo «Pulso Comercial» a cada persona en Usuarios y permisos.</li></ol>
+      <p style="font-size:12.5px">Fechas en formato fecha de la hoja o dd/mm/aaaa. Tipo de gasto: «Fijo» o «Variable».</p>
+    </div>
+    <div class="card pad"><p class="ch-t">Prompt del proyecto</p><div class="ch-s">Sirve para pedirle a una IA que lo amplíe o lo vuelva a construir igual</div>
+      <div class="prompt" id="prompt"></div><button class="btn" id="copiaP" style="margin-top:10px">📋 Copiar prompt</button></div></div>`;
+  $("prompt").textContent=PROMPT;
+  $("copiaP").onclick=async e=>{ try{ await navigator.clipboard.writeText(PROMPT); e.target.textContent="✓ Copiado"; }catch(x){} };
+}
+
+/* ============================ ejemplo (datos inventados) ============================ */
+function ejemplo(){
+  let sem=7; const rnd=()=>(sem=(sem*16807)%2147483647)/2147483647;
+  const P=[["Consultoría financiera","Servicios",1200,420],["Avalúo de inmueble","Servicios",650,210],["Due diligence","Legal",2400,900],["Redacción de contrato","Legal",380,90],["Gestión de alquileres","Inmobiliario",520,180],["Administración de fondo","Inmobiliario",3100,1400],["Informe de mercado","Servicios",290,60],["Auditoría interna","Servicios",1800,820]];
+  const CL=["Inversiones Alfa","Grupo Beta","Comercial Delta","Fundación Omega","Constructora Sigma","Particular"], VE=["Ana Pérez","Luis Gómez","Carlos Díaz"];
+  const h=hoy(), ventas=[], gastos=[];
+  for(let i=120;i>=0;i--){ const f=masDias(h,-i), n=Math.floor(rnd()*4); for(let k=0;k<n;k++){ const p=P[Math.floor(rnd()*P.length)]; ventas.push({Fecha:f,Producto:p[0],Categoria:p[1],Cliente:CL[Math.floor(rnd()*CL.length)],Vendedor:VE[Math.floor(rnd()*VE.length)],Cantidad:1+Math.floor(rnd()*3),Precio_unitario:Math.round(p[2]*(0.9+rnd()*0.2)),Costo_unitario:p[3]}); } }
+  const d0=new Date(h+"T12:00:00");
+  for(let m=4;m>=0;m--){ const y=d0.getFullYear(), mm=d0.getMonth()-m, f=iso(new Date(y,mm,1)), f15=iso(new Date(y,mm,15));
+    [["Alquiler de oficina","Oficina","Fijo",4200],["Planilla","Personal","Fijo",18500],["Software y licencias","Tecnología","Fijo",900]].forEach(g=>gastos.push({Fecha:f,Concepto:g[0],Categoria:g[1],Tipo:g[2],Monto:g[3]}));
+    if(f15<=h) [["Comisiones de venta","Comercial","Variable",1500+Math.round(rnd()*900)],["Viáticos","Operación","Variable",400+Math.round(rnd()*500)],["Publicidad","Comercial","Variable",700+Math.round(rnd()*600)]].forEach(g=>gastos.push({Fecha:f15,Concepto:g[0],Categoria:g[1],Tipo:g[2],Monto:g[3]})); }
+  const stock=[["Papelería corporativa","Insumos",12,20,8,0],["Tóner de impresora","Insumos",3,4,65,0],["Carpetas de cierre","Insumos",140,50,1.2,0],["Kits de bienvenida","Comercial",0,10,35,60],["Licencias de software","Tecnología",25,5,120,0]]
+    .map(s=>({Producto:s[0],Categoria:s[1],Stock:s[2],Stock_minimo:s[3],Costo_unitario:s[4],Precio_venta:s[5]}));
+  return {ventas,gastos,stock};
+}
+
+/* ============================ arranque ============================ */
+$("btnRec").onclick=()=>cargar();
+$("btnHoja").onclick=()=>{ if(HOJA) window.open(HOJA,"_blank"); };
+$("btnPdf").onclick=()=>window.print();
+window.addEventListener("beforeprint",()=>Object.values(CH).forEach(c=>c.resize()));
+$("btnXls").onclick=()=>{ const r=rango(), A=calc(r); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Período",r[0]+" a "+r[1]],[],["Ingresos",A.ing],["CMV",A.cmv],["Margen bruto",A.mb],["Gastos fijos",A.fij],["Gastos variables",A.vari],["Resultado neto",A.res],["Margen de contribución",A.mc],["Punto de equilibrio",A.pe]]),"Resumen");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(agrupar(A.v,"p").map(x=>({Producto:x.n,Ingresos:x.ing,Costo:x.cmv,Margen:x.ing-x.cmv,Unidades:x.q}))),"Productos");
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(A.g.map(x=>({Fecha:x.f,Concepto:x.con,Categoría:x.c,Tipo:x.t,Monto:x.m}))),"Gastos");
+  XLSX.writeFile(wb,"Pulso Comercial - "+r[0]+" a "+r[1]+".xlsx"); };
+function arrancar(){
+  $("acc").classList.add("hidden");
+  if(DEMO){ cargar(); return; }
+  if(!GS.url()){ GS.pantalla($("app"),{titulo:"Conectar Pulso Comercial",descripcion:"Dashboard de ventas, márgenes, gastos e inventario.",demo:()=>{ DEMO=true; arrancar(); },listo:arrancar}); return; }
+  cargar();
+}
+MA.listo.then(arrancar);
+</script>
+</body>
+</html>

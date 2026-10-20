@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitácora Ejecutiva — M&amp;A Capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#fff; --surface-2:#f0f3f8; --border:#dde3ec; --grid:#edf1f6;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#7d889a;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --warn:#9a6b0f;
+  --c1:#2a62a0; --c2:#0d9488; --c3:#b7821c;
+  --e-pend:#7d889a; --e-curso:#2a62a0; --e-bloq:#b03a32; --e-hecha:#1c7a46;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 6px 18px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+.wrap{max-width:1380px;margin:0 auto;padding:18px 24px 50px}
+.hero{position:relative;overflow:hidden;border-radius:18px;padding:22px 28px;color:#fff;background:linear-gradient(115deg,#0f2440 0%,#1b3a5c 55%,#0f5560 100%);box-shadow:0 10px 30px rgba(15,36,64,.22)}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,#e3c27a,#b98b2f 60%,transparent)}
+.hero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.hero h1{margin:4px 0 2px;font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:30px}
+.hero h1 i{color:var(--gold)}
+.hero .sub{color:#c9d5e4;font-size:13.5px}
+.hero .acc{position:absolute;right:24px;top:22px;display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-weight:600;font-size:13px;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.16)}.hbtn.pri{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+@media (max-width:900px){.hero .acc{position:static;margin-top:12px}}
+/* barra de control */
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.chips{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px}
+.chip{border:0;background:none;padding:7px 13px;border-radius:9px;font-weight:600;font-size:13px;color:var(--text-2);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy);color:#fff}
+.inp{padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);outline:none;font-size:13px}
+.inp:focus{border-color:var(--teal)}
+.grow{flex:1;min-width:200px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:13px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn.bad{color:var(--bad)}
+.filtro{display:inline-flex;align-items:center;gap:6px;background:#e8eef7;color:var(--navy);border-radius:999px;padding:5px 6px 5px 12px;font-size:12.5px;font-weight:700}
+.filtro button{border:0;background:var(--navy);color:#fff;border-radius:999px;width:20px;height:20px;cursor:pointer;font-size:11px}
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:12px 14px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold-d)}
+.kpi.bad::before{background:var(--bad)}.kpi.ok::before{background:var(--good)}
+.kpi .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi .v{font-size:24px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11.5px;color:var(--text-2)}
+/* pestañas */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto}
+.tab{border:0;background:none;padding:10px 14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--gold-d)}
+/* tablero */
+.board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.col{background:#e9eef5;border-radius:14px;padding:10px;min-height:200px;display:flex;flex-direction:column;gap:8px;transition:background .15s}
+.col.sobre{background:#dce6f3;outline:2px dashed var(--c1)}
+.col-h{display:flex;align-items:center;gap:8px;padding:2px 4px 4px;font-weight:800;font-size:13px}
+.col-h .pt{width:9px;height:9px;border-radius:50%}
+.col-h .n{margin-left:auto;background:#fff;border-radius:999px;padding:1px 9px;font-size:12px;color:var(--text-2)}
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 11px;box-shadow:0 1px 2px rgba(15,23,42,.05);cursor:grab;position:relative}
+.tc:hover{border-color:#b9c7da;box-shadow:0 6px 16px rgba(15,23,42,.08)}
+.tc.arr{opacity:.45}
+.tc.pend{opacity:.65;pointer-events:none}
+.tc .top{display:flex;gap:6px;align-items:center;margin-bottom:5px;flex-wrap:wrap}
+.pr{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:.02em}
+.pr.Crítica{background:#fbeceb;color:var(--bad)}.pr.Alta{background:#fdf2e3;color:#a35a00}.pr.Media{background:#e8eef7;color:var(--c1)}.pr.Baja{background:#eef1f4;color:var(--muted)}
+.pj{font-size:11px;color:var(--teal);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.tc h4{margin:0 0 6px;font-size:13.5px;line-height:1.35}
+.tc .meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-2)}
+.av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff;background:var(--navy);flex:none}
+.fl.venc{color:var(--bad);font-weight:700}.fl.hoy{color:#a35a00;font-weight:700}
+.prog{height:5px;background:var(--grid);border-radius:3px;overflow:hidden;margin-top:7px}.prog i{display:block;height:100%;background:var(--c2);border-radius:3px}
+.obs{margin-top:7px;background:#fbeceb;border-radius:8px;padding:6px 8px;font-size:11.5px;color:#7c2620;line-height:1.4}
+.mv{position:absolute;right:6px;top:6px;display:none;gap:3px}.tc:hover .mv{display:flex}
+.mv button{border:1px solid var(--border);background:#fff;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:11px;color:var(--text-2)}
+.addc{border:1px dashed #b9c7da;background:none;border-radius:10px;padding:8px;color:var(--text-2);font-weight:600;cursor:pointer}
+.vacio{padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55}
+.vacio>b{display:block;color:var(--text);font-size:14.5px;margin-bottom:4px}
+/* notas */
+.notas{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.nt{border-radius:4px 14px 14px 14px;padding:14px 14px 12px;min-height:150px;box-shadow:0 6px 16px rgba(15,23,42,.08);cursor:pointer;position:relative;display:flex;flex-direction:column}
+.nt h5{margin:0 0 6px;font-size:14px}.nt p{margin:0;font-size:13px;line-height:1.5;white-space:pre-wrap;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical}
+.nt .pie{font-size:11px;opacity:.7;margin-top:8px}.nt .pin{position:absolute;right:10px;top:8px}
+.n-amarillo{background:#fff6cc}.n-rosa{background:#fde4ea}.n-verde{background:#e1f5ea}.n-azul{background:#e2edfb}.n-lila{background:#ece6fb}
+/* pulso */
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:1000px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.pad{padding:16px 18px}
+.ch-t{font-weight:800;font-size:14px;margin:0 0 2px}.ch-s{font-size:12px;color:var(--muted);margin-bottom:10px}
+.fila{display:grid;grid-template-columns:150px 1fr 54px;gap:10px;align-items:center;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:12.5px}
+.fila:hover{background:var(--surface-2)}.fila .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.stk{display:flex;height:14px;border-radius:4px;overflow:hidden;background:var(--grid);gap:2px}.stk i{display:block;height:100%}
+.fila .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.ley{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--text-2);margin-bottom:8px}.ley span{display:inline-flex;align-items:center;gap:5px}.ley i{width:10px;height:10px;border-radius:3px}
+.salud{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
+.salud.ok{background:#e9f6ef;color:var(--good)}.salud.rev{background:#fdf6e6;color:var(--warn)}.salud.bad{background:#fbeceb;color:var(--bad)}
+.mat{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cu{border-radius:12px;padding:12px;cursor:pointer;border:1px solid var(--border);min-height:120px}
+.cu:hover{box-shadow:var(--shadow)}.cu b{font-size:22px;display:block}.cu span{font-size:12px;font-weight:700}.cu small{display:block;font-size:11.5px;color:var(--text-2);margin-top:4px;line-height:1.4}
+.cu.q1{background:#fbeceb}.cu.q2{background:#e8eef7}.cu.q3{background:#fdf6e6}.cu.q4{background:#f3f5f9}
+.ol{list-style:none;margin:0;padding:0}.ol li{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--grid);font-size:13px;cursor:pointer}
+.ol li:hover{background:var(--surface-2)}.ol li:last-child{border-bottom:0}
+.imp{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;flex:none}
+.imp.Alto{background:#fbeceb;color:var(--bad)}.imp.Medio{background:#fdf6e6;color:var(--warn)}.imp.Bajo{background:#eef1f4;color:var(--muted)}
+.sem{display:flex;align-items:flex-end;gap:6px;height:140px;padding-top:8px}
+.sem div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.sem i{display:block;width:70%;background:var(--c2);border-radius:4px 4px 0 0;min-height:2px}
+.sem span{font-size:10.5px;color:var(--muted)}.sem b{font-size:11.5px}
+/* lista */
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--border);background:var(--surface-2);cursor:pointer;white-space:nowrap}
+table.t td{padding:9px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
+table.t tr.cl{cursor:pointer}table.t tr.cl:hover td{background:#f6f9fc}
+/* guía */
+.guia{line-height:1.7;font-size:14px;color:var(--text-2)}.guia h3{color:var(--text);font-size:16px;margin:18px 0 6px}.guia h3:first-child{margin-top:0}
+.guia b{color:var(--text)}.guia ul,.guia ol{padding-left:20px;margin:6px 0}
+.prompt{background:#0f1c2e;color:#e6ecf5;border-radius:12px;padding:16px 18px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.6;white-space:pre-wrap;max-height:460px;overflow:auto}
+/* diálogo */
+.bg{position:fixed;inset:0;background:rgba(15,28,46,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;z-index:60;overflow-y:auto}
+.dlg{width:100%;max-width:660px;background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.35)}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}.dlg-h h3{margin:0;font-size:16px}
+.dlg-b{padding:14px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dlg-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--border)}
+.f{display:flex;flex-direction:column;gap:4px}.f.full{grid-column:1/-1}.f>span{font-size:11.5px;font-weight:700;color:var(--text-2)}
+.f textarea{min-height:80px;resize:vertical}
+.colores{display:flex;gap:8px}.colores button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer}.colores button[aria-pressed="true"]{border-color:var(--navy)}
+.rango{display:flex;align-items:center;gap:10px}.rango input{flex:1}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--navy-d);color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;z-index:80}
+.toast.bad{background:var(--bad)}
+.spin{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid #dbe3ee;border-top-color:var(--navy);animation:sp .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* calendario */
+.calh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.calh h3{margin:0;font-size:17px;font-family:"Playfair Display",Georgia,serif;font-weight:600;min-width:180px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.cal .dh{background:var(--surface-2);padding:7px 8px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.cal .dd{background:var(--surface);min-height:104px;padding:6px;display:flex;flex-direction:column;gap:3px;cursor:pointer}
+.cal .dd:hover{background:#f8fafc}.cal .dd.fuera{background:#f6f8fb;color:#b3bccb}.cal .dd.hoyd{box-shadow:inset 0 0 0 2px var(--gold-d)}
+.cal .dn{font-size:11.5px;font-weight:800;color:var(--text-2)}.cal .dd.fuera .dn{color:#b3bccb}
+.ce{font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.ce.mas{background:none;color:var(--text-2);padding:0 4px}
+/* cronograma */
+.gantt{overflow-x:auto}.gt{min-width:760px}
+.gt .gr{display:grid;grid-template-columns:230px 1fr;align-items:center;border-bottom:1px solid var(--grid);min-height:34px}
+.gt .gr.gp{background:var(--surface-2);font-weight:800;font-size:12px;color:var(--teal);min-height:28px}
+.gt .gn{padding:6px 10px;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.gt .gb{position:relative;height:100%;min-height:34px}
+.gt .bar{position:absolute;top:8px;height:18px;border-radius:6px;cursor:pointer;overflow:hidden;font-size:10.5px;color:#fff;font-weight:700;padding:2px 6px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.gt .bar i{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.28)}
+.gt .bar span{position:relative}
+.gt .hoyl{position:absolute;top:0;bottom:0;width:2px;background:var(--gold-d);z-index:2}
+.gt .gsc{position:relative;height:26px;border-bottom:1px solid var(--border)}
+.gt .gsc span{position:absolute;top:6px;font-size:10.5px;color:var(--muted);font-weight:700;transform:translateX(-50%);white-space:nowrap}
+/* insignias en tarjeta */
+.ins{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--text-2)}
+.ins span{background:var(--surface-2);border-radius:6px;padding:1px 6px}
+.ins .apr{background:#fdf6e6;color:var(--warn);font-weight:700}.ins .apr.ok{background:#e9f6ef;color:var(--good)}.ins .apr.cam{background:#fbeceb;color:var(--bad)}
+.ins .dep{background:#fbeceb;color:var(--bad)}
+.etq{display:inline-block;background:#e8eef7;color:var(--navy);border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:700;margin-right:3px}
+/* hilo de comentarios / actividad */
+.hilo{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;margin-top:4px}
+.hilo h4{margin:0 0 8px;font-size:13px}
+.cm{display:flex;gap:8px;margin-bottom:8px;font-size:12.5px}.cm .cb{background:var(--surface-2);border-radius:4px 12px 12px 12px;padding:7px 10px;flex:1;line-height:1.45;white-space:pre-wrap}
+.cm small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.act{list-style:none;margin:0;padding:0}.act li{display:flex;gap:10px;padding:8px 4px;border-bottom:1px solid var(--grid);font-size:12.5px;align-items:flex-start}
+.act li .cu2{font-size:11px;color:var(--muted);white-space:nowrap;min-width:92px}
+.ap{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--grid)}
+.ap:last-child{border-bottom:0}.ap .tx{flex:1;min-width:0}.ap .tx b{display:block}
+@media print{.hero .acc,.ctrl,.tabs,#maHdr,.mv,.addc{display:none!important}.card,.kpi,.tc{box-shadow:none}}
+</style>
+</head>
+<body>
+<!--MA_AUTH-->
+<!--GS_CONEXION-->
+<script>MA.iniciar({modulo:"bitacora",titulo:"Bitácora Ejecutiva"});</script>
+<div class="wrap">
+  <header class="hero">
+    <div class="k">M&amp;A Capital · Gestión</div>
+    <h1>Bitácora <i>Ejecutiva</i></h1>
+    <div class="sub" id="heroSub">Tareas, asignaciones, notas y obstáculos del equipo</div>
+    <div class="acc hidden" id="acc"><button class="hbtn" id="btnHoja">📗 Abrir la hoja</button><button class="hbtn" id="btnXls">⬇ Excel</button><button class="hbtn" id="btnRec">↻</button><button class="hbtn pri" id="btnNueva">＋ Nueva tarea</button></div>
+  </header>
+  <div id="app"><div class="vacio"><span class="spin"></span> Conectando…</div></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ESTADOS=[["Pendiente","--e-pend"],["En curso","--e-curso"],["Bloqueada","--e-bloq"],["Hecha","--e-hecha"]];
+const PRIOS=["Crítica","Alta","Media","Baja"], PESO={"Crítica":0,"Alta":1,"Media":2,"Baja":3};
+const COLORES=["amarillo","rosa","verde","azul","lila"];
+const hoy=()=>{ const d=new Date(); return new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())).toISOString().slice(0,10); };
+const dias=iso=>Math.round((Date.parse(String(iso).slice(0,10))-Date.parse(hoy()))/864e5);
+const fCorta=iso=>iso?new Date(String(iso).slice(0,10)+"T12:00:00").toLocaleDateString("es-PA",{day:"numeric",month:"short"}):"";
+const ini=s=>{ const t=String(s||"?").replace(/@.*/,"").split(/[\s._-]+/).filter(Boolean); return ((t[0]||"?")[0]+((t[1]||"")[0]||"")).toUpperCase(); };
+const nombre=s=>String(s||"Sin asignar").replace(/@.*/,"");
+function toast(t,mal){ const d=document.createElement("div"); d.className="toast"+(mal?" bad":""); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),mal?6000:2400); }
+let C=[], H=[], YO="", MES=null;
+const RECS=["No","Semanal","Quincenal","Mensual","Trimestral"], APRS=["","Pendiente","Aprobada","Cambios pedidos"];
+const etqs=t=>String(t.etiquetas||"").split(/[,;]+/).map(x=>x.trim()).filter(Boolean);
+const esperando=t=>{ if(!t.depende_de) return null; const d=T.find(x=>x.id===t.depende_de); return d&&d.estado!=="Hecha"?d:null; };
+let T=[], N=[], HOJA="", DEMO=false, VISTA="tablero", PER="todo", Q="", F={}, ORD={k:"limite",d:1};
+
+/* ============================ datos ============================ */
+async function cargar(){
+  if(DEMO){ pintar(); return; }
+  try{ await GS.conCache("bitacora.listar",r=>{ const pend=T.filter(t=>t._pend); T=(r.tareas||[]).map(norm).concat(pend.filter(p=>!(r.tareas||[]).some(t=>t.id===p.id))); N=r.notas||[]; C=r.comentarios||[]; H=r.historial||[]; HOJA=r.hoja||""; pintar(); }); }
+  catch(e){ if(e.tenia){ toast("No se pudo actualizar: "+e.message+" (se muestra lo último que se vio)",true); return; } $("app").innerHTML=`<div class="card vacio"><b>No se pudo leer la Hoja de Google</b>${esc(e.message)}<br><br><button class="btn" id="reint">Reintentar</button> ${(await MA.listo).rol==="admin"&&!GS.fija?'<button class="btn" id="recon">Cambiar la URL</button>':""}</div>`;
+    $("reint").onclick=cargar; if($("recon")) $("recon").onclick=()=>{ GS.desconectar(); arrancar(); }; }
+}
+function norm(t){ t.avance=+t.avance||0; t.recurrencia=RECS.includes(t.recurrencia)?t.recurrencia:"No"; t.aprobacion=APRS.includes(t.aprobacion)?t.aprobacion:""; t.prioridad=PRIOS.includes(t.prioridad)?t.prioridad:"Media"; t.estado=ESTADOS.some(e=>e[0]===t.estado)?t.estado:"Pendiente"; ["inicio","limite","cerrado"].forEach(k=>t[k]=t[k]?String(t[k]).slice(0,10):""); return t; }
+async function guardarT(t){
+  t=norm(Object.assign({},t)); if(t.estado==="Hecha") t.avance=100;
+  if(DEMO){ if(!t.id){ t.id="d"+Date.now(); t.creado=new Date().toISOString(); t.creado_por="ejemplo"; } t.actualizado=new Date().toISOString(); if(t.estado==="Hecha"&&!t.cerrado) t.cerrado=hoy(); if(t.estado!=="Hecha") t.cerrado="";
+    const antes=T.find(x=>x.id===t.id); const i=T.findIndex(x=>x.id===t.id); i>=0?T[i]=t:T.push(t);
+    const log=c=>H.push({fecha:new Date().toISOString().slice(0,19),usuario:"ejemplo",tarea_id:t.id,titulo:t.titulo,cambio:c});
+    if(!antes) log("Creó la tarea"); else { if(antes.estado!==t.estado) log("Estado: "+antes.estado+" → "+t.estado); if((antes.aprobacion||"")!==(t.aprobacion||"")&&t.aprobacion) log("Aprobación: "+t.aprobacion); }
+    if(t.estado==="Hecha"&&(!antes||antes.estado!=="Hecha")&&t.recurrencia!=="No"){ const s=Object.assign({},t,{id:"d"+Date.now()+"r",estado:"Pendiente",avance:0,cerrado:"",obstaculo:"",impacto:"",aprobacion:t.aprobador?"Pendiente":"",inicio:moverF(t.inicio,t.recurrencia),limite:moverF(t.limite,t.recurrencia)}); T.push(s); toast("🔁 Se creó la próxima: "+fCorta(s.limite)); }
+    pintar(); return; }
+  const prev=T.slice(); if(!t.id){ t.id=GS.id(); T.push(Object.assign({},t,{_pend:true})); pintar(); }   // id propio: nunca se duplica
+  else { const i=T.findIndex(x=>x.id===t.id); if(i>=0){ T[i]=t; pintar(); } }
+  try{ const r0=await GS.llamar("bitacora.guardarTarea",{tarea:Object.assign({},t,{_pend:undefined})}); const sig=r0._siguiente; delete r0._siguiente; const r=norm(r0); const j=T.findIndex(x=>x.id===r.id); j>=0?T[j]=r:T.push(r);
+    if(sig){ T.push(norm(sig)); toast("🔁 Se creó la próxima: "+fCorta(sig.limite)); } pintar(); }
+  catch(e){ T=prev; pintar(); toast("No se guardó: "+e.message,true); }
+}
+function moverF(f,rec){ if(!f) return ""; const d=new Date(String(f).slice(0,10)+"T12:00:00");
+  if(rec==="Semanal") d.setDate(d.getDate()+7); else if(rec==="Quincenal") d.setDate(d.getDate()+14); else if(rec==="Mensual") d.setMonth(d.getMonth()+1); else if(rec==="Trimestral") d.setMonth(d.getMonth()+3); else return f;
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+async function comentar(tid,txt){ txt=String(txt||"").trim(); if(!txt) return null;
+  if(DEMO){ const c={id:"c"+Date.now(),tarea_id:tid,texto:txt,autor:"ejemplo",creado:new Date().toISOString().slice(0,19)}; C.push(c); return c; }
+  try{ const c=await GS.llamar("bitacora.comentar",{id:GS.id(),tarea_id:tid,texto:txt}); C.push(c); return c; }catch(e){ toast("No se guardó el comentario: "+e.message,true); return null; } }
+async function borrarC(id){ if(!DEMO){ try{ await GS.llamar("bitacora.borrarComentario",{id}); }catch(e){ toast(e.message,true); return false; } } C=C.filter(c=>c.id!==id); return true; }
+async function borrarT(id){ if(DEMO){ T=T.filter(x=>x.id!==id); pintar(); return; }
+  try{ await GS.llamar("bitacora.borrarTarea",{id}); T=T.filter(x=>x.id!==id); pintar(); }catch(e){ toast(e.message,true); } }
+async function guardarN(n){
+  if(DEMO){ if(!n.id){ n.id="n"+Date.now(); n.creado=new Date().toISOString(); n.autor="ejemplo"; } const i=N.findIndex(x=>x.id===n.id); i>=0?N[i]=n:N.push(n); pintar(); return; }
+  try{ const r=await GS.llamar("bitacora.guardarNota",{nota:n}); const i=N.findIndex(x=>x.id===r.id); i>=0?N[i]=r:N.push(r); pintar(); }catch(e){ toast("No se guardó la nota: "+e.message,true); }
+}
+async function borrarN(id){ if(DEMO){ N=N.filter(x=>x.id!==id); pintar(); return; }
+  try{ await GS.llamar("bitacora.borrarNota",{id}); N=N.filter(x=>x.id!==id); pintar(); }catch(e){ toast(e.message,true); } }
+
+/* ============================ filtros ============================ */
+function enPeriodo(t){
+  if(PER==="todo") return true; if(!t.limite) return PER!=="hoy"&&t.estado!=="Hecha";
+  const d=dias(t.limite), abierta=t.estado!=="Hecha";
+  if(PER==="hoy") return d<=0&&(abierta||t.cerrado===hoy());
+  if(PER==="semana") return d<=7&&(abierta||dias(t.cerrado||t.limite)>=-7);
+  if(PER==="mes") return d<=31&&(abierta||dias(t.cerrado||t.limite)>=-31);
+  return true;
+}
+function visibles(){ const q=Q.trim().toLowerCase();
+  return T.filter(t=>enPeriodo(t)&&(!F.responsable||nombre(t.responsable)===F.responsable)&&(!F.proyecto||(t.proyecto||"Sin proyecto")===F.proyecto)&&(!F.ids||F.ids.includes(t.id))&&(!F.etq||etqs(t).includes(F.etq))
+    &&(!q||[t.titulo,t.descripcion,t.responsable,t.proyecto,t.obstaculo,t.etiquetas].join(" ").toLowerCase().includes(q))); }
+const ordenar=ts=>ts.slice().sort((a,b)=>(a.limite||"9999").localeCompare(b.limite||"9999")||PESO[a.prioridad]-PESO[b.prioridad]);
+
+/* ============================ pantalla ============================ */
+function pintar(){
+  $("acc").classList.remove("hidden"); $("btnHoja").classList.toggle("hidden",DEMO||!HOJA);
+  const vs=visibles(), act=vs.filter(t=>t.estado!=="Hecha");
+  const hechas=vs.filter(t=>t.estado==="Hecha").length, venc=act.filter(t=>t.limite&&dias(t.limite)<0).length;
+  const prom=act.length?Math.round(act.reduce((s,t)=>s+(+t.avance||0),0)/act.length):0;
+  const filtros=[F.responsable&&["responsable","Responsable: "+F.responsable],F.proyecto&&["proyecto","Proyecto: "+F.proyecto],F.ids&&["ids",F.etiqueta||"Selección"],F.etq&&["etq","Etiqueta: "+F.etq]].filter(Boolean);
+  $("app").innerHTML=`
+    <div class="ctrl">
+      <div class="chips">${[["hoy","Hoy"],["semana","Semana"],["mes","Mes"],["todo","Todo"]].map(([k,l])=>`<button class="chip" data-p="${k}" aria-pressed="${PER===k}">${l}</button>`).join("")}</div>
+      <input class="inp grow" id="q" placeholder="Buscar tarea, persona, proyecto u obstáculo…" value="${esc(Q)}">
+      ${filtros.map(([k,l])=>`<span class="filtro">${esc(l)}<button data-qf="${k}" title="Quitar filtro">✕</button></span>`).join("")}
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Activas</div><div class="v">${act.length}</div><div class="d">${vs.length} en la vista</div></div>
+      <div class="kpi ok"><div class="l">Completadas</div><div class="v">${vs.length?Math.round(100*hechas/vs.length):0}%</div><div class="d">${hechas} de ${vs.length}</div></div>
+      <div class="kpi"><div class="l">Avance promedio</div><div class="v">${prom}%</div><div class="d">de las activas</div></div>
+      <div class="kpi"><div class="l">Alta prioridad</div><div class="v">${act.filter(t=>PESO[t.prioridad]<=1).length}</div><div class="d">críticas y altas activas</div></div>
+      <div class="kpi bad"><div class="l">Bloqueadas</div><div class="v">${act.filter(t=>t.estado==="Bloqueada").length}</div><div class="d">con obstáculo</div></div>
+      <div class="kpi bad"><div class="l">Vencidas</div><div class="v">${venc}</div><div class="d">fecha límite pasada</div></div>
+    </div>
+    <div class="tabs">${[["tablero","🗂 Tablero"],["calendario","📅 Calendario"],["crono","📈 Cronograma"],["notas","📝 Notas"],["pulso","📊 Pulso del equipo"],["aprob","✅ Aprobaciones"+(T.filter(t=>t.aprobacion==="Pendiente").length?" ("+T.filter(t=>t.aprobacion==="Pendiente").length+")":"")],["actividad","🕘 Actividad"],["lista","☰ Lista"],["guia","💡 Guía y prompt"]].map(([k,l])=>`<button class="tab" data-v="${k}" aria-selected="${VISTA===k}">${l}</button>`).join("")}</div>
+    <div id="vista"></div>`;
+  if(DEMO) GS.avisoDemo($("app"),()=>{ DEMO=false; arrancar(); });
+  { const nEj=T.filter(t=>/^ej-/.test(t.id)).length+N.filter(n=>/^ej-/.test(n.id)).length; if(!DEMO&&nEj){ const w=document.createElement("div"); w.className="gs-demo"; w.innerHTML=`<span>👁 La hoja tiene <b>${nEj} registro(s) de ejemplo</b> (los que dicen «(ejemplo)»): son inventados para ver cómo funciona. Para quitarlos, la administradora ejecuta <b>borrarEjemplos</b> en Apps Script (borra solo los ejemplos).</span>`; $("app").prepend(w); } }
+  $("app").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ PER=b.dataset.p; pintar(); });
+  $("app").querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{ VISTA=b.dataset.v; pintar(); });
+  $("app").querySelectorAll("[data-qf]").forEach(b=>b.onclick=()=>{ delete F[b.dataset.qf]; if(b.dataset.qf==="ids") delete F.etiqueta; pintar(); });
+  $("q").oninput=e=>{ Q=e.target.value; clearTimeout(pintar.t); pintar.t=setTimeout(()=>{ pintar(); const i=$("q"); i.focus(); i.setSelectionRange(i.value.length,i.value.length); },250); };
+  ({tablero:vTablero,calendario:vCal,crono:vCrono,notas:vNotas,pulso:vPulso,aprob:vAprob,actividad:vAct,lista:vLista,guia:vGuia})[VISTA](vs);
+  $("heroSub").textContent=`${T.filter(t=>t.estado!=="Hecha").length} tareas activas · ${N.length} notas${DEMO?" · datos de ejemplo":""}`;
+}
+
+/* ---------- Tablero ---------- */
+function tarjeta(t){
+  const d=t.limite?dias(t.limite):null, abierta=t.estado!=="Hecha";
+  return `<div class="tc${abierta&&d!=null&&d<0?" venc":""}${t._pend?" pend":""}" draggable="true" data-id="${esc(t.id)}">${t._pend?'<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px"><span class="spin" style="width:12px;height:12px"></span>Guardando…</div>':""}
+    <div class="mv"><button data-mv="-1" title="Mover a la izquierda">◀</button><button data-mv="1" title="Mover a la derecha">▶</button></div>
+    <div class="top"><span class="pr ${t.prioridad}">${t.prioridad}</span>${t.proyecto?`<span class="pj">${esc(t.proyecto)}</span>`:""}</div>
+    <h4>${esc(t.titulo)}</h4>
+    <div class="meta"><span class="av" title="${esc(t.responsable||"Sin asignar")}">${esc(ini(t.responsable))}</span><span>${esc(nombre(t.responsable))}</span>
+      ${t.limite?`<span class="fl ${abierta&&d<0?"venc":abierta&&d===0?"hoy":""}" style="margin-left:auto">📅 ${fCorta(t.limite)}${abierta&&d<0?` · ${-d} d tarde`:""}</span>`:""}</div>
+    ${t.estado!=="Pendiente"?`<div class="prog" title="Avance ${t.avance}%"><i style="width:${t.avance}%"></i></div>`:""}
+    ${t.estado==="Bloqueada"&&t.obstaculo?`<div class="obs">⛔ ${esc(t.obstaculo)}${t.impacto?` · impacto ${esc(t.impacto.toLowerCase())}`:""}</div>`:""}
+    ${insignias(t)}
+  </div>`;
+}
+function insignias(t){
+  const nc=C.filter(c=>c.tarea_id===t.id).length, esp=t.estado!=="Hecha"&&esperando(t), b=[];
+  if(esp) b.push(`<span class="dep" title="Depende de otra tarea">⏳ Espera: ${esc(esp.titulo)}</span>`);
+  if(t.aprobacion) b.push(`<span class="apr ${t.aprobacion==="Aprobada"?"ok":t.aprobacion==="Cambios pedidos"?"cam":""}">${t.aprobacion==="Aprobada"?"✔ Aprobada":t.aprobacion==="Cambios pedidos"?"↩ Cambios pedidos":"✋ Por aprobar"}</span>`);
+  if(t.recurrencia&&t.recurrencia!=="No") b.push(`<span title="Se repite">🔁 ${esc(t.recurrencia)}</span>`);
+  if(nc) b.push(`<span title="Comentarios">💬 ${nc}</span>`);
+  if(t.enlace) b.push(`<span title="Tiene archivo o enlace">📎</span>`);
+  const e=etqs(t).map(x=>`<span class="etq">#${esc(x)}</span>`).join("");
+  return b.length||e?`<div class="ins">${b.join("")}${e?`<span style="background:none;padding:0">${e}</span>`:""}</div>`:"";
+}
+function vTablero(vs){
+  $("vista").innerHTML=`<div class="board">${ESTADOS.map(([e,c])=>{ const ts=ordenar(vs.filter(t=>t.estado===e));
+    return `<div class="col" data-e="${e}"><div class="col-h"><span class="pt" style="background:var(${c})"></span>${e}<span class="n">${ts.length}</span></div>
+      ${ts.map(tarjeta).join("")||`<div class="vacio" style="padding:14px">Sin tareas</div>`}
+      ${e!=="Hecha"?`<button class="addc" data-add="${e}">＋ Agregar</button>`:""}</div>`; }).join("")}</div>`;
+  const V=$("vista");
+  V.querySelectorAll(".tc").forEach(c=>{ const t=T.find(x=>x.id===c.dataset.id);
+    c.onclick=e=>{ if(e.target.closest(".mv")) return; const q=e.target.closest(".etq"); if(q){ F.etq=q.textContent.slice(1); pintar(); return; } editor(t); };
+    c.ondragstart=e=>{ e.dataTransfer.setData("text/plain",t.id); c.classList.add("arr"); };
+    c.ondragend=()=>c.classList.remove("arr");
+    c.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{ const i=ESTADOS.findIndex(x=>x[0]===t.estado)+(+b.dataset.mv); if(i>=0&&i<ESTADOS.length) mover(t,ESTADOS[i][0]); }); });
+  V.querySelectorAll(".col").forEach(col=>{
+    col.ondragover=e=>{ e.preventDefault(); col.classList.add("sobre"); }; col.ondragleave=()=>col.classList.remove("sobre");
+    col.ondrop=e=>{ e.preventDefault(); col.classList.remove("sobre"); const t=T.find(x=>x.id===e.dataTransfer.getData("text/plain")); if(t&&t.estado!==col.dataset.e) mover(t,col.dataset.e); }; });
+  V.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>editor({estado:b.dataset.add}));
+}
+function mover(t,e){
+  if(e==="Bloqueada"&&!t.obstaculo){ editor(Object.assign({},t,{estado:"Bloqueada"}),"Describe el obstáculo que la bloquea"); return; }
+  const n=Object.assign({},t,{estado:e}); if(e==="En curso"&&!n.avance) n.avance=10; if(e!=="Bloqueada"&&t.estado==="Bloqueada"&&e!=="Hecha"){} guardarT(n);
+}
+
+/* ---------- Editor de tarea ---------- */
+function editor(t,aviso){
+  t=Object.assign({estado:"Pendiente",prioridad:"Media",avance:0},t||{});
+  const personas=[...new Set(T.map(x=>x.responsable).filter(Boolean))], proys=[...new Set(T.map(x=>x.proyecto).filter(Boolean))];
+  const bg=document.createElement("div"); bg.className="bg";
+  bg.innerHTML=`<div class="dlg"><div class="dlg-h"><h3>${t.id?"Editar tarea":"Nueva tarea"}</h3><button class="btn sm" data-x>Cerrar</button></div>
+    <div class="dlg-b">
+      ${aviso?`<div class="f full" style="color:var(--bad);font-weight:700">${esc(aviso)}</div>`:""}
+      <label class="f full"><span>Título</span><input class="inp" id="eTit" value="${esc(t.titulo||"")}" placeholder="¿Qué hay que hacer?"></label>
+      <label class="f full"><span>Descripción</span><textarea class="inp" id="eDes" placeholder="Detalle, contexto, enlaces…">${esc(t.descripcion||"")}</textarea></label>
+      <label class="f"><span>Responsable (nombre o correo)</span><input class="inp" id="eRes" list="lRes" value="${esc(t.responsable||"")}"><datalist id="lRes">${personas.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></label>
+      <label class="f"><span>Proyecto</span><input class="inp" id="ePro" list="lPro" value="${esc(t.proyecto||"")}"><datalist id="lPro">${proys.map(p=>`<option value="${esc(p)}">`).join("")}</datalist></label>
+      <label class="f"><span>Prioridad</span><select class="inp" id="ePri">${PRIOS.map(p=>`<option${p===t.prioridad?" selected":""}>${p}</option>`).join("")}</select></label>
+      <label class="f"><span>Estado</span><select class="inp" id="eEst">${ESTADOS.map(([e])=>`<option${e===t.estado?" selected":""}>${e}</option>`).join("")}</select></label>
+      <label class="f"><span>Inicio</span><input class="inp" type="date" id="eIni" value="${esc(t.inicio||"")}"></label>
+      <label class="f"><span>Fecha límite</span><input class="inp" type="date" id="eLim" value="${esc(t.limite||"")}"></label>
+      <div class="f full"><span>Avance</span><div class="rango"><input type="range" min="0" max="100" step="5" id="eAva" value="${+t.avance||0}"><b id="eAvaV">${+t.avance||0}%</b></div></div>
+      <div class="f full" id="eObsBox"><span>Obstáculo (qué la bloquea)</span><textarea class="inp" id="eObs" placeholder="Ej.: falta la firma del banco, esperando respuesta del cliente…">${esc(t.obstaculo||"")}</textarea>
+        <label class="f" style="margin-top:6px"><span>Impacto del obstáculo</span><select class="inp" id="eImp">${["","Alto","Medio","Bajo"].map(x=>`<option${x===(t.impacto||"")?" selected":""} value="${x}">${x||"—"}</option>`).join("")}</select></label></div>
+      <label class="f"><span>Etiquetas (separadas por coma)</span><input class="inp" id="eEtq" list="lEtq" value="${esc(t.etiquetas||"")}" placeholder="banco, legal…"><datalist id="lEtq">${[...new Set(T.flatMap(etqs))].map(x=>`<option value="${esc(x)}">`).join("")}</datalist></label>
+      <label class="f"><span>🔁 Se repite</span><select class="inp" id="eRec">${RECS.map(r=>`<option${r===(t.recurrencia||"No")?" selected":""}>${r}</option>`).join("")}</select></label>
+      <label class="f"><span>⏳ Depende de (no puede avanzar hasta que termine)</span><select class="inp" id="eDep"><option value="">— Ninguna —</option>${T.filter(x=>x.id!==t.id).map(x=>`<option value="${esc(x.id)}"${x.id===t.depende_de?" selected":""}>${esc(x.titulo)}</option>`).join("")}</select></label>
+      <label class="f"><span>📎 Enlace al archivo (Drive, SharePoint…)</span><input class="inp" id="eEnl" value="${esc(t.enlace||"")}" placeholder="https://…"></label>
+      <label class="f"><span>✋ Aprobador (correo)</span><input class="inp" id="eApr" list="lRes" value="${esc(t.aprobador||"")}" placeholder="quien da el visto bueno"></label>
+      <label class="f"><span>Estado de aprobación</span><select class="inp" id="eApE">${APRS.map(a=>`<option value="${a}"${a===(t.aprobacion||"")?" selected":""}>${a||"— Sin aprobación —"}</option>`).join("")}</select></label>
+      ${t.enlace?`<div class="f full"><a href="${esc(t.enlace)}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700;font-size:13px">📎 Abrir el archivo enlazado ↗</a></div>`:""}
+      ${t.id?`<div class="hilo"><h4>💬 Comentarios</h4><div id="eHilo"></div><div style="display:flex;gap:8px;margin-top:6px"><input class="inp grow" id="eCom" placeholder="Escribe un comentario, una pregunta o un acuerdo…"><button class="btn" id="eComOk" type="button">Comentar</button></div>
+        <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:var(--text-2)">🕘 Historial de esta tarea</summary><ul class="act" id="eHist"></ul></details></div>`:""}
+    </div>
+    <div class="dlg-f">${t.id?`<button class="btn bad" id="eDel" style="margin-right:auto">Eliminar</button><button class="btn" id="eNota">📝 Nota</button><button class="btn" id="eDup" title="Crear una copia de esta tarea">⧉ Duplicar</button>`:""}<button class="btn" data-x>Cancelar</button><button class="btn pri" id="eOk">Guardar</button></div></div>`;
+  document.body.appendChild(bg);
+  const cerrar=()=>bg.remove(); bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrar); bg.onclick=e=>{ if(e.target===bg) cerrar(); };
+  const g=id=>bg.querySelector("#"+id);
+  g("eAva").oninput=e=>g("eAvaV").textContent=e.target.value+"%";
+  const obsVis=()=>g("eObsBox").style.display=g("eEst").value==="Bloqueada"||g("eObs").value?"":"none"; obsVis(); g("eEst").onchange=obsVis;
+  g("eTit").focus();
+  g("eOk").onclick=()=>{ const n=Object.assign({},t,{titulo:g("eTit").value.trim(),descripcion:g("eDes").value.trim(),responsable:g("eRes").value.trim(),proyecto:g("ePro").value.trim(),prioridad:g("ePri").value,estado:g("eEst").value,inicio:g("eIni").value,limite:g("eLim").value,avance:+g("eAva").value,obstaculo:g("eObs").value.trim(),impacto:g("eImp").value,
+      etiquetas:etqs({etiquetas:g("eEtq").value}).join(", "),recurrencia:g("eRec").value,depende_de:g("eDep").value,enlace:g("eEnl").value.trim(),aprobador:g("eApr").value.trim(),aprobacion:g("eApE").value});
+    if(n.aprobador&&!n.aprobacion) n.aprobacion="Pendiente";
+    if(n.enlace&&!/^https?:\/\//i.test(n.enlace)){ g("eEnl").focus(); toast("El enlace debe empezar con https://",true); return; }
+    if(!n.titulo){ g("eTit").focus(); return; } if(n.estado==="Bloqueada"&&!n.obstaculo){ g("eObs").focus(); g("eObs").placeholder="Escribe el obstáculo para poder bloquearla"; return; }
+    if(n.estado!=="Bloqueada"&&t.estado==="Bloqueada"){ n.obstaculo=n.obstaculo?n.obstaculo:""; }
+    cerrar(); guardarT(n); };
+  if(g("eDel")) g("eDel").onclick=()=>{ if(confirm("¿Eliminar la tarea «"+t.titulo+"»?")){ cerrar(); borrarT(t.id); } };
+  if(g("eNota")) g("eNota").onclick=()=>{ cerrar(); editorNota({tarea_id:t.id,titulo:t.titulo,color:"amarillo"}); };
+  if(g("eDup")) g("eDup").onclick=()=>{ cerrar(); const c=Object.assign({},t,{titulo:t.titulo+" (copia)",estado:"Pendiente",avance:0,cerrado:"",obstaculo:"",impacto:"",aprobacion:t.aprobador?"Pendiente":""}); ["id","creado","creado_por","actualizado","actualizado_por"].forEach(k=>delete c[k]); editor(c); };
+  if(t.id){
+    const pintaH=()=>{ const cs=C.filter(c=>c.tarea_id===t.id).sort((a,b)=>String(a.creado).localeCompare(String(b.creado)));
+      g("eHilo").innerHTML=cs.map(c=>`<div class="cm"><span class="av">${esc(ini(c.autor))}</span><div class="cb">${esc(c.texto)}<small>${esc(nombre(c.autor))} · ${fHora(c.creado)} ${c.autor===YO||DEMO?`· <a href="#" data-bc="${esc(c.id)}" style="color:var(--bad)">borrar</a>`:""}</small></div></div>`).join("")||`<div style="font-size:12.5px;color:var(--muted)">Sin comentarios todavía.</div>`;
+      g("eHilo").querySelectorAll("[data-bc]").forEach(a=>a.onclick=async e=>{ e.preventDefault(); if(await borrarC(a.dataset.bc)){ pintaH(); pintar(); } }); };
+    pintaH();
+    const enviar=async()=>{ const b=g("eComOk"); b.disabled=true; const c=await comentar(t.id,g("eCom").value); b.disabled=false; if(c){ g("eCom").value=""; pintaH(); pintar(); } };
+    g("eComOk").onclick=enviar; g("eCom").onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); enviar(); } };
+    const hs=H.filter(h=>h.tarea_id===t.id).slice().reverse();
+    g("eHist").innerHTML=hs.map(h=>`<li><span class="cu2">${fHora(h.fecha)}</span><span>${esc(h.cambio)} <span style="color:var(--muted)">· ${esc(nombre(h.usuario))}</span></span></li>`).join("")||`<li style="color:var(--muted)">Sin cambios registrados.</li>`;
+  }
+}
+const fHora=iso=>{ if(!iso) return ""; const d=new Date(String(iso).length>10?String(iso):String(iso)+"T12:00:00"); return isNaN(d)?String(iso):d.toLocaleDateString("es-PA",{day:"numeric",month:"short"})+(String(iso).length>10?" "+d.toLocaleTimeString("es-PA",{hour:"2-digit",minute:"2-digit"}):""); };
+
+/* ---------- Calendario ---------- */
+function vCal(vs){
+  const h=hoy(); if(!MES) MES=h.slice(0,7);
+  const [y,m]=MES.split("-").map(Number), primero=new Date(Date.UTC(y,m-1,1)), dow=(primero.getUTCDay()+6)%7, ini0=new Date(primero.getTime()-dow*864e5);
+  const porDia={}; vs.forEach(t=>{ if(t.limite) (porDia[t.limite]=porDia[t.limite]||[]).push(t); });
+  const color=t=>`var(${ESTADOS.find(e=>e[0]===t.estado)[1]})`;
+  let celdas=""; for(let i=0;i<42;i++){ const d=new Date(ini0.getTime()+i*864e5).toISOString().slice(0,10), ts=ordenar(porDia[d]||[]);
+    if(i===35&&d.slice(0,7)!==MES) break;
+    celdas+=`<div class="dd${d.slice(0,7)!==MES?" fuera":""}${d===h?" hoyd":""}" data-d="${d}"><span class="dn">${+d.slice(8)}</span>${ts.slice(0,3).map(t=>`<span class="ce" data-id="${esc(t.id)}" style="background:${color(t)}" title="${esc(t.titulo)} · ${esc(nombre(t.responsable))}">${t.estado!=="Hecha"&&dias(t.limite)<0?"⚠ ":""}${esc(t.titulo)}</span>`).join("")}${ts.length>3?`<span class="ce mas" data-mas="${d}">+${ts.length-3} más</span>`:""}</div>`; }
+  const nom=new Date(Date.UTC(y,m-1,15)).toLocaleDateString("es-PA",{month:"long",year:"numeric",timeZone:"UTC"}).replace(/^./,c=>c.toUpperCase()).replace(" De "," de ");
+  const sinF=vs.filter(t=>!t.limite&&t.estado!=="Hecha").length;
+  $("vista").innerHTML=`<div class="calh"><button class="btn sm" id="cAnt">◀</button><h3>${nom}</h3><button class="btn sm" id="cSig">▶</button><button class="btn sm" id="cHoy">Hoy</button>
+      <div class="ley" style="margin:0 0 0 auto">${ESTADOS.map(([e,c])=>`<span><i style="background:var(${c})"></i>${e}</span>`).join("")}</div></div>
+    <div class="cal">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d=>`<div class="dh">${d}</div>`).join("")}${celdas}</div>
+    <div class="ch-s" style="margin-top:8px">Cada tarea aparece en su fecha límite. Toca un día vacío para crear una tarea con esa fecha.${sinF?` · ${sinF} tarea(s) activa(s) sin fecha no aparecen aquí.`:""}</div>`;
+  const V=$("vista"), mover1=k=>{ const d=new Date(Date.UTC(y,m-1+k,1)); MES=d.toISOString().slice(0,7); vCal(vs); };
+  $("cAnt").onclick=()=>mover1(-1); $("cSig").onclick=()=>mover1(1); $("cHoy").onclick=()=>{ MES=h.slice(0,7); vCal(vs); };
+  V.querySelectorAll(".ce[data-id]").forEach(e=>e.onclick=ev=>{ ev.stopPropagation(); editor(T.find(t=>t.id===e.dataset.id)); });
+  V.querySelectorAll("[data-mas]").forEach(e=>e.onclick=ev=>{ ev.stopPropagation(); F.ids=(porDia[e.dataset.mas]||[]).map(t=>t.id); F.etiqueta="Vencen el "+fCorta(e.dataset.mas); VISTA="lista"; pintar(); });
+  V.querySelectorAll(".dd").forEach(e=>e.onclick=()=>editor({limite:e.dataset.d}));
+}
+
+/* ---------- Cronograma (Gantt) ---------- */
+function vCrono(vs){
+  const ts=vs.filter(t=>t.inicio||t.limite);
+  if(!ts.length){ $("vista").innerHTML=`<div class="card vacio"><b>No hay tareas con fechas en la vista</b>Pon fecha de inicio y fecha límite a las tareas para verlas en el cronograma.</div>`; return; }
+  const ms=d=>Date.parse(String(d).slice(0,10)), h=ms(hoy());
+  const desde0=t=>ms(t.inicio||t.limite), hasta0=t=>ms(t.limite||t.inicio)+864e5;
+  let a=Math.min(h,...ts.map(desde0))-2*864e5, b=Math.max(h+7*864e5,...ts.map(hasta0))+2*864e5; const tot=b-a, pc=x=>(100*(x-a)/tot).toFixed(3);
+  const marcas=[]; const paso=tot/864e5>120?30:tot/864e5>45?7:tot/864e5>15?3:1;
+  for(let x=a;x<=b;x+=paso*864e5){ marcas.push(x); }
+  const grupos={}; ts.forEach(t=>(grupos[t.proyecto||"Sin proyecto"]=grupos[t.proyecto||"Sin proyecto"]||[]).push(t));
+  const fila=t=>{ const x0=desde0(t), x1=hasta0(t), c=`var(${ESTADOS.find(e=>e[0]===t.estado)[1]})`, venc=t.estado!=="Hecha"&&t.limite&&ms(t.limite)<h;
+    return `<div class="gr"><div class="gn" data-id="${esc(t.id)}" title="${esc(t.titulo)}">${venc?"⚠ ":""}${esc(t.titulo)} <span style="color:var(--muted);font-size:11px">· ${esc(nombre(t.responsable))}</span></div>
+      <div class="gb"><span class="hoyl" style="left:${pc(h)}%"></span><div class="bar" data-id="${esc(t.id)}" style="left:${pc(x0)}%;width:max(10px,${pc(a+x1-x0)}%);background:${c}${venc?";outline:2px solid var(--bad);outline-offset:1px":""}" title="${esc(t.titulo)} · ${fCorta(t.inicio||t.limite)} → ${fCorta(t.limite||t.inicio)} · ${t.avance}%"><i style="width:${t.estado==="Hecha"?100:t.avance}%"></i><span>${t.avance?t.avance+"%":""}</span></div></div></div>`; };
+  $("vista").innerHTML=`<div class="card pad gantt"><p class="ch-t">Cronograma de tareas</p><div class="ch-s">Barra = de la fecha de inicio a la fecha límite · la parte clara es el avance · la línea dorada es hoy · borde rojo = vencida</div>
+    <div class="ley">${ESTADOS.map(([e,c])=>`<span><i style="background:var(${c})"></i>${e}</span>`).join("")}</div>
+    <div class="gt"><div class="gr" style="min-height:26px"><div></div><div class="gsc">${marcas.map(x=>`<span style="left:${pc(x)}%">${fCorta(new Date(x).toISOString())}</span>`).join("")}</div></div>
+    ${Object.entries(grupos).sort((x,y)=>x[0].localeCompare(y[0])).map(([g,l])=>`<div class="gr gp"><div class="gn">${esc(g)}</div><div></div></div>${l.sort((x,y)=>desde0(x)-desde0(y)).map(fila).join("")}`).join("")}</div></div>`;
+  $("vista").querySelectorAll("[data-id]").forEach(e=>e.onclick=()=>editor(T.find(t=>t.id===e.dataset.id)));
+}
+
+/* ---------- Aprobaciones ---------- */
+function vAprob(vs){
+  const pend=vs.filter(t=>t.aprobacion==="Pendiente"), cam=vs.filter(t=>t.aprobacion==="Cambios pedidos"), ok=vs.filter(t=>t.aprobacion==="Aprobada");
+  const item=t=>`<div class="ap"><span class="av">${esc(ini(t.responsable))}</span><div class="tx"><b>${esc(t.titulo)}</b><span style="font-size:12px;color:var(--text-2)">${esc(nombre(t.responsable))}${t.proyecto?" · "+esc(t.proyecto):""} · aprueba: <b style="display:inline">${esc(t.aprobador||"—")}</b>${t.enlace?` · <a href="${esc(t.enlace)}" target="_blank" rel="noopener" style="color:var(--teal)">📎 ver archivo</a>`:""}</span></div>
+    ${t.aprobacion==="Pendiente"?`<button class="btn sm" data-ok="${esc(t.id)}" style="color:var(--good)">✔ Aprobar</button><button class="btn sm bad" data-cam="${esc(t.id)}">↩ Pedir cambios</button>`:`<button class="btn sm" data-ver="${esc(t.id)}">Abrir</button>`}</div>`;
+  $("vista").innerHTML=`<div class="g2"><div class="card pad"><p class="ch-t">✋ Esperando aprobación (${pend.length})</p><div class="ch-s">Para pedir una aprobación, abre la tarea y escribe el correo del aprobador. Cada mañana le llega un correo con lo que tiene por aprobar.</div>
+      ${pend.map(item).join("")||`<div class="vacio">Nada pendiente de aprobar.</div>`}</div>
+    <div class="card pad"><p class="ch-t">↩ Con cambios pedidos (${cam.length})</p><div class="ch-s">El responsable corrige y vuelve a poner «Pendiente»</div>${cam.map(item).join("")||`<div class="vacio">Sin cambios pedidos.</div>`}
+      <p class="ch-t" style="margin-top:16px">✔ Aprobadas (${ok.length})</p>${ok.slice(0,15).map(item).join("")||`<div class="vacio">Todavía no hay aprobadas.</div>`}</div></div>`;
+  const V=$("vista"), tk=id=>T.find(t=>t.id===id);
+  V.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>guardarT(Object.assign({},tk(b.dataset.ok),{aprobacion:"Aprobada"})));
+  V.querySelectorAll("[data-cam]").forEach(b=>b.onclick=async()=>{ const t=tk(b.dataset.cam), m=prompt("¿Qué cambios hacen falta en «"+t.titulo+"»?"); if(m==null) return; if(m.trim()) await comentar(t.id,"↩ Cambios pedidos: "+m.trim()); guardarT(Object.assign({},t,{aprobacion:"Cambios pedidos"})); });
+  V.querySelectorAll("[data-ver]").forEach(b=>b.onclick=()=>editor(tk(b.dataset.ver)));
+}
+
+/* ---------- Actividad ---------- */
+function vAct(){
+  const q=Q.trim().toLowerCase();
+  const ev=H.map(h=>({f:h.fecha,u:h.usuario,id:h.tarea_id,t:h.titulo,x:h.cambio,c:"🕘"})).concat(C.map(c=>{ const t=T.find(x=>x.id===c.tarea_id); return {f:c.creado,u:c.autor,id:c.tarea_id,t:t?t.titulo:"",x:"💬 "+c.texto,c:"💬"}; }))
+    .filter(e=>!q||[e.u,e.t,e.x].join(" ").toLowerCase().includes(q)).sort((a,b)=>String(b.f).localeCompare(String(a.f))).slice(0,200);
+  $("vista").innerHTML=`<div class="card pad"><p class="ch-t">Actividad reciente</p><div class="ch-s">Quién hizo qué y cuándo: tareas creadas, cambios de estado, responsables, aprobaciones y comentarios. Se guarda en la pestaña «Historial» de la hoja.</div>
+    ${ev.length?`<ul class="act">${ev.map(e=>`<li data-id="${esc(e.id)}" style="cursor:pointer"><span class="cu2">${fHora(e.f)}</span><span class="av">${esc(ini(e.u))}</span><span><b>${esc(e.t||"")}</b><br><span style="color:var(--text-2)">${esc(e.x)}</span> <span style="color:var(--muted)">· ${esc(nombre(e.u))}</span></span></li>`).join("")}</ul>`
+      :`<div class="vacio"><b>Sin actividad todavía</b>Aparecerá aquí cuando se creen o cambien tareas.</div>`}</div>`;
+  $("vista").querySelectorAll("li[data-id]").forEach(l=>l.onclick=()=>{ const t=T.find(x=>x.id===l.dataset.id); if(t) editor(t); });
+}
+
+/* ---------- Notas ---------- */
+function vNotas(){
+  const q=Q.trim().toLowerCase(), ns=N.filter(n=>!q||[n.titulo,n.texto].join(" ").toLowerCase().includes(q)).sort((a,b)=>(String(b.fijada)==="true")-(String(a.fijada)==="true")||String(b.actualizado||b.creado||"").localeCompare(String(a.actualizado||a.creado||"")));
+  $("vista").innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="ch-s" style="margin:0">Ideas, acuerdos de reuniones, recordatorios. Una nota puede ir ligada a una tarea.</div><button class="btn pri" id="nNueva">＋ Nueva nota</button></div>
+    ${ns.length?`<div class="notas">${ns.map(n=>{ const tk=n.tarea_id&&T.find(t=>t.id===n.tarea_id);
+      return `<div class="nt n-${esc(COLORES.includes(n.color)?n.color:"amarillo")}" data-id="${esc(n.id)}">${String(n.fijada)==="true"?'<span class="pin">📌</span>':""}<h5>${esc(n.titulo||"Nota")}</h5><p>${esc(n.texto||"")}</p>
+        <div class="pie">${tk?"🔗 "+esc(tk.titulo)+" · ":""}${esc(nombre(n.autor))} · ${fCorta(n.actualizado||n.creado)}</div></div>`; }).join("")}</div>`
+      :`<div class="card vacio"><b>Todavía no hay notas</b>Crea la primera con «Nueva nota».</div>`}`;
+  $("nNueva").onclick=()=>editorNota({color:"amarillo"});
+  $("vista").querySelectorAll(".nt").forEach(e=>e.onclick=()=>editorNota(N.find(n=>n.id===e.dataset.id)));
+}
+function editorNota(n){
+  n=Object.assign({color:"amarillo"},n||{});
+  const bg=document.createElement("div"); bg.className="bg";
+  bg.innerHTML=`<div class="dlg"><div class="dlg-h"><h3>${n.id?"Editar nota":"Nueva nota"}</h3><button class="btn sm" data-x>Cerrar</button></div>
+    <div class="dlg-b"><label class="f full"><span>Título</span><input class="inp" id="nTit" value="${esc(n.titulo||"")}"></label>
+      <label class="f full"><span>Nota</span><textarea class="inp" id="nTxt" style="min-height:160px">${esc(n.texto||"")}</textarea></label>
+      <div class="f"><span>Color</span><div class="colores">${COLORES.map(c=>`<button type="button" class="n-${c}" data-c="${c}" aria-pressed="${n.color===c}" title="${c}"></button>`).join("")}</div></div>
+      <label class="f"><span>Ligada a la tarea</span><select class="inp" id="nTar"><option value="">— Ninguna —</option>${T.map(t=>`<option value="${esc(t.id)}"${t.id===n.tarea_id?" selected":""}>${esc(t.titulo)}</option>`).join("")}</select></label>
+      <label class="f full" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="nPin"${String(n.fijada)==="true"?" checked":""}> <span>📌 Fijar arriba</span></label></div>
+    <div class="dlg-f">${n.id?`<button class="btn bad" id="nDel" style="margin-right:auto">Eliminar</button>`:""}<button class="btn" data-x>Cancelar</button><button class="btn pri" id="nOk">Guardar</button></div></div>`;
+  document.body.appendChild(bg); const g=id=>bg.querySelector("#"+id), cerrar=()=>bg.remove();
+  bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrar); bg.onclick=e=>{ if(e.target===bg) cerrar(); };
+  let color=n.color; bg.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ color=b.dataset.c; bg.querySelectorAll("[data-c]").forEach(x=>x.setAttribute("aria-pressed",x===b)); });
+  g("nOk").onclick=()=>{ const o=Object.assign({},n,{titulo:g("nTit").value.trim(),texto:g("nTxt").value,color,tarea_id:g("nTar").value,fijada:g("nPin").checked?"true":"false"}); if(!o.titulo&&!o.texto.trim()) return; cerrar(); if(VISTA!=="notas"){ VISTA="notas"; } guardarN(o); };
+  if(g("nDel")) g("nDel").onclick=()=>{ if(confirm("¿Eliminar esta nota?")){ cerrar(); borrarN(n.id); } };
+  g("nTit").focus();
+}
+
+/* ---------- Pulso del equipo (interactivo) ---------- */
+function apilado(ts){ const tot=ts.length||1; return ESTADOS.map(([e,c])=>{ const n=ts.filter(t=>t.estado===e).length; return n?`<i style="width:${100*n/tot}%;background:var(${c})" title="${e}: ${n}"></i>`:""; }).join(""); }
+function salud(ts){ const act=ts.filter(t=>t.estado!=="Hecha"); if(!act.length) return ["ok","Al día"];
+  const v=act.filter(t=>t.limite&&dias(t.limite)<0).length, b=act.filter(t=>t.estado==="Bloqueada").length;
+  return v/act.length>.25||b/act.length>.25?["bad","En riesgo"]:v||b?["rev","Atención"]:["ok","Al día"]; }
+function vPulso(vs){
+  const act=vs.filter(t=>t.estado!=="Hecha");
+  const grupo=k=>{ const m={}; vs.forEach(t=>{ const g=k==="responsable"?nombre(t.responsable):(t.proyecto||"Sin proyecto"); (m[g]=m[g]||[]).push(t); }); return Object.entries(m).sort((a,b)=>b[1].length-a[1].length); };
+  const proy=grupo("proyecto"), pers=grupo("responsable");
+  const urg=t=>t.limite&&dias(t.limite)<=3, imp=t=>PESO[t.prioridad]<=1;
+  const Q4=[["q1","Hacer ya","Importantes y urgentes",act.filter(t=>imp(t)&&urg(t))],["q2","Planificar","Importantes, no urgentes",act.filter(t=>imp(t)&&!urg(t))],["q3","Delegar o resolver rápido","Urgentes, menos importantes",act.filter(t=>!imp(t)&&urg(t))],["q4","Después","Ni urgentes ni importantes",act.filter(t=>!imp(t)&&!urg(t))]];
+  const bloq=act.filter(t=>t.estado==="Bloqueada").sort((a,b)=>({Alto:0,Medio:1,Bajo:2}[a.impacto]??3)-({Alto:0,Medio:1,Bajo:2}[b.impacto]??3));
+  // completadas por semana (últimas 8)
+  const sems=[]; for(let i=7;i>=0;i--){ const fin=new Date(Date.parse(hoy())-i*7*864e5), ini_=new Date(fin.getTime()-6*864e5); sems.push({ini:ini_.toISOString().slice(0,10),fin:fin.toISOString().slice(0,10)}); }
+  sems.forEach(s=>s.n=T.filter(t=>t.estado==="Hecha"&&t.cerrado&&t.cerrado>=s.ini&&t.cerrado<=s.fin).length); const smx=Math.max(1,...sems.map(s=>s.n));
+  const aTiempo=T.filter(t=>t.estado==="Hecha"&&t.cerrado&&t.limite), ok=aTiempo.filter(t=>t.cerrado<=t.limite).length;
+  const ley=`<div class="ley">${ESTADOS.map(([e,c])=>`<span><i style="background:var(${c})"></i>${e}</span>`).join("")}</div>`;
+  $("vista").innerHTML=`
+    <div class="g2">
+      <div class="card pad"><p class="ch-t">Nivel de avance por proyecto</p><div class="ch-s">Toca un proyecto para ver solo sus tareas en el tablero</div>${ley}
+        ${proy.map(([p,ts])=>{ const a=ts.filter(t=>t.estado!=="Hecha"), av=Math.round(ts.reduce((s,t)=>s+(t.estado==="Hecha"?100:+t.avance||0),0)/ts.length), [k,l]=salud(ts);
+          return `<div class="fila" data-pj="${esc(p)}"><span class="nm" title="${esc(p)}">${esc(p)}</span><span><span class="stk">${apilado(ts)}</span><span style="font-size:11px;color:var(--muted)">${av}% de avance · ${a.length} activas · <span class="salud ${k}">${l}</span></span></span><span class="v">${ts.length}</span></div>`; }).join("")||`<div class="vacio">Sin tareas en la vista.</div>`}</div>
+      <div class="card pad"><p class="ch-t">Carga por persona</p><div class="ch-s">Toca una persona para filtrar el tablero</div>${ley}
+        ${pers.map(([p,ts])=>{ const v=ts.filter(t=>t.estado!=="Hecha"&&t.limite&&dias(t.limite)<0).length;
+          return `<div class="fila" data-rs="${esc(p)}"><span class="nm" title="${esc(p)}"><span class="av" style="display:inline-grid;margin-right:6px;vertical-align:middle">${esc(ini(p))}</span>${esc(p)}</span><span><span class="stk">${apilado(ts)}</span>${v?`<span style="font-size:11px;color:var(--bad);font-weight:700">${v} vencida(s)</span>`:""}</span><span class="v">${ts.filter(t=>t.estado!=="Hecha").length}</span></div>`; }).join("")||`<div class="vacio">Sin tareas en la vista.</div>`}</div>
+    </div>
+    <div class="g3" style="margin-top:12px">
+      <div class="card pad"><p class="ch-t">Matriz de prioridades</p><div class="ch-s">Importante = crítica o alta · Urgente = vence en 3 días o menos</div>
+        <div class="mat">${Q4.map(([c,t1,t2,ts])=>`<div class="cu ${c}" data-q="${c}"><b>${ts.length}</b><span>${t1}</span><small>${t2}${ts.length?"<br>"+ts.slice(0,2).map(t=>"· "+esc(t.titulo)).join("<br>"):""}</small></div>`).join("")}</div></div>
+      <div class="card pad"><p class="ch-t">Obstáculos activos</p><div class="ch-s">Tareas bloqueadas, de mayor a menor impacto</div>
+        ${bloq.length?`<ul class="ol">${bloq.map(t=>`<li data-id="${esc(t.id)}"><span class="imp ${esc(t.impacto||"")}">${esc(t.impacto||"Sin impacto")}</span><span><b>${esc(t.titulo)}</b><br><span style="color:var(--text-2)">⛔ ${esc(t.obstaculo||"")}</span><br><span style="font-size:11.5px;color:var(--muted)">${esc(nombre(t.responsable))}${t.actualizado?` · bloqueada desde hace ${Math.max(0,-dias(String(t.actualizado).slice(0,10)))} día(s)`:""}</span></span></li>`).join("")}</ul>`:`<div class="vacio" style="padding:16px">No hay tareas bloqueadas. 👏</div>`}</div>
+      <div class="card pad"><p class="ch-t">Ritmo del equipo</p><div class="ch-s">Tareas completadas por semana · cumplidas a tiempo: <b style="color:var(--text)">${aTiempo.length?Math.round(100*ok/aTiempo.length)+"%":"—"}</b></div>
+        <div class="sem">${sems.map(s=>`<div title="${fCorta(s.ini)} – ${fCorta(s.fin)}: ${s.n}"><b>${s.n||""}</b><i style="height:${Math.round(100*s.n/smx)}%"></i><span>${fCorta(s.fin)}</span></div>`).join("")}</div></div>
+    </div>`;
+  const V=$("vista");
+  V.querySelectorAll("[data-pj]").forEach(e=>e.onclick=()=>{ F.proyecto=e.dataset.pj; VISTA="tablero"; pintar(); });
+  V.querySelectorAll("[data-rs]").forEach(e=>e.onclick=()=>{ F.responsable=e.dataset.rs; VISTA="tablero"; pintar(); });
+  V.querySelectorAll("[data-q]").forEach(e=>e.onclick=()=>{ const q=Q4.find(x=>x[0]===e.dataset.q); F.ids=q[3].map(t=>t.id); F.etiqueta=q[1]; VISTA="tablero"; pintar(); });
+  V.querySelectorAll(".ol li").forEach(e=>e.onclick=()=>editor(T.find(t=>t.id===e.dataset.id)));
+}
+
+/* ---------- Lista ---------- */
+function vLista(vs){
+  const cols=[["titulo","Tarea"],["responsable","Responsable"],["proyecto","Proyecto"],["prioridad","Prioridad"],["estado","Estado"],["avance","Avance"],["limite","Límite"]];
+  const s=vs.slice().sort((a,b)=>{ const k=ORD.k; const x=k==="prioridad"?PESO[a[k]]:a[k]??"", y=k==="prioridad"?PESO[b[k]]:b[k]??""; return (x>y?1:x<y?-1:0)*ORD.d; });
+  $("vista").innerHTML=`<div class="card" style="overflow-x:auto"><table class="t"><thead><tr>${cols.map(([k,l])=>`<th data-k="${k}">${l}${ORD.k===k?(ORD.d>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>${
+    s.map(t=>{ const d=t.limite?dias(t.limite):null; return `<tr class="cl" data-id="${esc(t.id)}"><td><b>${esc(t.titulo)}</b>${t.estado==="Bloqueada"&&t.obstaculo?`<div style="font-size:11.5px;color:var(--bad)">⛔ ${esc(t.obstaculo)}</div>`:""}</td><td>${esc(nombre(t.responsable))}</td><td>${esc(t.proyecto||"")}</td><td><span class="pr ${t.prioridad}">${t.prioridad}</span></td><td>${t.estado}</td><td>${t.avance}%</td><td class="fl ${t.estado!=="Hecha"&&d!=null&&d<0?"venc":""}">${t.limite?fCorta(t.limite):"—"}</td></tr>`; }).join("")||`<tr><td colspan="7" class="vacio">Sin tareas en la vista.</td></tr>`}</tbody></table></div>`;
+  $("vista").querySelectorAll("th").forEach(h=>h.onclick=()=>{ ORD=ORD.k===h.dataset.k?{k:ORD.k,d:-ORD.d}:{k:h.dataset.k,d:1}; vLista(vs); });
+  $("vista").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>editor(T.find(t=>t.id===r.dataset.id)));
+}
+
+/* ---------- Guía y prompt ---------- */
+const PROMPT=`Actúa como desarrollador senior de Google Apps Script y diseñador de producto.
+Quiero una "Bitácora Ejecutiva" para el equipo de M&A Capital: un tablero de tareas, notas y obstáculos que se use desde una página web y guarde todo en una Hoja de cálculo de Google.
+
+DATOS (una pestaña por tabla, fila 1 = encabezados):
+- Tareas: id, titulo, descripcion, responsable, proyecto, prioridad (Crítica/Alta/Media/Baja), estado (Pendiente/En curso/Bloqueada/Hecha), avance (0-100), inicio, limite, obstaculo, impacto (Alto/Medio/Bajo), creado, creado_por, actualizado, actualizado_por, cerrado
+  + etiquetas, recurrencia (No/Semanal/Quincenal/Mensual/Trimestral), depende_de, enlace, aprobador, aprobacion (Pendiente/Aprobada/Cambios pedidos)
+- Notas: id, titulo, texto, color, fijada, tarea_id, autor, creado, actualizado, tablero, etiquetas, recordar, orden
+- Comentarios: id, tarea_id, texto, autor, creado
+- Historial: fecha, usuario, tarea_id, titulo, cambio
+
+SERVIDOR (Codigo.gs, aplicación web):
+- doPost recibe JSON {accion, token, ...}: bitacora.listar, bitacora.guardarTarea, bitacora.borrarTarea, bitacora.guardarNota, bitacora.borrarNota, bitacora.comentar, bitacora.borrarComentario.
+- Al guardar una tarea registra en Historial: creación, cambio de estado, de responsable y de aprobación. Si una tarea recurrente pasa a Hecha, crea la siguiente con las fechas corridas.
+- Verifica la sesión del usuario (token de Supabase) y que tenga el módulo "bitacora" antes de leer o escribir.
+- Crea las pestañas y encabezados si no existen; usa LockService al escribir.
+- Función avisoDiario + disparador diario 7 a. m.: correo a cada responsable con sus tareas vencidas, de hoy o bloqueadas, a cada aprobador con lo que tiene por aprobar y a cada autor con sus notas que tienen recordatorio hoy.
+
+PÁGINA (HTML + JS, estilo M&A: azul marino y dorado):
+- Filtros: Hoy / Semana / Mes / Todo, búsqueda, filtro por persona y proyecto.
+- Indicadores: activas, % completadas, avance promedio, alta prioridad, bloqueadas, vencidas.
+- Pestañas: Tablero (kanban con arrastrar y soltar; al bloquear pide el obstáculo y su impacto; insignias de aprobación, dependencia, repetición, comentarios, archivo y etiquetas), Calendario mensual por fecha límite, Cronograma tipo Gantt por proyecto con línea de hoy, Aprobaciones (aprobar / pedir cambios), Actividad (historial + comentarios), Notas (tipo post-it, colores, fijar, ligar a una tarea), Pulso del equipo (avance por proyecto con semáforo de salud, carga por persona, matriz de prioridades importante/urgente, obstáculos activos por impacto, ritmo semanal y % cumplido a tiempo; todo clicable para filtrar), Lista ordenable y exportación a Excel.
+- Nunca inventar datos: si la hoja está vacía, mostrarlo vacío.`;
+function vGuia(){
+  $("vista").innerHTML=`<div class="g2">
+    <div class="card pad guia">
+      <h3>¿Para qué sirve?</h3>
+      <p>Es la <b>bitácora del equipo</b>: qué se está haciendo, quién lo tiene, para cuándo, cuánto avanzó y <b>qué lo está frenando</b>. Reúne en un solo lugar las tareas, las asignaciones y las notas de reuniones, y muestra en tiempo real el pulso del equipo.</p>
+      <ul><li><b>Tablero:</b> mueve las tareas entre Pendiente, En curso, Bloqueada y Hecha arrastrándolas.</li>
+        <li><b>Obstáculos:</b> al bloquear una tarea se anota qué la frena y su impacto; quedan a la vista hasta resolverlos.</li>
+        <li><b>Pulso del equipo:</b> avance y salud por proyecto, carga de cada persona, matriz de prioridades y ritmo semanal. Todo se puede tocar para filtrar.</li>
+        <li><b>Notas:</b> acuerdos, ideas y recordatorios, ligados a una tarea si hace falta.</li>
+        <li><b>Calendario y Cronograma:</b> las tareas por fecha límite en un mes, y en barras de inicio a fin por proyecto (estilo Gantt).</li>
+        <li><b>Aprobaciones:</b> una tarea puede necesitar el visto bueno de alguien; se aprueba o se piden cambios con un clic.</li>
+        <li><b>Comentarios e historial:</b> conversación dentro de cada tarea y registro de quién cambió qué.</li>
+        <li><b>Tareas que se repiten</b> (semanal, quincenal, mensual, trimestral): al cerrarla se crea sola la siguiente. También <b>dependencias</b>, <b>etiquetas</b>, <b>enlace al archivo</b> y <b>duplicar</b>.</li>
+        <li><b>Correo de cada mañana</b> (opcional) a cada responsable con lo vencido, lo de hoy, lo bloqueado y lo que tiene por aprobar.</li></ul>
+      <h3>¿Por qué va más allá de Power BI?</h3>
+      <p>Power BI solo <b>muestra</b> datos. Aquí además se <b>trabaja</b>: se crean, mueven y cierran tareas, se registran obstáculos y notas, y los indicadores se actualizan al instante. La base es una Hoja de Google que cualquiera puede abrir, filtrar o bajar a Excel, sin licencias ni servidores.</p>
+      <h3>Cómo hacerlo funcionar</h3>
+      <ol><li>Crear una Hoja de cálculo de Google nueva.</li><li>Extensiones › Apps Script › pegar el código (botón «Abrir la hoja» o la pantalla de conexión lo tienen) › Guardar.</li>
+        <li>Implementar › Nueva implementación › Aplicación web · Ejecutar como: Yo · Acceso: Cualquier usuario.</li><li>Pegar la URL /exec en esta página (solo la administradora) o enviarla para dejarla fija para todos.</li>
+        <li>Dar a cada persona el módulo «Bitácora Ejecutiva» en Usuarios y permisos.</li><li>Opcional: ejecutar <b>instalarAvisoDiario</b> en Apps Script para los correos de las 7 a. m.</li></ol>
+      <p style="font-size:12.5px">Para que el correo llegue, el responsable debe escribirse con su <b>correo</b> (por ejemplo omayra@myacapital.com).</p>
+    </div>
+    <div class="card pad"><p class="ch-t">Prompt del proyecto</p><div class="ch-s">Sirve para pedirle a una IA que lo amplíe o lo vuelva a construir igual</div>
+      <div class="prompt" id="prompt"></div><button class="btn" id="copiaP" style="margin-top:10px">📋 Copiar prompt</button></div></div>`;
+  $("prompt").textContent=PROMPT;
+  $("copiaP").onclick=async e=>{ try{ await navigator.clipboard.writeText(PROMPT); e.target.textContent="✓ Copiado"; }catch(x){} };
+}
+
+/* ============================ ejemplo ============================ */
+function ejemplo(){
+  const d=n=>new Date(Date.parse(hoy())+n*864e5).toISOString().slice(0,10), act=n=>new Date(Date.parse(hoy())+n*864e5).toISOString();
+  const P=["Ana Pérez","Luis Gómez","Omayra Ríos","Carlos Díaz"], X=["Cierre mensual Pantera","Due diligence Finca 45678","Renovación de contratos","Auditoría 2026"];
+  T=[["Conciliar bancos de agosto",P[1],X[0],"Alta","En curso",60,-2,3],["Enviar balance a gerencia",P[0],X[0],"Crítica","Pendiente",0,0,1],["Revisar certificado del Registro Público",P[2],X[1],"Alta","Bloqueada",40,-5,-1,"Falta el certificado actualizado del Registro","Alto"],
+    ["Redactar promesa de compraventa",P[2],X[1],"Media","En curso",30,-3,6],["Llamar a inquilino Local 3",P[3],X[2],"Media","Pendiente",0,1,4],["Preparar adenda de renta",P[3],X[2],"Alta","Bloqueada",20,-8,2,"Esperando respuesta del inquilino","Medio"],
+    ["Reunión con auditores",P[0],X[3],"Media","Hecha",100,-10,-6],["Entregar anexos de cuentas por cobrar",P[1],X[3],"Alta","Hecha",100,-14,-9],["Cargar avalúos al Data Room",P[0],X[0],"Baja","Pendiente",0,2,12],
+    ["Actualizar flujo de caja",P[1],X[0],"Crítica","En curso",80,-4,-1],["Firmar paz y salvo municipal",P[2],X[1],"Media","Hecha",100,-20,-15],["Revisar vencimientos de poderes",P[2],X[2],"Baja","Pendiente",0,3,20]]
+    .map((x,i)=>({id:"e"+i,titulo:x[0],responsable:x[1],proyecto:x[2],prioridad:x[3],estado:x[4],avance:x[5],inicio:d(x[6]),limite:d(x[7]),obstaculo:x[8]||"",impacto:x[9]||"",cerrado:x[4]==="Hecha"?d(x[7]-(i%2)):"",actualizado:act(x[4]==="Bloqueada"?-3:-1),descripcion:""}));
+  N=[{id:"n1",titulo:"Acuerdos reunión lunes",texto:"• Cerrar conciliaciones antes del jueves\n• Pedir certificado RP actualizado\n• Revisar flujo con Martina",color:"amarillo",fijada:"true",autor:"ana.perez@ejemplo.com",creado:act(-1)},
+     {id:"n2",titulo:"Idea",texto:"Agregar al informe mensual el comparativo de cap rate por activo.",color:"azul",fijada:"false",autor:"luis.gomez@ejemplo.com",creado:act(-3)},
+     {id:"n3",titulo:"Pendiente con el banco",texto:"Confirmar fecha de firma de la carta de aprobación.",color:"rosa",fijada:"false",tarea_id:"e2",autor:"omayra@ejemplo.com",creado:act(-2)}];
+  Object.assign(T[0],{etiquetas:"banco, cierre",recurrencia:"Mensual"}); Object.assign(T[1],{aprobador:"martina@ejemplo.com",aprobacion:"Pendiente",etiquetas:"cierre"});
+  Object.assign(T[3],{depende_de:"e2",etiquetas:"legal"}); Object.assign(T[6],{aprobador:"martina@ejemplo.com",aprobacion:"Aprobada"}); Object.assign(T[9],{recurrencia:"Semanal",etiquetas:"banco"});
+  C=[{id:"c1",tarea_id:"e0",texto:"Faltan los estados de cuenta del Banco General.",autor:"luis.gomez@ejemplo.com",creado:act(-1).slice(0,19)},{id:"c2",tarea_id:"e2",texto:"Ya se pidió al Registro, responden el viernes.",autor:"omayra@ejemplo.com",creado:act(-2).slice(0,19)}];
+  H=T.map((t,i)=>({fecha:act(-(12-i)).slice(0,19),usuario:t.responsable,tarea_id:t.id,titulo:t.titulo,cambio:t.estado==="Pendiente"?"Creó la tarea":"Estado: Pendiente → "+t.estado}));
+}
+
+/* ============================ arranque ============================ */
+$("btnNueva").onclick=()=>editor({});
+$("btnRec").onclick=()=>cargar();
+$("btnHoja").onclick=()=>{ if(HOJA) window.open(HOJA,"_blank"); };
+$("btnXls").onclick=()=>{ const vs=visibles(); const ws=XLSX.utils.json_to_sheet(vs.map(t=>({Tarea:t.titulo,Responsable:t.responsable,Proyecto:t.proyecto,Prioridad:t.prioridad,Estado:t.estado,"Avance %":t.avance,Inicio:t.inicio,"Fecha límite":t.limite,Obstáculo:t.obstaculo,Impacto:t.impacto,Cerrada:t.cerrado,Etiquetas:t.etiquetas||"","Se repite":t.recurrencia,"Depende de":(T.find(x=>x.id===t.depende_de)||{}).titulo||"",Enlace:t.enlace||"",Aprobador:t.aprobador||"",Aprobación:t.aprobacion||""})));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Tareas"); if(N.length) XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(N.map(n=>({Título:n.titulo,Nota:n.texto,Autor:n.autor,Fecha:n.creado}))),"Notas");
+  XLSX.writeFile(wb,"Bitácora Ejecutiva - "+hoy()+".xlsx"); };
+function arrancar(){
+  $("acc").classList.add("hidden");
+  F={}; Q=""; T=[]; N=[]; C=[]; H=[]; HOJA=""; MES=null; MA.listo.then(c=>YO=(c.email||"").toLowerCase());
+  if(DEMO){ ejemplo(); pintar(); return; }
+  if(!GS.url()){ GS.pantalla($("app"),{titulo:"Conectar la Bitácora Ejecutiva",descripcion:"Tablero de tareas, notas y obstáculos del equipo.",demo:()=>{ DEMO=true; arrancar(); },listo:arrancar}); return; }
+  $("app").innerHTML=`<div class="card vacio"><span class="spin"></span> Leyendo la Hoja de Google… <span style="display:block;font-size:12px;margin-top:4px">puede tardar unos segundos</span></div>`; cargar();
+}
+MA.listo.then(arrancar);
+</script>
+</body>
+</html>

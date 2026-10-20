@@ -1,0 +1,251 @@
+<style>
+/* ---------- Reportes específicos ---------- */
+.ltabs{display:flex;gap:4px;padding:3px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px}
+.ltab{padding:6px 12px;border-radius:7px;border:none;background:transparent;color:var(--text-2);font-weight:700;font-size:12.5px;cursor:pointer}
+.ltab[aria-selected="true"]{background:var(--navy);color:#fff}
+.rep{display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;height:100%}
+.rep>.panel{display:flex;flex-direction:column;min-height:0}
+.rep-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.rep-top b{font-size:13.5px;color:var(--navy)}
+#repLista{flex:1;min-height:0;overflow:auto;padding:6px 0}
+.rp-item{padding:10px 14px;cursor:pointer;border-left:3px solid transparent}
+.rp-item:hover{background:var(--surface-2)}
+.rp-item.sel{background:#eaf0f7;border-left-color:var(--navy)}
+.rp-item b{display:block;font-size:13px;color:var(--text)}
+.rp-item small{color:var(--muted);font-size:11.5px}
+.rep-nota{padding:10px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border);line-height:1.45}
+#repMain{overflow:auto}
+.rep-ed{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.rep-ed h2{margin:0;font-size:17px;font-weight:800}
+.rep-ed h3{margin:4px 0 0;font-size:12px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em}
+.rf{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.rf label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-2);font-weight:600}
+.rf input,.rf select,.fl-row input,.fl-row select{padding:7px 9px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:13px;color:var(--text);background:#fff}
+.rchips{display:flex;flex-wrap:wrap;gap:6px}
+.rchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--border);border-radius:999px;font-size:12.5px;background:#fff;cursor:pointer;user-select:none}
+.rchip input{margin:0}
+.fl-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.rinfo{font-size:12px;color:var(--muted)}
+.rinfo.err{color:var(--bad);font-weight:600}
+.racts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rres-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rres-hdr h2{margin:0;font-size:17px;font-weight:800}
+.rres-hdr .m{font-size:12px;color:var(--muted);margin-top:3px}
+@media (max-width:900px){.rep{grid-template-columns:1fr}}
+</style>
+<script>
+/* ===================== Reportes específicos (Contabilidad y Legal) =====================
+   La administradora arma cada reporte (qué archivos, qué hoja, columnas, filtros y totales).
+   Los reportes se guardan en la propia carpeta del módulo (Contabilidad o Legal) de OneDrive, en el archivo
+   _reportes_dashboard.json, así todos los usuarios ven los mismos. Los datos salen siempre
+   de los Excel que hay en la carpeta (año › mes); no se inventa nada. */
+(function(){
+  const ARCH_REP="_reportes_dashboard.json";
+  const VIRT=["Año","Mes","Archivo"];
+  let REPS=[], SELR=null, EDIT=null, LEIDO=false, VISTA="lector";
+  const esAdminR=()=>{ const c=window.MA&&MA.ctx(); return !!(c&&c.rol==="admin"); };
+  const nn=s=>norm(String(s==null?"":s)).trim();
+  const uid=()=>"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+  /* ---------- pestañas ---------- */
+  function vista(v){ VISTA=v; document.querySelectorAll(".ltab").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
+    const conectado=!!DIR_HANDLE;
+    $("lectorBox").classList.toggle("hidden",!conectado||v!=="lector"); $("repBox").classList.toggle("hidden",!conectado||v!=="reportes");
+    if(v==="reportes"&&conectado) pintarLista(); }
+  document.querySelectorAll(".ltab").forEach(b=>b.onclick=()=>vista(b.dataset.v));
+  const pantalla0=window.pantalla;
+  window.pantalla=function(c){ pantalla0(c); if(c) vista(VISTA); else $("repBox").classList.add("hidden"); };
+
+  /* ---------- leer / guardar en la carpeta ---------- */
+  async function leerReportes(){
+    REPS=[]; LEIDO=true;
+    if(!DIR_HANDLE) return;
+    try{ const fh=await DIR_HANDLE.getFileHandle(ARCH_REP); const t=await (await fh.getFile()).text(); const j=JSON.parse(t); REPS=Array.isArray(j.reportes)?j.reportes:[]; }
+    catch(e){ if(e&&e.name!=="NotFoundError") $("repNota").innerHTML=`<span class="rinfo err">No se pudo leer ${ARCH_REP}: ${esc(e.message)}</span>`; }
+  }
+  async function guardarReportes(){
+    if(DIR_HANDLE.auto==="local") throw new Error("Con el acceso directo la carpeta es solo de lectura. Para guardar, abre el dashboard en línea.");
+    let p=await DIR_HANDLE.queryPermission({mode:"readwrite"});
+    if(p!=="granted") p=await DIR_HANDLE.requestPermission({mode:"readwrite"});
+    if(p!=="granted") throw new Error("Chrome no dio permiso para guardar en la carpeta. Vuelve a intentar y elige «Permitir».");
+    const fh=await DIR_HANDLE.getFileHandle(ARCH_REP,{create:true}); const w=await fh.createWritable();
+    await w.write(JSON.stringify({version:1,actualizado:new Date().toISOString(),por:(MA.ctx()||{}).email||"",reportes:REPS},null,2)); await w.close();
+  }
+  window.repRefrescar=async()=>{ await leerReportes(); if(VISTA==="reportes"){ pintarLista(); if(SELR&&!EDIT){ const r=REPS.find(x=>x.id===SELR); if(r) ejecutar(r); else vacio(); } } };
+
+  /* ---------- periodos y archivos ---------- */
+  const clave=(a,m)=>(+a)*100+mesIndex(m)+1;
+  function periodos(){ const out=[]; for(const a of Object.keys(ARBOL)) if(esAnio(a)) for(const m of Object.keys(ARBOL[a])){ const i=mesIndex(m); if(i<12) out.push({k:clave(a,m),t:MESES[i]+" "+a}); }
+    const u=new Map(); out.forEach(p=>u.set(p.k,p)); return [...u.values()].sort((x,y)=>x.k-y.k); }
+  function archivosDe(d){
+    const q=nn(d.archivo||"");
+    return ARCHIVOS.filter(f=>esExcel(f.nombre)&&(!q||nn(f.nombre).includes(q))&&(()=>{ if(!d.desde&&!d.hasta) return true; const i=mesIndex(f.mes); if(i>=12||!esAnio(f.anio)) return false; const k=clave(f.anio,f.mes); return (!d.desde||k>=+d.desde)&&(!d.hasta||k<=+d.hasta); })())
+      .sort((x,y)=>clave(x.anio,x.mes)-clave(y.anio,y.mes)||x.nombre.localeCompare(y.nombre,"es"));
+  }
+  async function libro(f){ return XLSX.read(await (await f.handle.getFile()).arrayBuffer(),{type:"array",cellDates:true}); }
+  function hojaDe(wb,h){ if(h){ const x=wb.SheetNames.find(s=>nn(s)===nn(h)); if(x) return x; } return wb.SheetNames[0]; }
+  const esTot=r=>r.slice(0,3).some(c=>/^\s*(total|totales|gran total|suma)\b/i.test(String(c??"")));
+  async function filasDe(f,hoja){
+    const wb=await libro(f); const ws=wb.Sheets[hojaDe(wb,hoja)]; if(!ws) return {cab:[],filas:[]};
+    const {cab,cuerpo}=filasLimpias(ws);
+    const nombres=cab.map((c,i)=>String(c===""?"Columna "+(i+1):(c instanceof Date?c.toLocaleDateString("es-PA"):c)).trim());
+    const filas=cuerpo.filter(r=>!esTot(r)).map(r=>{ const o={}; nombres.forEach((n,i)=>o[n]=r[i]??""); o["Año"]=f.anio; o["Mes"]=f.mes; o["Archivo"]=f.nombre; return o; });
+    return {cab:nombres,filas};
+  }
+
+  /* ---------- ejecutar ---------- */
+  function pasaFiltro(o,fl){
+    const v=o[fl.col]; const t=nn(v), q=nn(fl.valor);
+    const num=typeof v==="number"?v:parseFloat(String(v).replace(/[^\d.-]/g,"")); const qn=parseFloat(String(fl.valor).replace(/[^\d.-]/g,""));
+    switch(fl.op){
+      case "contiene": return t.includes(q);
+      case "no contiene": return !t.includes(q);
+      case "igual": return t===q;
+      case "distinto": return t!==q;
+      case "mayor": return !isNaN(num)&&!isNaN(qn)&&num>qn;
+      case "menor": return !isNaN(num)&&!isNaN(qn)&&num<qn;
+      case "con dato": return t!=="";
+      case "vacío": return t==="";
+    } return true;
+  }
+  async function calcular(d,progreso){
+    const fs=archivosDe(d); const filas=[]; let cabs=[]; const fallos=[];
+    for(let i=0;i<fs.length;i++){ progreso&&progreso(`Leyendo ${i+1} de ${fs.length}: ${fs[i].nombre}`);
+      try{ const r=await filasDe(fs[i],d.hoja); r.cab.forEach(c=>{ if(!cabs.includes(c)) cabs.push(c); }); filas.push(...r.filas); }catch(e){ fallos.push(fs[i].nombre); } }
+    const sel=filas.filter(o=>(d.filtros||[]).every(fl=>!fl.col||pasaFiltro(o,fl)));
+    const sumar=(d.sumar||[]).filter(Boolean);
+    let cab, cuerpo, numCols=new Set();
+    if(d.agrupar){
+      const meses=[...new Map(sel.map(o=>[clave(o["Año"],o["Mes"]),MESES[mesIndex(o["Mes"])]?.slice(0,3)+" "+o["Año"]])).entries()].sort((x,y)=>x[0]-y[0]);
+      const g=new Map();
+      for(const o of sel){ const k=String(o[d.agrupar]??"").trim()||"(vacío)"; let x=g.get(k); if(!x){ x={k,n:0,s:{},pm:{}}; g.set(k,x); } x.n++;
+        for(const c of sumar){ const v=typeof o[c]==="number"?o[c]:0; x.s[c]=(x.s[c]||0)+v; if(d.porMes){ const mk=clave(o["Año"],o["Mes"]); (x.pm[c]=x.pm[c]||{})[mk]=(x.pm[c][mk]||0)+v; } } }
+      cab=[d.agrupar,"Filas"]; numCols.add(1);
+      if(d.porMes) for(const c of sumar){ for(const [mk,mt] of meses){ cab.push(sumar.length>1?c+" · "+mt:mt); numCols.add(cab.length-1); } cab.push("Total"+(sumar.length>1?" "+c:"")); numCols.add(cab.length-1); }
+      else for(const c of sumar){ cab.push(c); numCols.add(cab.length-1); }
+      cuerpo=[...g.values()].sort((a,b)=>String(a.k).localeCompare(String(b.k),"es",{numeric:true})).map(x=>{ const r=[x.k,x.n];
+        if(d.porMes) for(const c of sumar){ for(const [mk] of meses) r.push((x.pm[c]||{})[mk]||0); r.push(x.s[c]||0); } else for(const c of sumar) r.push(x.s[c]||0); return r; });
+    }else{
+      cab=(d.columnas&&d.columnas.length?d.columnas:cabs).slice();
+      cuerpo=sel.map(o=>cab.map(c=>o[c]??""));
+      cab.forEach((c,i)=>{ if(sumar.includes(c)) numCols.add(i); });
+    }
+    const tot=cab.map((c,i)=>numCols.has(i)||(!d.agrupar&&sumar.includes(c))?cuerpo.reduce((t,r)=>t+(typeof r[i]==="number"?r[i]:0),0):null);
+    return {cab,cuerpo,tot,archivos:fs,fallos,leidas:filas.length,quedan:sel.length};
+  }
+  function tablaHTML(res,max){
+    const {cab,cuerpo,tot}=res; const M=max||1500;
+    const numIdx=cab.map((_,i)=>cuerpo.some(r=>typeof r[i]==="number"));
+    const fil=cuerpo.slice(0,M).map((r,ri)=>`<tr><td class="rn">${ri+1}</td>${r.map((v,i)=>{ const c=celda(v,""); return `<td class="${numIdx[i]?"n":""}${c.neg?" neg":""}">${esc(c.t)}</td>`; }).join("")}</tr>`).join("");
+    const hayTot=tot.some(x=>x!=null);
+    return `<div class="tbl-wrap" style="flex:1;min-height:0"><table class="x"><thead><tr><th class="rn">#</th>${cab.map((c,i)=>`<th class="${numIdx[i]?"n":""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${fil}
+      ${hayTot?`<tr class="totrow"><td class="rn">Σ</td>${tot.map((t,i)=>`<td class="${numIdx[i]?"n":""}">${t!=null?esc(celda(t,"").t):(i===0?"Total":"")}</td>`).join("")}</tr>`:""}</tbody></table></div>
+      ${cuerpo.length>M?`<div class="more">Se muestran ${M} de ${cuerpo.length.toLocaleString("es-PA")} filas. El Excel trae todas.</div>`:""}`;
+  }
+  function descargar(d,res){
+    const aoa=[res.cab,...res.cuerpo]; if(res.tot.some(x=>x!=null)) aoa.push(res.tot.map((t,i)=>t!=null?t:(i===0?"Total":"")));
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),"Reporte");
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Archivo","Año","Mes"],...res.archivos.map(f=>[f.nombre,f.anio,f.mes])]),"Archivos usados");
+    XLSX.writeFile(wb,(d.nombre||"Reporte").replace(/[\\/:*?"<>|]+/g,"").slice(0,80)+".xlsx");
+  }
+  const perTxt=d=>{ const ps=periodos(); const t=k=>(ps.find(p=>p.k===+k)||{}).t||""; return d.desde||d.hasta?`${d.desde?t(d.desde):"inicio"} a ${d.hasta?t(d.hasta):"hoy"}`:"Todos los meses"; };
+
+  /* ---------- lista y resultado ---------- */
+  function vacio(){ $("repMain").innerHTML=`<div class="empty"><div class="big">📊</div><b>${REPS.length?"Elige un reporte":"Todavía no hay reportes"}</b>${esAdminR()?"Pulsa «＋ Nuevo» para armar el primero.":"La administradora los crea aquí; aparecen para todos."}</div>`; }
+  function pintarLista(){
+    $("repNuevo").classList.toggle("hidden",!esAdminR());
+    $("repNota").innerHTML=`Se guardan en la carpeta <b>${esc(DIR_HANDLE?DIR_HANDLE.name:"")}</b> (archivo ${ARCH_REP}) y los ven todos los usuarios.`;
+    $("repLista").innerHTML=REPS.length?REPS.map(r=>`<div class="rp-item${SELR===r.id?" sel":""}" data-id="${esc(r.id)}"><b>${esc(r.nombre)}</b><small>${esc(r.descripcion||perTxt(r))}</small></div>`).join("")
+      :`<div class="empty" style="padding:24px"><b>Sin reportes</b>${esAdminR()?"Crea el primero con «＋ Nuevo».":"La administradora todavía no creó reportes."}</div>`;
+    $("repLista").querySelectorAll(".rp-item").forEach(x=>x.onclick=()=>{ const r=REPS.find(y=>y.id===x.dataset.id); if(r){ SELR=r.id; EDIT=null; pintarLista(); ejecutar(r); } });
+    if(!SELR&&!EDIT) vacio();
+  }
+  async function ejecutar(d){
+    const m=$("repMain");
+    m.innerHTML=`<div class="empty"><div class="spin" style="margin:0 auto 12px"></div><span id="rpProg">Armando el reporte…</span></div>`;
+    let res; try{ res=await calcular(d,t=>{ const p=$("rpProg"); if(p) p.textContent=t; }); }
+    catch(e){ m.innerHTML=`<div class="empty"><div class="big">⚠️</div><b>No se pudo armar el reporte</b>${esc(e.message)}</div>`; return; }
+    if(SELR!==d.id&&!EDIT) return;
+    m.innerHTML=`<div class="rres-hdr"><div><h2>${esc(d.nombre)}</h2><div class="m">${esc(perTxt(d))} · ${res.archivos.length} archivo(s) · ${res.quedan.toLocaleString("es-PA")} de ${res.leidas.toLocaleString("es-PA")} fila(s) pasan los filtros${res.fallos.length?` · <span style="color:var(--bad)">no se pudo leer: ${esc(res.fallos.join(", "))}</span>`:""}</div>${d.descripcion?`<div class="m">${esc(d.descripcion)}</div>`:""}</div>
+      <div class="racts"><button class="btn sm pri" id="rpXls">⬇ Excel</button>${esAdminR()?`<button class="btn sm" id="rpEd">✎ Editar</button><button class="btn sm" id="rpDup">⧉ Duplicar</button><button class="btn sm" id="rpDel" style="color:var(--bad)">Eliminar</button>`:""}</div></div>
+      ${res.archivos.length?tablaHTML(res):`<div class="empty"><b>Ningún archivo coincide</b>No hay Excel cuyo nombre contenga «${esc(d.archivo||"")}» en ${esc(perTxt(d))}.</div>`}`;
+    m.style.display="flex"; m.style.flexDirection="column";
+    $("rpXls").onclick=()=>descargar(d,res);
+    if(esAdminR()){
+      $("rpEd").onclick=()=>editor(JSON.parse(JSON.stringify(d)));
+      $("rpDup").onclick=()=>{ const c=JSON.parse(JSON.stringify(d)); c.id=uid(); c.nombre=d.nombre+" (copia)"; editor(c,true); };
+      $("rpDel").onclick=async()=>{ if(!confirmarInline($("rpDel"),"¿Seguro? Pulsa otra vez para eliminar")) return; REPS=REPS.filter(x=>x.id!==d.id);
+        try{ await guardarReportes(); SELR=null; pintarLista(); }catch(e){ alertar(e.message); await leerReportes(); pintarLista(); } };
+    }
+  }
+  function confirmarInline(b,txt){ if(b.dataset.ok==="1") return true; b.dataset.ok="1"; b.textContent=txt; setTimeout(()=>{ b.dataset.ok=""; b.textContent="Eliminar"; },4000); return false; }
+  function alertar(t){ $("repMain").insertAdjacentHTML("afterbegin",`<div class="banner err" style="margin:10px">${esc(t)}</div>`); }
+
+  /* ---------- editor (solo administradora) ---------- */
+  async function editor(d,nuevo){
+    EDIT=d; const m=$("repMain"); m.style.display=""; const ps=periodos();
+    const opt=(v,t,s)=>`<option value="${esc(v)}"${String(s)===String(v)?" selected":""}>${esc(t)}</option>`;
+    m.innerHTML=`<div class="rep-ed">
+      <h2>${nuevo?"Nuevo reporte":"Editar reporte"}</h2>
+      <div class="rf"><label>Nombre del reporte<input id="reNombre" value="${esc(d.nombre||"")}" placeholder="Nombre que verán todos"></label>
+        <label>Descripción (opcional)<input id="reDesc" value="${esc(d.descripcion||"")}"></label></div>
+      <h3>1 · Archivos</h3>
+      <div class="rf"><label>El nombre del archivo contiene<input id="reArchivo" value="${esc(d.archivo||"")}" placeholder="Vacío = todos los Excel"></label>
+        <label>Hoja<select id="reHoja"></select></label>
+        <label>Desde<select id="reDesde">${opt("","Primer mes",d.desde)}${ps.map(p=>opt(p.k,p.t,d.desde)).join("")}</select></label>
+        <label>Hasta<select id="reHasta">${opt("","Último mes",d.hasta)}${ps.map(p=>opt(p.k,p.t,d.hasta)).join("")}</select></label></div>
+      <div class="rinfo" id="reArchInfo"></div>
+      <h3>2 · Columnas a mostrar</h3><div class="rinfo">Si no marcas ninguna, salen todas. Año, Mes y Archivo dicen de dónde salió cada fila.</div><div class="rchips" id="reCols"></div>
+      <h3>3 · Filtros</h3><div id="reFiltros"></div><div><button class="btn sm" id="reAddF">＋ Agregar filtro</button></div>
+      <h3>4 · Totales</h3>
+      <div class="rf"><label>Agrupar por (opcional)<select id="reAgrupar"></select></label></div>
+      <div class="rinfo">Columnas a sumar:</div><div class="rchips" id="reSumar"></div>
+      <label class="rchip" style="align-self:flex-start"><input type="checkbox" id="rePorMes"${d.porMes?" checked":""}> Al agrupar, una columna por mes</label>
+      <div class="racts"><button class="btn sm" id="reVista">👁 Vista previa</button><button class="btn sm pri" id="reGuardar">💾 Guardar en la carpeta</button><button class="btn sm" id="reCancelar">Cancelar</button><span class="rinfo" id="reMsg"></span></div>
+      <div id="reVistaBox" style="display:flex;flex-direction:column;max-height:420px;border:1px solid var(--border);border-radius:10px;overflow:hidden" class="hidden"></div></div>`;
+    let CABS=[], HOJAS=[];
+    const leerForm=()=>({ ...d, nombre:$("reNombre").value.trim(), descripcion:$("reDesc").value.trim(), archivo:$("reArchivo").value.trim(), hoja:$("reHoja").value,
+      desde:$("reDesde").value, hasta:$("reHasta").value,
+      columnas:[...document.querySelectorAll("#reCols input:checked")].map(x=>x.value),
+      filtros:[...document.querySelectorAll("#reFiltros .fl-row")].map(r=>({col:r.querySelector(".fc").value,op:r.querySelector(".fo").value,valor:r.querySelector(".fv").value})).filter(f=>f.col),
+      agrupar:$("reAgrupar").value, sumar:[...document.querySelectorAll("#reSumar input:checked")].map(x=>x.value), porMes:$("rePorMes").checked });
+    const OPS=["contiene","no contiene","igual","distinto","mayor","menor","con dato","vacío"];
+    function filtroRow(f){ const r=document.createElement("div"); r.className="fl-row";
+      r.innerHTML=`<select class="fc"><option value="">— columna —</option>${[...CABS,...VIRT].map(c=>opt(c,c,f.col)).join("")}</select><select class="fo">${OPS.map(o=>opt(o,o,f.op||"contiene")).join("")}</select><input class="fv" value="${esc(f.valor||"")}" placeholder="valor"><button class="btn sm" type="button" title="Quitar filtro">✕</button>`;
+      r.querySelector("button").onclick=()=>r.remove(); $("reFiltros").appendChild(r); }
+    async function muestra(){
+      const cur=leerForm(); const fs=archivosDe(cur);
+      $("reArchInfo").textContent=fs.length?`${fs.length} archivo(s) coinciden${fs.length?": "+fs.slice(-3).map(f=>f.nombre+" ("+f.mes+" "+f.anio+")").join(", ")+(fs.length>3?"…":""):""}`:"Ningún archivo coincide con ese nombre y periodo.";
+      $("reArchInfo").className="rinfo"+(fs.length?"":" err");
+      if(!fs.length){ CABS=[]; } else {
+        try{ const f=fs[fs.length-1]; const wb=await libro(f); HOJAS=wb.SheetNames;
+          const hs=$("reHoja").value||cur.hoja||d.hoja||"";
+          $("reHoja").innerHTML=HOJAS.map(h=>opt(h,h,hojaDe(wb,hs))).join("");
+          CABS=(await filasDe(f,$("reHoja").value)).cab; }catch(e){ CABS=[]; $("reArchInfo").textContent="No se pudo leer el archivo de muestra: "+e.message; $("reArchInfo").className="rinfo err"; }
+      }
+      const todas=[...CABS,...VIRT];
+      const cols=(cur.columnas&&cur.columnas.length?cur.columnas:d.columnas)||[], sum=(cur.sumar&&cur.sumar.length?cur.sumar:d.sumar)||[];
+      $("reCols").innerHTML=todas.map(c=>`<label class="rchip"><input type="checkbox" value="${esc(c)}"${cols.includes(c)?" checked":""}>${esc(c)}</label>`).join("")||`<span class="rinfo">Elige primero los archivos.</span>`;
+      $("reSumar").innerHTML=CABS.map(c=>`<label class="rchip"><input type="checkbox" value="${esc(c)}"${sum.includes(c)?" checked":""}>${esc(c)}</label>`).join("")||`<span class="rinfo">—</span>`;
+      const ag=cur.agrupar||d.agrupar||""; $("reAgrupar").innerHTML=opt("","Sin agrupar",ag)+todas.map(c=>opt(c,c,ag)).join("");
+      document.querySelectorAll("#reFiltros .fc").forEach(s=>{ const v=s.value; s.innerHTML=`<option value="">— columna —</option>`+todas.map(c=>opt(c,c,v)).join(""); });
+    }
+    (d.filtros||[]).forEach(filtroRow);
+    let tmr=null; $("reArchivo").oninput=()=>{ clearTimeout(tmr); tmr=setTimeout(muestra,450); };
+    ["reDesde","reHasta","reHoja"].forEach(id=>$(id).onchange=muestra);
+    $("reAddF").onclick=()=>filtroRow({});
+    $("reCancelar").onclick=()=>{ EDIT=null; const r=REPS.find(x=>x.id===SELR); pintarLista(); if(r) ejecutar(r); else vacio(); };
+    $("reVista").onclick=async()=>{ const cur=leerForm(); const b=$("reVistaBox"); b.classList.remove("hidden"); b.innerHTML=`<div class="empty" style="padding:20px">Armando…</div>`;
+      try{ const res=await calcular(cur); b.innerHTML=res.archivos.length?tablaHTML(res,200):`<div class="empty" style="padding:20px"><b>Ningún archivo coincide</b></div>`; }catch(e){ b.innerHTML=`<div class="empty">${esc(e.message)}</div>`; } };
+    $("reGuardar").onclick=async()=>{ const cur=leerForm(); const msg=$("reMsg");
+      if(!cur.nombre){ msg.textContent="Ponle un nombre al reporte."; msg.className="rinfo err"; return; }
+      const i=REPS.findIndex(x=>x.id===cur.id); const antes=REPS.slice();
+      if(i>=0) REPS[i]=cur; else REPS.push(cur);
+      msg.textContent="Guardando en la carpeta…"; msg.className="rinfo";
+      try{ await guardarReportes(); EDIT=null; SELR=cur.id; pintarLista(); ejecutar(cur); }
+      catch(e){ REPS=antes; msg.textContent="No se pudo guardar: "+e.message; msg.className="rinfo err"; } };
+    await muestra();
+  }
+  $("repNuevo").onclick=()=>{ if(!esAdminR()) return; SELR=null; pintarLista(); editor({id:uid(),nombre:"",archivo:"",hoja:"",desde:"",hasta:"",columnas:[],filtros:[],agrupar:"",sumar:[],porMes:false},true); };
+})();
+</script>

@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente Legal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#fff; --surface-2:#f0f3f8; --border:#dde3ec; --grid:#edf1f6;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#8792a4;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --warn:#9a6b0f;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit}
+.hidden{display:none!important}
+/* barra superior del agente */
+.bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.navb{border:none;background:none;padding:8px 12px;border-radius:9px;font-weight:600;color:var(--text-2);cursor:pointer}
+.navb:hover{background:var(--surface-2)}
+.navb.on{background:var(--navy);color:#fff}
+.estado{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-2)}
+.estado .pt{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block;margin-right:4px}
+.main{flex:1;overflow-y:auto;padding:20px 24px 40px}
+.wrap{max-width:1240px;margin:0 auto}
+h1.t{font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:26px;margin:0}
+.sub{color:var(--muted);font-size:13px;margin:4px 0 16px}
+.k{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.pad{padding:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.grid3,.grid4{grid-template-columns:1fr 1fr}}
+.func{padding:18px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.func:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(15,23,42,.1)}
+.func .ic{font-size:24px}
+.func h3{margin:8px 0 4px;font-size:15.5px}
+.func p{margin:0 0 10px;color:var(--text-2);font-size:12.5px;line-height:1.5}
+.func a{color:var(--teal);font-weight:700;font-size:12.5px;text-decoration:none}
+.herr{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;font-size:13px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.inp{padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;width:100%}
+.inp:focus{border-color:var(--teal)}
+textarea.inp{min-height:90px;resize:vertical}
+.f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.f>span{font-size:11.5px;font-weight:700;color:var(--text-2)}
+.row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.row>.f{flex:1;min-width:200px}
+.checks{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.checks label{display:inline-flex;gap:6px;align-items:center;font-size:13px}
+table.t{width:100%;border-collapse:separate;border-spacing:0}
+table.t th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:9px 10px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+table.t td{padding:9px 10px;border-bottom:1px solid var(--grid);vertical-align:top;font-size:13px}
+table.t tr.cl{cursor:pointer} table.t tr.cl:hover td{background:#f6f9fc}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.kpi{padding:14px}
+.kpi .v{font-size:28px;font-weight:800;margin-top:2px}
+.kpi.ok .v{color:var(--good)} .kpi.rev .v{color:var(--warn)} .kpi.bad .v{color:var(--bad)}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);white-space:nowrap}
+.tag.ok{background:#e9f6ef;border-color:#bfe3cf;color:var(--good)}
+.tag.rev{background:#fdf6e6;border-color:#f0dcaa;color:var(--warn)}
+.tag.bad{background:#fbeceb;border-color:#efc4c0;color:var(--bad)}
+.vacio{padding:34px 20px;text-align:center;color:var(--muted)}
+.vacio b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+.nota{font-size:12px;color:var(--muted)}
+.err{color:var(--bad);font-size:12.5px;min-height:16px}
+.aviso{padding:10px 14px;border-radius:10px;background:#fdf6e6;border:1px solid #f0dcaa;color:#6b4d12;font-size:13px;margin-bottom:12px}
+.aviso.bad{background:#fbeceb;border-color:#efc4c0;color:#7c2620}
+.spin{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid #dbe3ee;border-top-color:var(--navy);animation:sp .8s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pasos{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.paso{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 14px;font-weight:600;font-size:12.5px;color:var(--text-2);cursor:pointer}
+.paso.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.doc{max-width:820px;margin:0 auto;background:#fff;padding:40px 56px;font-family:"Times New Roman",Georgia,serif;font-size:15px;line-height:1.6;color:#111;box-shadow:0 2px 14px rgba(15,23,42,.12)}
+.doc p{margin:0 0 10px}
+mark.ok{background:#fff3b0;padding:0 2px}
+mark.falta{background:#fbd5d1;padding:0 2px}
+.doc p.cambio{background:#e7f6ee;outline:2px solid #bfe3cf}
+.barra{height:8px;border-radius:999px;background:var(--grid);overflow:hidden;display:flex}
+.barra i{display:block;height:100%}
+.chat{display:flex;flex-direction:column;gap:10px;max-height:56vh;overflow-y:auto;padding:4px}
+.msg{max-width:80%;padding:10px 12px;border-radius:12px;white-space:pre-wrap;line-height:1.5}
+.msg.yo{align-self:flex-end;background:var(--navy);color:#fff}
+.msg.ia{align-self:flex-start;background:var(--surface-2)}
+.semaf{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle}
+.semaf.verde{background:#22a35a}.semaf.amarillo{background:#e0a400}.semaf.rojo{background:#d0453b}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.tab2{border:none;background:none;padding:9px 12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.tab2.on{color:var(--teal);border-bottom-color:var(--teal)}
+.bg{position:fixed;inset:0;background:rgba(15,28,46,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;z-index:50;overflow-y:auto}
+.dlg{width:100%;max-width:640px;background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,.35)}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.dlg-h h3{margin:0;font-size:16px}
+.dlg-b{padding:14px 18px}
+.dlg-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--border)}
+.x{border:none;background:none;color:var(--muted);cursor:pointer}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--navy-d);color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;z-index:80}
+.toast.bad{background:var(--bad)}
+.cargando{padding:60px 20px;text-align:center;color:var(--muted)}
+.connect{max-width:560px;margin:50px auto;text-align:center;padding:36px 30px}
+.connect .big{font-size:42px}
+.lista-items .it{display:flex;gap:8px;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div id="sinSesion" class="cargando">Conectando con el dashboard…</div>
+<div id="app" class="hidden" style="display:contents">
+  <nav class="bar" id="bar">
+    <button class="navb" data-v="inicio">Inicio</button>
+    <button class="navb" data-v="dd">Due diligence</button>
+    <button class="navb" data-v="red">Redacción</button>
+    <button class="navb" data-v="cierre">Cierre</button>
+    <button class="navb" data-v="mas">Más herramientas</button>
+    <div class="estado"><span id="estadoTxt"></span>
+      <button class="btn sm teal" id="btnRelee">↻ Actualizar carpeta Legal</button>
+      <button class="btn sm" id="btnCambiar" title="Elegir otra carpeta Legal">📁</button></div>
+  </nav>
+  <main class="main"><div class="wrap" id="main"></div></main>
+</div>
+
+<script>
+/* ============================ sesión que pasa el inicio ============================ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let SB=null, YO=null, ROL=null, LISTO=false;
+if(window.parent===window) $("sinSesion").innerHTML="<b>Abre esta página desde el Dashboard M&amp;A</b> (tarjeta “Agente Legal”).";
+window.addEventListener("message",ev=>{
+  if(ev.source!==window.parent) return; const d=ev.data||{}; if(d.type!=="MA_SESSION") return;
+  SB=window.supabase.createClient(d.url,d.anon,{global:{headers:{Authorization:"Bearer "+d.token}},auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  YO=d.email; ROL=d.rol; if(!LISTO){ LISTO=true; iniciar(); }
+});
+if(window.parent!==window) window.parent.postMessage({type:"MA_APP_READY"},"*");
+let ultAct=0;
+const avisarActividad=()=>{ if(Date.now()-ultAct>10000){ ultAct=Date.now(); try{ window.parent.postMessage({type:"MA_ACTIVITY"},"*"); }catch(_){} } };
+["mousemove","mousedown","keydown","wheel","touchstart"].forEach(e=>addEventListener(e,avisarActividad,{passive:true,capture:true}));
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* ============================ utilidades ============================ */
+function toast(t,mal){ const d=document.createElement("div"); d.className="toast"+(mal?" bad":""); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),mal?6000:2600); }
+const fHora=t=>t?new Date(t).toLocaleString("es-PA",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";
+const fFecha=t=>t?new Date(t).toLocaleDateString("es-PA",{day:"numeric",month:"short",year:"numeric"}):"—";
+async function q(p){ const {data,error}=await p; if(error) throw new Error(error.message); return data; }
+function abrirDlg(html){ cerrarDlg(); const bg=document.createElement("div"); bg.className="bg"; bg.innerHTML=`<div class="dlg">${html}</div>`; document.body.appendChild(bg); bg.onclick=e=>{ if(e.target===bg) cerrarDlg(); }; bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrarDlg); return bg; }
+function cerrarDlg(){ document.querySelectorAll(".bg").forEach(b=>b.remove()); }
+function descargar(blob,nombre){ const u=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=u; a.download=nombre; a.click(); setTimeout(()=>URL.revokeObjectURL(u),2000); }
+const limpiaNombre=s=>String(s).replace(/[\\/:*?"<>|]+/g,"-").trim();
+
+/* ============================ carpeta Legal (OneDrive local) ============================ */
+const IDB="agente_legal_db";
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open(IDB,1); r.onupgradeneeded=()=>r.result.createObjectStore("h"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function guardarHandle(h){ try{ const db=await idb(); await new Promise(r=>{ const tx=db.transaction("h","readwrite"); tx.objectStore("h").put(h,"legal"); tx.oncomplete=r; tx.onerror=r; }); }catch(e){} }
+async function leerHandle(){ try{ const db=await idb(); return await new Promise(r=>{ const g=db.transaction("h").objectStore("h").get("legal"); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
+let RAIZ=null, CASOS=[], PLANTILLAS=[], LEIDA=null, META={};
+async function* recorrer(dir,ruta){
+  for await (const [n,h] of dir.entries()){
+    if(n.startsWith(".")||n.startsWith("~$")) continue;
+    if(h.kind==="directory") yield* recorrer(h,ruta+n+"/");
+    else yield {nombre:n,ruta:ruta+n,handle:h};
+  }
+}
+async function leerCarpeta(){
+  const casos=[], plant=[];
+  for await (const [n,h] of RAIZ.entries()){
+    if(h.kind!=="directory"||n.startsWith(".")||n.startsWith("_")) continue;
+    const arch=[]; for await (const f of recorrer(h,"")) arch.push(f);
+    for(const a of arch){ try{ const file=await a.handle.getFile(); a.mod=file.lastModified; a.size=file.size; }catch(e){ a.mod=0; } }
+    if(/^plantillas?$/i.test(n)) plant.push(...arch.filter(a=>/\.docx$/i.test(a.nombre)));
+    else casos.push({nombre:n,handle:h,archivos:arch,mod:arch.reduce((m,a)=>Math.max(m,a.mod||0),0)});
+  }
+  CASOS=casos.sort((a,b)=>b.mod-a.mod); PLANTILLAS=plant.sort((a,b)=>a.nombre.localeCompare(b.nombre,"es")); LEIDA=Date.now();
+  try{ (await q(SB.from("lg_casos").select("*"))).forEach(m=>META[m.caso]=m); }catch(e){}
+  pintarEstado();
+}
+function pintarEstado(){ $("estadoTxt").innerHTML=RAIZ?`<span class="pt"></span><b>${esc(RAIZ.name)}</b> · ${CASOS.length} casos · leída ${new Date(LEIDA).toLocaleTimeString("es-PA",{hour:"2-digit",minute:"2-digit"})}`:""; }
+async function conectar(gesto){
+  let h=RAIZ||await leerHandle();
+  if(h){ try{ let p=await h.queryPermission({mode:"read"}); if(p!=="granted"&&gesto) p=await h.requestPermission({mode:"read"}); if(p==="granted"){ RAIZ=h; await leerCarpeta(); return true; } }catch(e){} }
+  if(gesto){ try{ h=await window.showDirectoryPicker({mode:"read",id:"carpeta_legal"}); RAIZ=h; await guardarHandle(h); await leerCarpeta(); return true; }catch(e){ if(e&&e.name!=="AbortError") toast("No se pudo abrir la carpeta: "+e.message,true); } }
+  return false;
+}
+function pantallaConectar(){
+  $("bar").querySelectorAll(".navb").forEach(b=>b.disabled=true);
+  $("main").innerHTML=`<div class="card connect"><div class="big">📂</div><h2>Conectar la carpeta Legal</h2>
+    <p class="nota" style="font-size:13.5px;line-height:1.6">Elige la carpeta <b>Legal</b> de OneDrive. Cada subcarpeta es un caso; una subcarpeta llamada <b>Plantillas</b> guarda los modelos de Word para la redacción.
+    Solo se hace la primera vez en esta PC: elige <b>“Permitir en cada visita”</b> si Chrome lo ofrece.</p>
+    <button class="btn pri" id="btnCon" style="font-size:14px;padding:11px 22px">📂 Conectar carpeta Legal</button></div>`;
+  $("btnCon").onclick=async()=>{ if(await conectar(true)) listo(); };
+}
+
+/* ============================ lectura de documentos ============================ */
+const TXT=new Map();
+const MAX_DOC=60000, MAX_TOTAL=320000;
+async function textoPDF(buf){
+  if(!window.pdfjsLib) throw new Error("no se pudo cargar el lector de PDF");
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise; let out=[];
+  for(let i=1;i<=pdf.numPages;i++){ const pg=await pdf.getPage(i); const c=await pg.getTextContent(); out.push(c.items.map(x=>x.str+(x.hasEOL?"\n":" ")).join("")); }
+  return out.join("\n\n");
+}
+const W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+async function parrafosDocx(buf){
+  const zip=await JSZip.loadAsync(buf); const f=zip.file("word/document.xml"); if(!f) throw new Error("no es un Word válido");
+  const doc=new DOMParser().parseFromString(await f.async("string"),"application/xml");
+  return {zip,doc,ps:[...doc.getElementsByTagNameNS(W,"p")]};
+}
+const textoParrafo=p=>{ let s=""; p.querySelectorAll("*").forEach(n=>{ if(n.namespaceURI!==W) return; if(n.localName==="t") s+=n.textContent; else if(n.localName==="tab") s+="\t"; else if(n.localName==="br") s+="\n"; }); return s; };
+async function textoDOCX(buf){ const {ps}=await parrafosDocx(buf); return ps.map(textoParrafo).join("\n"); }
+async function textoDe(a){
+  const k=a.ruta+"|"+a.mod; if(TXT.has(k)) return TXT.get(k);
+  let t=null; const ext=(a.nombre.match(/\.([^.]+)$/)||[])[1]?.toLowerCase()||"";
+  try{
+    const file=await a.handle.getFile();
+    if(ext==="pdf") t=await textoPDF(await file.arrayBuffer());
+    else if(ext==="docx") t=await textoDOCX(await file.arrayBuffer());
+    else if(["xlsx","xlsm","xls","csv"].includes(ext)){ const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}); t=wb.SheetNames.map(n=>"## "+n+"\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n])).join("\n\n"); }
+    else if(["txt","md"].includes(ext)) t=await file.text();
+  }catch(e){ t=null; }
+  if(t&&!t.trim()) t=null;
+  TXT.set(k,t); return t;
+}
+// Documentos de un caso listos para la IA (con límite de tamaño)
+async function docsDe(lista,progreso){
+  const docs=[], omitidos=[]; let i=0;
+  for(const a of lista){ i++; if(progreso) progreso(`Leyendo ${i} de ${lista.length}: ${a.nombre}`);
+    const t=await textoDe(a); if(t) docs.push({nombre:a.ruta,texto:t.slice(0,MAX_DOC)}); else omitidos.push(a.ruta); }
+  let total=docs.reduce((s,d)=>s+d.texto.length,0);
+  if(total>MAX_TOTAL){ const f=MAX_TOTAL/total; docs.forEach(d=>d.texto=d.texto.slice(0,Math.floor(d.texto.length*f))); }
+  return {docs,omitidos};
+}
+
+/* ============================ IA (Edge Function agente-legal) ============================ */
+async function ia(tarea,payload){
+  const {data,error}=await SB.functions.invoke("agente-legal",{body:{tarea,...payload}});
+  if(error){ let msg=error.message; try{ const j=await error.context.json(); if(j&&j.error) msg=j.error; }catch(_){}
+    if(/Failed to send|not found|404/i.test(msg)) msg="La función agente-legal no está publicada en Supabase (ver la guía, paso “Agente Legal”).";
+    throw new Error(msg); }
+  if(data&&data.error) throw new Error(data.error);
+  return data.resultado;
+}
+async function guardarResultado(caso,herr,resultado){ try{ await q(SB.from("lg_resultados").insert({caso,herramienta:herr,resultado,usuario:YO})); }catch(e){} }
+async function ultimoResultado(caso,herr){ try{ const r=await q(SB.from("lg_resultados").select("*").eq("caso",caso).eq("herramienta",herr).order("creado",{ascending:false}).limit(1)); return r[0]||null; }catch(e){ return null; } }
+const casoPor=n=>CASOS.find(c=>c.nombre===n);
+const opcCasos=sel=>CASOS.map(c=>`<option${c.nombre===sel?" selected":""}>${esc(c.nombre)}</option>`).join("");
+let CASO_SEL=null;
+function selCaso(id){ const v=$(id).value; CASO_SEL=v; return casoPor(v); }
+const trabajando=(el,txt)=>{ el.innerHTML=`<div class="card pad"><span class="spin"></span> ${esc(txt)}</div>`; };
+
+/* ============================ arranque y navegación ============================ */
+let VISTA="inicio";
+async function iniciar(){
+  $("sinSesion").classList.add("hidden"); $("app").classList.remove("hidden");
+  $("bar").querySelectorAll(".navb").forEach(b=>b.onclick=()=>ir(b.dataset.v));
+  $("btnRelee").onclick=async()=>{ if(!RAIZ){ if(await conectar(true)) listo(); return; } $("btnRelee").disabled=true; try{ await leerCarpeta(); ir(VISTA); toast("Carpeta Legal actualizada"); }catch(e){ toast(e.message,true); } $("btnRelee").disabled=false; };
+  $("btnCambiar").onclick=async()=>{ try{ const h=await window.showDirectoryPicker({mode:"read",id:"carpeta_legal"}); RAIZ=h; await guardarHandle(h); TXT.clear(); await leerCarpeta(); ir("inicio"); }catch(e){} };
+  if(await conectar(false)) listo(); else pantallaConectar();
+  // si algo cambió en la carpeta, se nota al volver a la pestaña
+  let ult=0; addEventListener("focus",async()=>{ if(!RAIZ||Date.now()-ult<15000) return; ult=Date.now(); try{ await leerCarpeta(); if(VISTA==="inicio") vInicio(); }catch(e){} });
+}
+function listo(){ $("bar").querySelectorAll(".navb").forEach(b=>b.disabled=false); ir("inicio"); }
+function ir(v){ VISTA=v; $("bar").querySelectorAll(".navb").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  ({inicio:vInicio,dd:vDD,red:vRed,cierre:vCierre,mas:vMas})[v](); document.querySelector(".main").scrollTop=0; }
+
+/* ============================ Inicio ============================ */
+function vInicio(){
+  $("main").innerHTML=`
+    <div class="k">Agente legal</div><h1 class="t">Inicio</h1><div class="sub">Funciones principales sobre los casos de la carpeta Legal.</div>
+    <div class="grid3" style="margin-bottom:16px">
+      <div class="card func" data-go="dd"><div class="ic">🔎</div><h3>Due diligence</h3><p>Lee los documentos del caso, extrae partes, fincas, fechas y montos, y marca lo que no coincide entre documentos.</p><a>Abrir due diligence →</a></div>
+      <div class="card func" data-go="red"><div class="ic">📝</div><h3>Redacción asistida</h3><p>Elige plantilla y caso: se llenan solo los campos marcados. Pide cambios puntuales y descarga el Word con el formato original.</p><a>Abrir redacción →</a></div>
+      <div class="card func" data-go="cierre"><div class="ic">✅</div><h3>Cierre de procesos</h3><p>Compara la carpeta del caso con el checklist del proceso y te dice qué está final, qué hay que corregir y qué falta.</p><a>Abrir cierre →</a></div>
+    </div>
+    <div class="k" style="margin-bottom:8px">Más herramientas</div>
+    <div class="herr" style="margin-bottom:20px">${[["chat","💬 Agente (chat)"],["comparar","⇄ Comparar documentos"],["consultar","❓ Consultar documento"],["semaforo","🚦 Semáforo de riesgo"]].map(([k,l])=>`<button class="btn" data-h="${k}">${l}</button>`).join("")}</div>
+    <div class="k" style="margin-bottom:8px">Casos en la carpeta Legal · modificados recientemente</div>
+    <div class="nota" style="margin-bottom:8px">Cada subcarpeta de Legal aparece como un caso en las listas desplegables.</div>
+    <div class="card">${CASOS.length?`<table class="t"><thead><tr><th>Caso (subcarpeta)</th><th>Sociedad</th><th>Tipo de proceso</th><th>Documentos</th><th>Última modificación</th><th></th></tr></thead><tbody>${
+      CASOS.map(c=>{ const m=META[c.nombre]||{}; return `<tr><td><b>${esc(c.nombre)}</b></td><td>${esc(m.sociedad||"—")}</td><td>${esc(m.tipo_proceso||"—")}</td><td>${c.archivos.length}</td><td>${fFecha(c.mod)}</td><td><button class="btn sm" data-ed="${esc(c.nombre)}">✎ Datos</button></td></tr>`; }).join("")}</tbody></table>`
+      :`<div class="vacio"><b>No hay casos en la carpeta</b>Crea una subcarpeta por caso dentro de <b>${esc(RAIZ?RAIZ.name:"Legal")}</b> y pon ahí sus documentos.</div>`}</div>
+    ${PLANTILLAS.length?`<div class="nota" style="margin-top:10px">${PLANTILLAS.length} plantilla(s) de Word en <b>Plantillas</b>.</div>`:`<div class="nota" style="margin-top:10px">No hay subcarpeta <b>Plantillas</b> con modelos de Word todavía.</div>`}`;
+  $("main").querySelectorAll("[data-go]").forEach(c=>c.onclick=()=>ir(c.dataset.go));
+  $("main").querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{ MAS_TAB=b.dataset.h; ir("mas"); });
+  $("main").querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>dlgCaso(b.dataset.ed));
+}
+function dlgCaso(nombre){
+  const m=META[nombre]||{};
+  const bg=abrirDlg(`<div class="dlg-h"><h3>Datos del caso · ${esc(nombre)}</h3><button class="x" data-x>Cerrar</button></div>
+    <div class="dlg-b"><label class="f"><span>Sociedad</span><input class="inp" id="ms" value="${esc(m.sociedad||"")}"></label>
+    <label class="f"><span>Tipo de proceso</span><input class="inp" id="mt" list="tiposProc" value="${esc(m.tipo_proceso||"")}"><datalist id="tiposProc"></datalist></label>
+    <div class="err" id="merr"></div></div>
+    <div class="dlg-f"><button class="btn" id="mia">✨ Detectar con IA</button><span style="flex:1"></span><button class="btn" data-x>Cancelar</button><button class="btn pri" id="mok">Guardar</button></div>`);
+  q(SB.from("lg_checklists").select("tipo_proceso")).then(r=>{ $("tiposProc").innerHTML=r.map(x=>`<option value="${esc(x.tipo_proceso)}">`).join(""); }).catch(()=>{});
+  $("mia").onclick=async()=>{ $("mia").disabled=true; $("merr").innerHTML='<span class="spin"></span> Leyendo el caso…';
+    try{ const c=casoPor(nombre); const {docs}=await docsDe(c.archivos.slice(0,12)); const r=await ia("caso_meta",{caso:nombre,documentos:docs.map(d=>({nombre:d.nombre,texto:d.texto.slice(0,6000)}))});
+      if(r.sociedad) $("ms").value=r.sociedad; if(r.tipo_proceso) $("mt").value=r.tipo_proceso; $("merr").textContent=""; }
+    catch(e){ $("merr").textContent=e.message; } $("mia").disabled=false; };
+  $("mok").onclick=async()=>{ try{ const fila={caso:nombre,sociedad:$("ms").value.trim()||null,tipo_proceso:$("mt").value.trim()||null,actualizado:new Date().toISOString(),actualizado_por:YO};
+    await q(SB.from("lg_casos").upsert(fila,{onConflict:"caso"})); META[nombre]=fila; cerrarDlg(); vInicio(); toast("Datos del caso guardados"); }catch(e){ $("merr").textContent=e.message; } };
+}
+
+/* ============================ Due diligence ============================ */
+const DATOS_DD=[["partes","Partes"],["fincas","Fincas"],["fechas","Fechas y vigencias"],["montos","Montos"],["gravamenes","Gravámenes"]];
+async function vDD(){
+  $("main").innerHTML=`
+    <div class="k">Agente legal</div><h1 class="t">Due diligence</h1><div class="sub">Extrae los datos clave de todos los documentos del caso y marca lo que no coincide.</div>
+    <div class="card pad" style="margin-bottom:14px"><div class="row">
+      <label class="f"><span>Caso</span><select class="inp" id="ddCaso">${opcCasos(CASO_SEL)}</select></label>
+      <div class="f" style="flex:2"><span>Qué datos buscar</span><div class="checks">${DATOS_DD.map(([k,l])=>`<label><input type="checkbox" value="${k}" checked> ${l}</label>`).join("")}</div></div>
+      <button class="btn pri" id="ddRun" style="margin-bottom:10px">Correr</button></div>
+      <div class="nota" id="ddInfo"></div></div>
+    <div id="ddRes"></div>`;
+  if(!CASOS.length){ $("ddRes").innerHTML=`<div class="card vacio"><b>No hay casos</b>Agrega subcarpetas a la carpeta Legal.</div>`; return; }
+  const info=async()=>{ const c=selCaso("ddCaso"); $("ddInfo").innerHTML=`Usará ${c.archivos.length} documento(s) de <b>${esc(RAIZ.name)} / ${esc(c.nombre)}</b>. Solo se lee esta subcarpeta.`;
+    const u=await ultimoResultado(c.nombre,"due_diligence"); if(u) pintarDD(u.resultado,`Último análisis: ${fHora(u.creado)} · ${u.usuario}`); else $("ddRes").innerHTML=""; };
+  $("ddCaso").onchange=info; info();
+  $("ddRun").onclick=async()=>{
+    const c=selCaso("ddCaso"); const datos=[...$("main").querySelectorAll(".checks input:checked")].map(x=>DATOS_DD.find(d=>d[0]===x.value)[1]);
+    if(!datos.length){ toast("Marca al menos un dato",true); return; }
+    $("ddRun").disabled=true; const el=$("ddRes");
+    try{ const {docs,omitidos}=await docsDe(c.archivos,t=>trabajando(el,t));
+      if(!docs.length) throw new Error("No se pudo leer ningún documento del caso (PDF con texto, Word, Excel o texto).");
+      trabajando(el,`Analizando ${docs.length} documento(s) con IA…`);
+      const r=await ia("due_diligence",{caso:c.nombre,datos,documentos:docs}); r.omitidos=omitidos; r.documentos_leidos=docs.length;
+      await guardarResultado(c.nombre,"due_diligence",r); pintarDD(r,`Análisis de ahora · ${YO}`);
+    }catch(e){ el.innerHTML=`<div class="aviso bad">${esc(e.message)}</div>`; }
+    $("ddRun").disabled=false;
+  };
+}
+const ESTADO_DD=e=>{ e=String(e||"").toLowerCase(); return e.startsWith("coinc")?["ok","Coincide"]:e.startsWith("dif")?["bad","Diferencia"]:["rev","Revisar"]; };
+function pintarDD(r,pie){
+  const ds=r.datos||[]; const n=k=>ds.filter(d=>ESTADO_DD(d.estado)[0]===k).length;
+  $("ddRes").innerHTML=`
+    <div class="grid4" style="margin-bottom:12px">
+      <div class="card kpi"><div class="k">Documentos leídos</div><div class="v">${r.documentos_leidos??"—"}</div></div>
+      <div class="card kpi ok"><div class="k">Coinciden</div><div class="v">${n("ok")}</div></div>
+      <div class="card kpi rev"><div class="k">Para revisar</div><div class="v">${n("rev")}</div></div>
+      <div class="card kpi bad"><div class="k">Diferencias</div><div class="v">${n("bad")}</div></div></div>
+    <div class="card"><div class="pad" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b>Datos encontrados</b><span class="nota">${esc(pie||"")}</span><button class="btn sm" id="ddWord">⬇ Descargar informe (Word)</button></div>
+    ${ds.length?`<table class="t"><thead><tr><th>Dato</th><th>Valor encontrado</th><th>Dónde aparece</th><th>Estado</th></tr></thead><tbody>${ds.map(d=>{ const [k,l]=ESTADO_DD(d.estado);
+      return `<tr><td><b>${esc(d.dato)}</b></td><td>${esc(d.valor||"")}${(d.valores||[]).length>1?`<div class="nota">${d.valores.map(v=>esc(v.valor)+" ("+esc(v.documento)+")").join("<br>")}</div>`:""}${d.nota?`<div class="nota">${esc(d.nota)}</div>`:""}</td><td class="nota">${esc((d.documentos||[]).join(", "))}</td><td><span class="tag ${k}">${l}</span></td></tr>`; }).join("")}</tbody></table>`
+      :`<div class="vacio">Sin datos.</div>`}
+    ${(r.omitidos||[]).length?`<div class="pad nota">No se pudieron leer: ${r.omitidos.map(esc).join(", ")} (por ejemplo, PDF escaneados sin texto).</div>`:""}</div>`;
+  $("ddWord").onclick=async()=>{
+    const filas=[["Dato","Valor encontrado","Dónde aparece","Estado"],...ds.map(d=>[d.dato,(d.valor||"")+((d.valores||[]).length>1?"\n"+d.valores.map(v=>v.valor+" ("+v.documento+")").join("\n"):"")+(d.nota?"\n"+d.nota:""),(d.documentos||[]).join(", "),ESTADO_DD(d.estado)[1]])];
+    descargar(await docxSimple("Informe de due diligence",[`Caso: ${CASO_SEL}`,`Fecha: ${new Date().toLocaleDateString("es-PA")}`,`Documentos leídos: ${r.documentos_leidos??""} · Coinciden: ${n("ok")} · Para revisar: ${n("rev")} · Diferencias: ${n("bad")}`],filas),`Due diligence - ${limpiaNombre(CASO_SEL)}.docx`);
+  };
+}
+
+/* ============================ Word simple (informes) ============================ */
+const xe=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const runXml=(t,b)=>String(t).split("\n").map((l,i)=>`${i?"<w:r><w:br/></w:r>":""}<w:r>${b?"<w:rPr><w:b/></w:rPr>":""}<w:t xml:space="preserve">${xe(l)}</w:t></w:r>`).join("");
+async function docxSimple(titulo,lineas,tabla){
+  const z=new JSZip();
+  z.file("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  z.file("_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  const tbl=tabla?`<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>${["top","left","bottom","right","insideH","insideV"].map(b=>`<w:${b} w:val="single" w:sz="4" w:color="BFC8D6"/>`).join("")}</w:tblBorders></w:tblPr>${
+    tabla.map((f,i)=>`<w:tr>${f.map(c=>`<w:tc><w:p>${runXml(c,i===0)}</w:p></w:tc>`).join("")}</w:tr>`).join("")}</w:tbl>`:"";
+  z.file("word/document.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="${W}"><w:body>
+    <w:p><w:pPr><w:spacing w:after="200"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="32"/></w:rPr><w:t>${xe(titulo)}</w:t></w:r></w:p>
+    ${lineas.map(l=>`<w:p>${runXml(l)}</w:p>`).join("")}<w:p/>${tbl}<w:p/></w:body></w:document>`);
+  return z.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+}
+
+/* ============================ Redacción asistida ============================ */
+const RX_CAMPO=/\[([^\[\]\n]{1,80})\]/g;
+let RED={paso:1,caso:null,plantilla:null,idioma:"Español",parrafos:[],campos:{},fuentes:{},cambios:[],validaciones:null};
+async function cargarPlantilla(nombre){
+  const a=PLANTILLAS.find(p=>p.ruta===nombre); if(!a) return;
+  const {ps}=await parrafosDocx(await (await a.handle.getFile()).arrayBuffer());
+  RED.plantilla=nombre; RED.parrafos=ps.map(textoParrafo); RED.cambios=[]; RED.validaciones=null;
+  const nuevos={}; camposDe().forEach(k=>nuevos[k]=RED.campos[k]||""); RED.campos=nuevos;
+}
+function camposDe(){ const s=new Set(); RED.parrafos.forEach(t=>{ for(const m of t.matchAll(RX_CAMPO)) s.add(m[1].trim()); }); return [...s]; }
+const textoFinal=i=>{ const c=RED.cambios.find(x=>x.parrafo===i&&x.aceptado); return (c?c.propuesto:RED.parrafos[i]); };
+function vRed(){
+  if(!RED.caso&&CASOS.length) RED.caso=CASO_SEL||CASOS[0].nombre;
+  const P=[[1,"1 Datos"],[2,"2 Vista previa"],[3,"3 Cambios"],[4,"4 Validar y descargar"]];
+  $("main").innerHTML=`<div class="k">Agente legal</div><h1 class="t">Redacción asistida</h1><div class="sub">El texto de la plantilla no se toca: solo se llenan los campos resaltados.</div>
+    <div class="pasos">${P.map(([n,l])=>`<button class="paso${RED.paso===n?" on":""}" data-p="${n}">${l}</button>`).join("")}</div><div id="redBody"></div>`;
+  $("main").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ if(+b.dataset.p>1&&!RED.plantilla){ toast("Primero elige una plantilla",true); return; } RED.paso=+b.dataset.p; vRed(); });
+  ({1:redDatos,2:redPrevia,3:redCambios,4:redValidar})[RED.paso]();
+}
+function redDatos(){
+  const campos=camposDe();
+  $("redBody").innerHTML=`
+    <div class="card pad" style="margin-bottom:12px"><b>Caso y documento</b>
+      <div class="row" style="margin-top:8px">
+        <label class="f"><span>Caso</span><select class="inp" id="rCaso">${opcCasos(RED.caso)}</select></label>
+        <label class="f"><span>Plantilla (carpeta Plantillas)</span><select class="inp" id="rPl"><option value="">— Elegir —</option>${PLANTILLAS.map(p=>`<option value="${esc(p.ruta)}"${p.ruta===RED.plantilla?" selected":""}>${esc(p.nombre.replace(/\.docx$/i,""))}</option>`).join("")}</select></label>
+        <label class="f"><span>Idioma de los campos</span><select class="inp" id="rId">${["Español","English","Bilingüe"].map(i=>`<option${i===RED.idioma?" selected":""}>${i}</option>`).join("")}</select></label></div>
+      ${PLANTILLAS.length?"":`<div class="aviso">No hay plantillas. Crea la subcarpeta <b>Plantillas</b> dentro de la carpeta Legal y pon ahí los Word con los campos entre corchetes, por ejemplo <span class="mono">[NOMBRE DEL FIRMANTE]</span>.</div>`}</div>
+    ${RED.plantilla?`<div class="card pad"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <b>Campos de la plantilla (${campos.length})</b><button class="btn teal" id="rLlenar">✨ Llenar con IA desde el caso</button></div>
+      <div class="err" id="rErr"></div>
+      ${campos.length?`<div class="grid3" style="grid-template-columns:repeat(2,minmax(0,1fr))">${campos.map(k=>`<label class="f"><span>[${esc(k)}]</span><input class="inp" data-campo="${esc(k)}" value="${esc(RED.campos[k]||"")}">${RED.fuentes[k]?`<span class="nota">Fuente: ${esc(RED.fuentes[k])}</span>`:""}</label>`).join("")}</div>`
+        :`<div class="nota">Esta plantilla no tiene campos entre corchetes.</div>`}
+      <div style="text-align:right;margin-top:8px"><button class="btn pri" id="rSig">Ver vista previa →</button></div></div>`:""}`;
+  $("rCaso").onchange=e=>{ RED.caso=e.target.value; CASO_SEL=RED.caso; };
+  $("rId").onchange=e=>RED.idioma=e.target.value;
+  $("rPl").onchange=async e=>{ if(!e.target.value){ RED.plantilla=null; RED.parrafos=[]; } else{ try{ await cargarPlantilla(e.target.value); }catch(err){ toast("No se pudo leer la plantilla: "+err.message,true); } } redDatos(); };
+  $("redBody").querySelectorAll("[data-campo]").forEach(i=>i.oninput=()=>RED.campos[i.dataset.campo]=i.value);
+  if($("rSig")) $("rSig").onclick=()=>{ RED.paso=2; vRed(); };
+  if($("rLlenar")) $("rLlenar").onclick=async()=>{
+    const c=casoPor(RED.caso); if(!c){ toast("Elige un caso",true); return; }
+    $("rLlenar").disabled=true;
+    try{ const {docs}=await docsDe(c.archivos,t=>$("rErr").innerHTML=`<span class="spin"></span> ${esc(t)}`);
+      $("rErr").innerHTML=`<span class="spin"></span> Buscando los datos en ${docs.length} documento(s)…`;
+      const r=await ia("redaccion_campos",{caso:c.nombre,idioma:RED.idioma,campos:camposDe(),plantilla:RED.parrafos.join("\n"),documentos:docs,sociedad:(META[c.nombre]||{}).sociedad||null});
+      Object.entries(r.campos||{}).forEach(([k,v])=>{ if(v&&v.valor){ RED.campos[k]=v.valor; RED.fuentes[k]=v.fuente||""; } });
+      const vacios=camposDe().filter(k=>!RED.campos[k]).length;
+      redDatos(); toast(vacios?`Listo. ${vacios} campo(s) no aparecen en el caso: llénalos a mano.`:"Campos llenados");
+    }catch(e){ $("rErr").textContent=e.message; $("rLlenar").disabled=false; }
+  };
+}
+function htmlParrafo(t){ return esc(t).replace(/\[([^\[\]\n]{1,80})\]/g,(m,k)=>{ const v=RED.campos[k.trim()]; return v?`<mark class="ok" title="[${esc(k)}]">${esc(v)}</mark>`:`<mark class="falta">${m}</mark>`; }); }
+function redPrevia(){
+  $("redBody").innerHTML=`<div class="nota" style="margin-bottom:8px"><mark class="ok">Campo llenado</mark> · <mark class="falta">[Campo sin llenar]</mark> · <span style="background:#e7f6ee;padding:0 4px">Cambio aceptado</span></div>
+    <div class="doc">${RED.parrafos.map((t,i)=>`<p class="${RED.cambios.some(c=>c.parrafo===i&&c.aceptado)?"cambio":""}">${htmlParrafo(textoFinal(i))||"&nbsp;"}</p>`).join("")}</div>`;
+}
+function redCambios(){
+  $("redBody").innerHTML=`<div class="card pad" style="margin-bottom:12px"><b>Cambios específicos</b>
+      ${RED.cambios.length?RED.cambios.map((c,j)=>`<div class="card pad" style="margin-top:10px"><div class="nota">Párrafo ${c.parrafo+1} · Pedido: “${esc(c.pedido)}”</div>
+        <div style="margin:6px 0"><s class="nota">${esc(RED.parrafos[c.parrafo]).slice(0,600)}</s></div><div>${esc(c.propuesto)}</div>${c.explicacion?`<div class="nota" style="margin-top:4px">${esc(c.explicacion)}</div>`:""}
+        <div style="margin-top:8px">${c.aceptado?`<span class="tag ok">Aceptado</span> <button class="btn sm" data-r="${j}">Deshacer</button>`:`<button class="btn sm teal" data-a="${j}">Aceptar</button> <button class="btn sm" data-r="${j}">Rechazar</button>`}</div></div>`).join("")
+        :`<div class="nota" style="margin-top:6px">Todavía no hay cambios pedidos.</div>`}
+      <label class="f" style="margin-top:12px"><span>Pedir otro cambio</span><textarea class="inp" id="cPed" placeholder="Describe el cambio que quieres en el texto de la plantilla"></textarea></label>
+      <div class="err" id="cErr"></div><button class="btn pri" id="cProp">Proponer cambio</button></div>`;
+  $("redBody").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{ const c=RED.cambios[+b.dataset.a]; RED.cambios.forEach(x=>{ if(x.parrafo===c.parrafo) x.aceptado=false; }); c.aceptado=true; RED.validaciones=null; redCambios(); });
+  $("redBody").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{ const c=RED.cambios[+b.dataset.r]; if(c.aceptado) c.aceptado=false; else RED.cambios.splice(+b.dataset.r,1); redCambios(); });
+  $("cProp").onclick=async()=>{ const ped=$("cPed").value.trim(); if(!ped) return; $("cProp").disabled=true; $("cErr").innerHTML='<span class="spin"></span> Proponiendo…';
+    try{ const r=await ia("redaccion_cambio",{idioma:RED.idioma,pedido:ped,parrafos:RED.parrafos.map((t,i)=>({i,texto:textoFinal(i)}))});
+      (r.cambios||[]).forEach(c=>{ if(Number.isInteger(c.parrafo)&&RED.parrafos[c.parrafo]!=null) RED.cambios.push({parrafo:c.parrafo,propuesto:c.propuesto,explicacion:c.explicacion||"",pedido:ped,aceptado:false}); });
+      if(!(r.cambios||[]).length) toast("La IA no propuso cambios para ese pedido",true);
+      redCambios(); }
+    catch(e){ $("cErr").textContent=e.message; $("cProp").disabled=false; } };
+}
+function redValidar(){
+  const faltan=camposDe().filter(k=>!RED.campos[k]);
+  const pend=RED.cambios.filter(c=>!c.aceptado).length;
+  const c=casoPor(RED.caso)||{nombre:""};
+  const sugerido=`${(RED.plantilla||"").split("/").pop().replace(/\.docx$/i,"")} - ${c.nombre} - ${new Date().toISOString().slice(0,10)}.docx`;
+  $("redBody").innerHTML=`<div class="grid3" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+    <div class="card pad"><b>Validaciones</b><div style="margin-top:8px">
+      <div style="margin-bottom:6px">${faltan.length?`<span class="tag rev">PENDIENTE</span> Faltan ${faltan.length} campo(s): ${faltan.map(k=>"["+esc(k)+"]").join(", ")}`:`<span class="tag ok">OK</span> Todos los campos están llenos`}</div>
+      <div style="margin-bottom:6px">${pend?`<span class="tag rev">PENDIENTE</span> ${pend} cambio(s) sin aceptar o rechazar`:`<span class="tag ok">OK</span> No hay cambios pendientes`}</div>
+      ${(RED.validaciones||[]).map(v=>{ const k=/^ok/i.test(v.estado)?"ok":/error|dif/i.test(v.estado)?"bad":"rev"; return `<div style="margin-bottom:6px"><span class="tag ${k}">${esc(v.estado)}</span> ${esc(v.texto)}</div>`; }).join("")}
+      </div><div class="err" id="vErr"></div><button class="btn teal" id="vIA">✨ Revisar consistencia con IA</button>
+      <div class="nota" style="margin-top:6px">Revisa, por ejemplo, que los montos en letras coincidan con los números y que los datos coincidan con el caso.</div></div>
+    <div class="card pad"><b>Guardar</b>
+      <label class="f" style="margin-top:8px"><span>Nombre sugerido</span><input class="inp" id="vNom" value="${esc(sugerido)}"></label>
+      <div class="nota" style="margin-bottom:10px">Destino: <b>${esc(RAIZ?RAIZ.name:"Legal")} / ${esc(c.nombre)}</b></div>
+      <button class="btn pri" id="vGuardar">💾 Guardar en la carpeta del caso</button> <button class="btn" id="vBajar">⬇ Descargar Word</button>
+      <div class="nota" style="margin-top:8px">${faltan.length?"Se puede descargar, pero quedan campos sin llenar.":""}</div></div></div>`;
+  $("vIA").onclick=async()=>{ $("vIA").disabled=true; $("vErr").innerHTML='<span class="spin"></span> Revisando…';
+    try{ const {docs}=await docsDe(casoPor(RED.caso).archivos); const r=await ia("redaccion_validar",{texto:RED.parrafos.map((_,i)=>textoFinal(i).replace(RX_CAMPO,(m,k)=>RED.campos[k.trim()]||m)).join("\n"),documentos:docs});
+      RED.validaciones=r.validaciones||[]; redValidar(); }
+    catch(e){ $("vErr").textContent=e.message; $("vIA").disabled=false; } };
+  const generar=async()=>{ const a=PLANTILLAS.find(p=>p.ruta===RED.plantilla); return await llenarDocx(await (await a.handle.getFile()).arrayBuffer()); };
+  $("vBajar").onclick=async()=>{ try{ descargar(await generar(),limpiaNombre($("vNom").value)||"documento.docx"); }catch(e){ toast(e.message,true); } };
+  $("vGuardar").onclick=async()=>{
+    try{ const cs=casoPor(RED.caso); let p=await cs.handle.queryPermission({mode:"readwrite"}); if(p!=="granted") p=await cs.handle.requestPermission({mode:"readwrite"});
+      if(p!=="granted") throw new Error("Sin permiso para escribir en la carpeta del caso. Usa Descargar Word.");
+      let nom=limpiaNombre($("vNom").value)||"documento.docx"; if(!/\.docx$/i.test(nom)) nom+=".docx";
+      const fh=await cs.handle.getFileHandle(nom,{create:true}); const w=await fh.createWritable(); await w.write(await generar()); await w.close();
+      toast("✓ Guardado en "+cs.nombre+" / "+nom); await leerCarpeta();
+    }catch(e){ toast(e.message,true); }
+  };
+}
+// Llena la plantilla Word conservando su formato: los campos se reemplazan dentro de su mismo texto
+async function llenarDocx(buf){
+  const {zip,doc,ps}=await parrafosDocx(buf);
+  ps.forEach((p,i)=>{
+    const ts=[...p.getElementsByTagNameNS(W,"t")]; if(!ts.length) return;
+    const cambio=RED.cambios.find(c=>c.parrafo===i&&c.aceptado);
+    const llenar=s=>s.replace(RX_CAMPO,(m,k)=>RED.campos[k.trim()]||m);
+    if(cambio){ ts[0].textContent=llenar(cambio.propuesto); ts[0].setAttribute("xml:space","preserve"); ts.slice(1).forEach(t=>t.textContent=""); return; }
+    ts.forEach(t=>{ const n=llenar(t.textContent); if(n!==t.textContent){ t.textContent=n; t.setAttribute("xml:space","preserve"); } });
+    // campo partido en varios tramos de texto: se une en el primer tramo
+    const full=ts.map(t=>t.textContent).join(""), lleno=llenar(full);
+    if(lleno!==full){ ts[0].textContent=lleno; ts[0].setAttribute("xml:space","preserve"); ts.slice(1).forEach(t=>t.textContent=""); }
+  });
+  zip.file("word/document.xml",new XMLSerializer().serializeToString(doc));
+  return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+}
+
+/* ============================ Cierre de procesos ============================ */
+let CHECKS=[];
+async function vCierre(){
+  try{ CHECKS=await q(SB.from("lg_checklists").select("*").order("tipo_proceso")); }catch(e){ CHECKS=[]; }
+  const caso0=CASO_SEL||(CASOS[0]||{}).nombre; const tipo0=(META[caso0]||{}).tipo_proceso;
+  $("main").innerHTML=`<div class="k">Agente legal</div><h1 class="t">Cierre de procesos</h1><div class="sub">Compara la carpeta del caso con el checklist del proceso.</div>
+    <div class="card pad" style="margin-bottom:14px"><div class="row">
+      <label class="f"><span>Caso</span><select class="inp" id="ciCaso">${opcCasos(caso0)}</select></label>
+      <label class="f"><span>Checklist del proceso</span><select class="inp" id="ciChk"><option value="">— Elegir —</option>${CHECKS.map(c=>`<option${c.tipo_proceso===tipo0?" selected":""}>${esc(c.tipo_proceso)}</option>`).join("")}</select></label>
+      <button class="btn" id="ciEd" style="margin-bottom:10px">✎ Editar checklist</button><button class="btn pri" id="ciRun" style="margin-bottom:10px">Correr</button></div>
+      ${CHECKS.length?"":`<div class="aviso">Todavía no hay checklists. Crea el primero con <b>Editar checklist</b>: el nombre del proceso y la lista de documentos requeridos.</div>`}</div>
+    <div id="ciRes"></div>`;
+  const al=async()=>{ const c=selCaso("ciCaso"); if(!c) return; const t=(META[c.nombre]||{}).tipo_proceso; if(t&&CHECKS.some(x=>x.tipo_proceso===t)) $("ciChk").value=t;
+    const u=await ultimoResultado(c.nombre,"cierre"); if(u) pintarCierre(u.resultado,`Revisado ${fHora(u.creado)} · ${u.usuario}`); else $("ciRes").innerHTML=""; };
+  $("ciCaso").onchange=al; if(CASOS.length) al();
+  $("ciEd").onclick=()=>dlgChecklist(CHECKS.find(c=>c.tipo_proceso===$("ciChk").value));
+  $("ciRun").onclick=async()=>{
+    const c=selCaso("ciCaso"), chk=CHECKS.find(x=>x.tipo_proceso===$("ciChk").value);
+    if(!c||!chk){ toast("Elige el caso y el checklist",true); return; }
+    if(!(chk.items||[]).length){ toast("El checklist no tiene documentos",true); return; }
+    $("ciRun").disabled=true; const el=$("ciRes");
+    try{ const {docs,omitidos}=await docsDe(c.archivos,t=>trabajando(el,t)); trabajando(el,"Comparando con el checklist…");
+      const r=await ia("cierre",{caso:c.nombre,checklist:chk.tipo_proceso,items:chk.items,archivos:c.archivos.map(a=>({nombre:a.ruta,modificado:new Date(a.mod).toISOString().slice(0,10)})),documentos:docs});
+      r.omitidos=omitidos; r.checklist=chk.tipo_proceso; await guardarResultado(c.nombre,"cierre",r); pintarCierre(r,"Revisado ahora");
+    }catch(e){ el.innerHTML=`<div class="aviso bad">${esc(e.message)}</div>`; }
+    $("ciRun").disabled=false;
+  };
+}
+const EST_CI=e=>{ e=String(e||"").toLowerCase(); return e.startsWith("final")?["ok","Final"]:e.startsWith("falt")?["bad","Falta"]:["rev","Por modificar"]; };
+function pintarCierre(r,pie){
+  const it=r.items||[]; const n=k=>it.filter(x=>EST_CI(x.estado)[0]===k).length; const tot=it.length||1;
+  $("ciRes").innerHTML=`<div class="card pad" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>Checklist · ${n("ok")} de ${it.length} listos</b><span class="nota">${esc(r.checklist||"")} · ${esc(pie||"")}</span></div>
+      <div class="barra" style="margin:10px 0 6px"><i style="width:${n("ok")*100/tot}%;background:#22a35a"></i><i style="width:${n("rev")*100/tot}%;background:#e0a400"></i><i style="width:${n("bad")*100/tot}%;background:#d0453b"></i></div>
+      <div class="nota">${n("ok")} finales · ${n("rev")} por modificar · ${n("bad")} faltan</div></div>
+    <div class="card" style="margin-bottom:12px"><table class="t"><thead><tr><th>Documento requerido</th><th>Archivo encontrado</th><th>Estado</th><th>Motivo</th></tr></thead><tbody>${
+      it.map(x=>{ const [k,l]=EST_CI(x.estado); return `<tr><td><b>${esc(x.documento)}</b></td><td class="mono">${esc(x.archivo||"—")}</td><td><span class="tag ${k}">${l}</span></td><td class="nota">${esc(x.motivo||"")}</td></tr>`; }).join("")}</tbody></table></div>
+    <div class="card pad"><b>Qué falta para cerrar</b>
+      ${(r.que_falta||[]).length?`<ol>${r.que_falta.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<div class="nota" style="margin:6px 0">Nada pendiente según el checklist.</div>`}
+      ${(r.alertas||[]).map(a=>`<div class="aviso">${esc(a)}</div>`).join("")}
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" id="ciMail">✉ Preparar correo de seguimiento</button><button class="btn" id="ciXls">⬇ Descargar checklist (Excel)</button></div></div>`;
+  $("ciXls").onclick=()=>{ const ws=XLSX.utils.aoa_to_sheet([["Caso",CASO_SEL],["Checklist",r.checklist||""],[],["Documento requerido","Archivo encontrado","Estado","Motivo"],...it.map(x=>[x.documento,x.archivo||"",EST_CI(x.estado)[1],x.motivo||""]),[],["Qué falta para cerrar"],...(r.que_falta||[]).map(x=>[x])]);
+    ws["!cols"]=[{wch:36},{wch:36},{wch:16},{wch:60}]; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Checklist"); XLSX.writeFile(wb,`Checklist cierre - ${limpiaNombre(CASO_SEL)}.xlsx`); };
+  $("ciMail").onclick=async()=>{ const bg=abrirDlg(`<div class="dlg-h"><h3>Correo de seguimiento</h3><button class="x" data-x>Cerrar</button></div><div class="dlg-b" id="mailB"><span class="spin"></span> Redactando…</div><div class="dlg-f"><button class="btn" data-x>Cerrar</button><button class="btn pri" id="mailCopy" disabled>Copiar</button></div>`);
+    try{ const m=await ia("correo_seguimiento",{caso:CASO_SEL,checklist:r.checklist,items:it,que_falta:r.que_falta||[],alertas:r.alertas||[]});
+      $("mailB").innerHTML=`<label class="f"><span>Asunto</span><input class="inp" id="mA" value="${esc(m.asunto||"")}"></label><label class="f"><span>Mensaje</span><textarea class="inp" id="mC" style="min-height:260px">${esc(m.cuerpo||"")}</textarea></label>`;
+      $("mailCopy").disabled=false; $("mailCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText("Asunto: "+$("mA").value+"\n\n"+$("mC").value); toast("Copiado"); }catch(e){ $("mC").select(); } };
+    }catch(e){ $("mailB").innerHTML=`<div class="aviso bad">${esc(e.message)}</div>`; } };
+}
+function dlgChecklist(chk){
+  let items=chk?JSON.parse(JSON.stringify(chk.items||[])):[];
+  const bg=abrirDlg(`<div class="dlg-h"><h3>${chk?"Editar checklist":"Nuevo checklist"}</h3><button class="x" data-x>Cerrar</button></div>
+    <div class="dlg-b"><label class="f"><span>Tipo de proceso</span><input class="inp" id="chT" value="${esc(chk?chk.tipo_proceso:"")}" ${chk?"disabled":""} placeholder="Nombre del proceso"></label>
+      <div class="f"><span>Documentos requeridos</span><div class="lista-items" id="chI"></div><button class="btn sm" id="chAdd">＋ Agregar documento</button></div>
+      <div class="err" id="chErr"></div></div>
+    <div class="dlg-f">${chk?`<button class="btn" id="chNuevo">＋ Nuevo checklist</button><span style="flex:1"></span>`:""}<button class="btn" data-x>Cancelar</button><button class="btn pri" id="chOk">Guardar</button></div>`);
+  const pintar=()=>{ $("chI").innerHTML=items.map((x,i)=>`<div class="it"><input class="inp" data-d="${i}" placeholder="Documento" value="${esc(x.documento||"")}"><input class="inp" data-e="${i}" placeholder="Detalle (opcional)" value="${esc(x.detalle||"")}"><button class="btn sm" data-del="${i}">✕</button></div>`).join("")||`<div class="nota">Sin documentos.</div>`;
+    $("chI").querySelectorAll("[data-d]").forEach(e=>e.oninput=()=>items[+e.dataset.d].documento=e.value);
+    $("chI").querySelectorAll("[data-e]").forEach(e=>e.oninput=()=>items[+e.dataset.e].detalle=e.value);
+    $("chI").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ items.splice(+b.dataset.del,1); pintar(); }); };
+  pintar();
+  $("chAdd").onclick=()=>{ items.push({documento:"",detalle:""}); pintar(); $("chI").querySelector(`[data-d="${items.length-1}"]`).focus(); };
+  if($("chNuevo")) $("chNuevo").onclick=()=>dlgChecklist(null);
+  $("chOk").onclick=async()=>{ const tipo=$("chT").value.trim(); const lim=items.filter(x=>x.documento.trim()).map(x=>({documento:x.documento.trim(),detalle:(x.detalle||"").trim()}));
+    if(!tipo){ $("chErr").textContent="Ponle nombre al proceso."; return; }
+    try{ await q(SB.from("lg_checklists").upsert({tipo_proceso:tipo,items:lim,actualizado:new Date().toISOString(),actualizado_por:YO},{onConflict:"tipo_proceso"})); cerrarDlg(); toast("Checklist guardado"); vCierre(); }
+    catch(e){ $("chErr").textContent=e.message; } };
+}
+
+/* ============================ Más herramientas ============================ */
+let MAS_TAB="chat", CHAT={caso:null,msgs:[]};
+function vMas(){
+  const T=[["chat","💬 Agente (chat)"],["comparar","⇄ Comparar documentos"],["consultar","❓ Consultar documento"],["semaforo","🚦 Semáforo de riesgo"]];
+  $("main").innerHTML=`<div class="k">Agente legal</div><h1 class="t">Más herramientas</h1><div class="sub">Sobre los documentos de la carpeta Legal.</div>
+    <div class="tabs2">${T.map(([k,l])=>`<button class="tab2${MAS_TAB===k?" on":""}" data-t="${k}">${l}</button>`).join("")}</div><div id="masB"></div>`;
+  $("main").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ MAS_TAB=b.dataset.t; vMas(); });
+  ({chat:mChat,comparar:mComparar,consultar:mConsultar,semaforo:mSemaforo})[MAS_TAB]();
+}
+const opcArchivos=sel=>CASOS.map(c=>`<optgroup label="${esc(c.nombre)}">${c.archivos.map(a=>`<option value="${esc(c.nombre+"\u0001"+a.ruta)}"${sel===c.nombre+"\u0001"+a.ruta?" selected":""}>${esc(a.ruta)}</option>`).join("")}</optgroup>`).join("");
+const archivoPor=v=>{ const [c,r]=String(v).split("\u0001"); const cs=casoPor(c); return cs&&cs.archivos.find(a=>a.ruta===r); };
+function mChat(){
+  if(!CHAT.caso&&CASOS.length) CHAT.caso=CASO_SEL||CASOS[0].nombre;
+  $("masB").innerHTML=`<div class="card pad"><div class="row"><label class="f"><span>Caso</span><select class="inp" id="chCaso">${opcCasos(CHAT.caso)}</select></label><button class="btn sm" id="chLimpia" style="margin-bottom:10px">Nueva conversación</button></div>
+    <div class="chat" id="chMsgs">${CHAT.msgs.map(m=>`<div class="msg ${m.rol==="user"?"yo":"ia"}">${esc(m.texto)}</div>`).join("")||`<div class="nota">Pregunta lo que necesites sobre los documentos del caso.</div>`}</div>
+    <div class="row" style="margin-top:10px"><label class="f" style="flex:5"><span>Mensaje</span><input class="inp" id="chIn" placeholder="Ej.: ¿Quién firma por la vendedora y con qué poder?"></label><button class="btn pri" id="chSend" style="margin-bottom:10px">Enviar</button></div><div class="err" id="chErr"></div></div>`;
+  $("chMsgs").scrollTop=1e9;
+  $("chCaso").onchange=e=>{ CHAT={caso:e.target.value,msgs:[]}; mChat(); };
+  $("chLimpia").onclick=()=>{ CHAT.msgs=[]; mChat(); };
+  const enviar=async()=>{ const t=$("chIn").value.trim(); if(!t) return; CHAT.msgs.push({rol:"user",texto:t}); mChat(); $("chSend").disabled=true; $("chErr").innerHTML='<span class="spin"></span> Pensando…';
+    try{ const {docs}=await docsDe(casoPor(CHAT.caso).archivos); const r=await ia("chat",{caso:CHAT.caso,mensajes:CHAT.msgs.map(m=>({role:m.rol==="user"?"user":"assistant",content:m.texto})),documentos:docs});
+      CHAT.msgs.push({rol:"ia",texto:r.respuesta||""}); mChat(); }
+    catch(e){ CHAT.msgs.pop(); mChat(); $("chErr").textContent=e.message; } };
+  $("chSend").onclick=enviar; $("chIn").onkeydown=e=>{ if(e.key==="Enter") enviar(); }; $("chIn").focus();
+}
+function mComparar(){
+  $("masB").innerHTML=`<div class="card pad" style="margin-bottom:12px"><div class="row"><label class="f"><span>Documento A</span><select class="inp" id="cA">${opcArchivos()}</select></label><label class="f"><span>Documento B</span><select class="inp" id="cB">${opcArchivos()}</select></label><button class="btn pri" id="cRun" style="margin-bottom:10px">Comparar</button></div></div><div id="cRes"></div>`;
+  if($("cB").options.length>1) $("cB").selectedIndex=1;
+  $("cRun").onclick=async()=>{ const a=archivoPor($("cA").value), b=archivoPor($("cB").value); if(!a||!b||a===b){ toast("Elige dos documentos distintos",true); return; }
+    $("cRun").disabled=true; trabajando($("cRes"),"Comparando…");
+    try{ const [ta,tb]=[await textoDe(a),await textoDe(b)]; if(!ta||!tb) throw new Error("No se pudo leer el texto de uno de los documentos.");
+      const r=await ia("comparar",{a:{nombre:a.ruta,texto:ta.slice(0,MAX_DOC*2)},b:{nombre:b.ruta,texto:tb.slice(0,MAX_DOC*2)}});
+      $("cRes").innerHTML=`<div class="card pad" style="margin-bottom:12px">${esc(r.resumen||"")}</div><div class="card"><table class="t"><thead><tr><th>Tema</th><th>${esc(a.nombre)}</th><th>${esc(b.nombre)}</th><th>Importancia</th></tr></thead><tbody>${
+        (r.diferencias||[]).map(d=>`<tr><td><b>${esc(d.tema)}</b></td><td>${esc(d.a)}</td><td>${esc(d.b)}</td><td><span class="tag ${/alta/i.test(d.importancia)?"bad":/media/i.test(d.importancia)?"rev":""}">${esc(d.importancia||"")}</span></td></tr>`).join("")||`<tr><td colspan="4" class="nota">Sin diferencias relevantes.</td></tr>`}</tbody></table></div>`; }
+    catch(e){ $("cRes").innerHTML=`<div class="aviso bad">${esc(e.message)}</div>`; } $("cRun").disabled=false; };
+}
+function mConsultar(){
+  $("masB").innerHTML=`<div class="card pad" style="margin-bottom:12px"><label class="f"><span>Documento</span><select class="inp" id="qD">${opcArchivos()}</select></label>
+    <div class="row"><label class="f" style="flex:5"><span>Pregunta</span><input class="inp" id="qP" placeholder="Ej.: ¿Cuál es el plazo de vigencia y cómo se renueva?"></label><button class="btn pri" id="qRun" style="margin-bottom:10px">Consultar</button></div></div><div id="qRes"></div>`;
+  const run=async()=>{ const a=archivoPor($("qD").value), p=$("qP").value.trim(); if(!a||!p) return; $("qRun").disabled=true; trabajando($("qRes"),"Leyendo el documento…");
+    try{ const t=await textoDe(a); if(!t) throw new Error("No se pudo leer el texto de este documento (puede ser un PDF escaneado).");
+      const r=await ia("consultar",{documento:{nombre:a.ruta,texto:t.slice(0,MAX_DOC*3)},pregunta:p});
+      $("qRes").innerHTML=`<div class="card pad"><div style="white-space:pre-wrap;line-height:1.6">${esc(r.respuesta||"")}</div>${(r.citas||[]).map(c=>`<div class="aviso" style="margin-top:10px">“${esc(c.texto)}”${c.ubicacion?` <span class="nota">· ${esc(c.ubicacion)}</span>`:""}</div>`).join("")}</div>`; }
+    catch(e){ $("qRes").innerHTML=`<div class="aviso bad">${esc(e.message)}</div>`; } $("qRun").disabled=false; };
+  $("qRun").onclick=run; $("qP").onkeydown=e=>{ if(e.key==="Enter") run(); };
+}
+async function mSemaforo(){
+  $("masB").innerHTML=`<div class="card"><div class="pad nota">Evalúa el riesgo de cada caso con sus documentos. Se guarda la última evaluación.</div><div id="sT"><div class="pad"><span class="spin"></span></div></div></div><div id="sDet" style="margin-top:12px"></div>`;
+  let ult={}; try{ (await q(SB.from("lg_resultados").select("*").eq("herramienta","semaforo").order("creado",{ascending:false}))).forEach(r=>{ if(!ult[r.caso]) ult[r.caso]=r; }); }catch(e){}
+  const nivel=r=>String((r&&r.resultado&&r.resultado.nivel)||"").toLowerCase();
+  $("sT").innerHTML=CASOS.length?`<table class="t"><thead><tr><th></th><th>Caso</th><th>Resumen</th><th>Evaluado</th><th></th></tr></thead><tbody>${CASOS.map(c=>{ const r=ult[c.nombre]; const nv=nivel(r);
+    return `<tr class="${r?"cl":""}" data-v="${esc(c.nombre)}"><td>${r?`<span class="semaf ${esc(nv)}"></span>`:""}</td><td><b>${esc(c.nombre)}</b></td><td class="nota">${esc(r?r.resultado.resumen||"":"Sin evaluar")}</td><td class="nota">${r?fHora(r.creado):""}</td><td><button class="btn sm" data-ev="${esc(c.nombre)}">Evaluar</button></td></tr>`; }).join("")}</tbody></table>`:`<div class="vacio">No hay casos.</div>`;
+  const det=r=>{ $("sDet").innerHTML=`<div class="card"><div class="pad"><span class="semaf ${esc(nivel(r))}"></span> <b>${esc(r.caso)}</b> · ${esc(r.resultado.resumen||"")}</div><table class="t"><thead><tr><th>Riesgo</th><th>Gravedad</th><th>Documento</th></tr></thead><tbody>${(r.resultado.riesgos||[]).map(x=>`<tr><td>${esc(x.riesgo)}</td><td><span class="tag ${/alta/i.test(x.gravedad)?"bad":/media/i.test(x.gravedad)?"rev":"ok"}">${esc(x.gravedad)}</span></td><td class="nota">${esc(x.documento||"")}</td></tr>`).join("")||`<tr><td colspan="3" class="nota">Sin riesgos señalados.</td></tr>`}</tbody></table></div>`; };
+  $("sT").querySelectorAll("tr[data-v]").forEach(tr=>tr.onclick=e=>{ if(e.target.closest("button")) return; const r=ult[tr.dataset.v]; if(r) det(r); });
+  $("sT").querySelectorAll("[data-ev]").forEach(b=>b.onclick=async()=>{ const c=casoPor(b.dataset.ev); b.disabled=true; b.innerHTML='<span class="spin"></span>';
+    try{ const {docs}=await docsDe(c.archivos); if(!docs.length) throw new Error("No se pudo leer ningún documento de "+c.nombre);
+      const r=await ia("semaforo",{caso:c.nombre,documentos:docs}); await guardarResultado(c.nombre,"semaforo",r);
+      await mSemaforo(); det({caso:c.nombre,resultado:r}); }
+    catch(e){ toast(e.message,true); b.disabled=false; b.textContent="Evaluar"; } });
+}
+</script>
+</body>
+</html>

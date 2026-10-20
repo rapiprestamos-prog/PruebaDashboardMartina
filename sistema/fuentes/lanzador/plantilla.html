@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Dashboard M&amp;A</title>
+<style>body{margin:0;font:15px Inter,system-ui,"Segoe UI",sans-serif;background:#f3f5f9;color:#0f1c2e;display:flex;align-items:center;justify-content:center;height:100vh}
+.c{text-align:center;max-width:520px;padding:24px}.s{width:34px;height:34px;border-radius:50%;border:3px solid #e7ecf3;border-top-color:#1b3a5c;animation:g .8s linear infinite;margin:0 auto 14px}
+@keyframes g{to{transform:rotate(360deg)}}.e{color:#b03a32}</style></head>
+<body><div class="c" id="c"><div class="s"></div>Abriendo el Dashboard M&amp;A…</div>
+<script>
+/* Lanzador del Dashboard M&A: trae la página más reciente desde GitHub y la abre aquí, en la carpeta de OneDrive.
+   Así el dashboard se actualiza solo (vive en GitHub) y, abierto con el acceso directo, lee las carpetas sin preguntar.
+   No hay que tocar este archivo. */
+(function(){
+  var PAGINA="__PAGINA__", ORIGEN="https://rapiprestamos-prog.github.io/Dashboard-DEMO-MARTINA/";
+  var x=new XMLHttpRequest(); x.open("GET",ORIGEN+PAGINA+"?t="+Date.now());
+  x.onload=function(){ if(x.status!==200){ falla("GitHub respondió "+x.status+"."); return; } document.open(); document.write(x.responseText); document.close(); };
+  x.onerror=function(){ falla("No hay conexión a internet o GitHub no responde."); };
+  x.send();
+  function falla(m){ document.getElementById("c").innerHTML='<b class="e">No se pudo abrir el dashboard</b><br><br>'+m+'<br>Revisa la conexión y vuelve a abrir el acceso directo.'; }
+})();
+</script></body></html>

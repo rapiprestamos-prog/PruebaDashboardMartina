@@ -1,0 +1,86 @@
+<style>
+.gs-cfg{max-width:860px;margin:30px auto;background:#fff;border:1px solid #dde3ec;border-radius:16px;box-shadow:0 6px 18px rgba(15,23,42,.06);padding:26px 30px;color:#0f1c2e;font-family:Inter,system-ui,"Segoe UI",sans-serif}
+.gs-cfg h2{margin:0 0 4px;font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:24px}
+.gs-cfg .gs-sub{color:#5a687e;font-size:13.5px;line-height:1.6;margin-bottom:16px}
+.gs-cfg ol{margin:0 0 16px;padding-left:20px;line-height:1.75;font-size:13.5px;color:#26354a}
+.gs-cfg code{background:#f0f3f8;border-radius:5px;padding:1px 6px;font-size:12.5px}
+.gs-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.gs-row input{flex:1;min-width:260px;padding:10px 12px;border-radius:10px;border:1px solid #dde3ec;font:inherit;font-size:13px}
+.gs-b{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;border:1px solid #1b3a5c;background:#1b3a5c;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.gs-b.alt{background:#fff;color:#1b3a5c}.gs-b.gold{background:#e3c27a;border-color:#e3c27a;color:#0f2440}
+.gs-msg{font-size:13px;min-height:18px;margin-top:6px}.gs-msg.bad{color:#b03a32}.gs-msg.ok{color:#1c7a46}
+.gs-demo{background:#fdf6e6;border:1px solid #f0dcaa;color:#6b4d12;border-radius:12px;padding:10px 14px;font-size:13px;margin:0 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.gs-demo b{color:#4a3510}.gs-demo button{margin-left:auto}
+details.gs-cod summary{cursor:pointer;font-weight:700;font-size:13.5px;color:#0f6f6e;margin:6px 0}
+details.gs-cod textarea{width:100%;height:220px;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;border:1px solid #dde3ec;border-radius:10px;padding:10px;background:#f8fafc}
+</style>
+<script>
+/* Conexión con la Hoja de Google (Apps Script) que usan Bitácora Ejecutiva y Pulso Comercial.
+   La URL fija viene del build; mientras no exista, la administradora puede pegarla aquí (se guarda en este navegador). */
+window.GS=(function(){
+  const FIJA="__GS_URL__", K="ma_gs_url", CODIGO=__GS_CODIGO__;
+  const ls={get:k=>{try{return localStorage.getItem(k)||"";}catch(e){return "";}},set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k);}catch(e){}}};
+  const url=()=>FIJA||ls.get(K);
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  async function llamar(accion,datos,u){
+    const c=await MA.listo; const dir=u||url(); if(!dir) throw new Error("La Hoja de Google todavía no está conectada.");
+    const cuerpo=JSON.stringify(Object.assign({accion,token:c.token},datos||{})), q=encodeURIComponent(cuerpo);
+    // Google a veces redirige el pedido y lo pierde: se intenta por GET (?q=) y por POST, hasta 3 vueltas.
+    const intentos=[]; for(let i=0;i<3;i++){ if(q.length<7500) intentos.push("get"); intentos.push("post"); }
+    let red=false, ultimo="";
+    for(const modo of intentos){
+      let r; try{ r=modo==="get"?await fetch(dir+(dir.includes("?")?"&":"?")+"q="+q,{cache:"no-store"}):await fetch(dir,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:cuerpo}); }
+      catch(e){ red=true; continue; }
+      let t=""; try{ t=await r.text(); }catch(e){ continue; }
+      let j=null; try{ j=JSON.parse(t); }catch(e){ ultimo=t.slice(0,80); continue; }
+      if(!j.ok) throw new Error(j.error||"Google devolvió un error");
+      return j.datos;
+    }
+    if(red&&!ultimo) throw new Error("No hubo respuesta de Google. Revisa la conexión a internet y pulsa Reintentar.");
+    throw new Error("Google tardó o no devolvió datos. Pulsa Reintentar; si sigue igual, revisa que la implementación tenga acceso para «Cualquiera».");
+  }
+  // Pantalla para conectar (o ver el ejemplo) cuando todavía no hay Hoja de Google
+  async function pantalla(el,o){
+    const c=await MA.listo, admin=c.rol==="admin";
+    el.innerHTML=`<div class="gs-cfg"><h2>${esc(o.titulo)}</h2>
+      <div class="gs-sub">${o.descripcion} Los datos viven en una <b>Hoja de cálculo de Google</b>; un <b>Apps Script</b> la conecta con esta página. Se configura una sola vez.</div>
+      <ol><li>Crea una Hoja de cálculo de Google nueva (por ejemplo <b>«M&amp;A · Bitácora y Ventas»</b>). Sirve una sola hoja para los dos módulos.</li>
+        <li>En la hoja: <b>Extensiones › Apps Script</b>. Borra lo que haya, pega el código de abajo y guarda.</li>
+        <li><b>Implementar › Nueva implementación › Aplicación web</b>. Ejecutar como: <b>Yo</b>. Quién tiene acceso: <b>Cualquier usuario</b>. Autoriza los permisos.</li>
+        <li>Copia la <b>URL de la aplicación web</b> (termina en <code>/exec</code>)${admin?" y pégala aquí":" y envíasela a la administradora"}.</li>
+        <li>Opcional: en Apps Script ejecuta una vez <code>instalarAvisoDiario</code> para que cada responsable reciba un correo a las 7 a. m. con sus tareas vencidas, de hoy o bloqueadas.</li></ol>
+      <details class="gs-cod"><summary>Ver y copiar el código de Apps Script</summary><textarea readonly id="gsCodigo"></textarea>
+        <div class="gs-row"><button class="gs-b alt" id="gsCopiar">📋 Copiar código</button></div></details>
+      ${admin?`<div class="gs-row"><input id="gsUrl" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(url())}"><button class="gs-b" id="gsProbar">Conectar</button></div>`:`<div class="gs-msg">La administradora debe conectar la Hoja de Google.</div>`}
+      <div class="gs-msg" id="gsMsg"></div>
+      <div class="gs-row" style="margin-top:14px"><button class="gs-b gold" id="gsDemo">👁 Ver con datos de ejemplo</button><span style="font-size:12px;color:#7d889a">Datos inventados, solo para ver cómo funciona. No se guarda nada.</span></div></div>`;
+    el.querySelector("#gsCodigo").value=CODIGO;
+    el.querySelector("#gsCopiar").onclick=async e=>{ try{ await navigator.clipboard.writeText(CODIGO); e.target.textContent="✓ Copiado"; }catch(x){ el.querySelector("#gsCodigo").select(); } };
+    el.querySelector("#gsDemo").onclick=()=>o.demo();
+    const pb=el.querySelector("#gsProbar");
+    if(pb) pb.onclick=async()=>{ const u=el.querySelector("#gsUrl").value.trim(), m=el.querySelector("#gsMsg");
+      if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)){ m.className="gs-msg bad"; m.textContent="La URL debe ser la de la aplicación web de Apps Script (https://script.google.com/…/exec)."; return; }
+      pb.disabled=true; m.className="gs-msg"; m.textContent="Probando la conexión…";
+      try{ const r=await llamar("info",{},u); ls.set(K,u); m.className="gs-msg ok"; m.textContent="✓ Conectado como "+r.email+". Cargando…"; setTimeout(()=>o.listo(),500); }
+      catch(e){ m.className="gs-msg bad"; m.textContent=e.message; pb.disabled=false; } };
+  }
+  function avisoDemo(el,salir){ const d=document.createElement("div"); d.className="gs-demo"; d.innerHTML=`<span>👁 <b>Datos de ejemplo</b> (inventados, solo para mostrar cómo funciona). Los cambios no se guardan.</span><button class="gs-b alt" type="button">Conectar la Hoja de Google</button>`; d.querySelector("button").onclick=salir; el.prepend(d); }
+  // id propio para lo nuevo: si Google reintenta, se actualiza la misma fila y nunca se duplica
+  const id=()=>{ try{ return crypto.randomUUID(); }catch(e){ return "id-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,10); } };
+  // aviso flotante «Actualizando…»
+  let nAct=0; function actualizando(si){ nAct=Math.max(0,nAct+(si?1:-1)); let d=document.getElementById("gsAct");
+    if(!d){ d=document.createElement("div"); d.id="gsAct"; d.style.cssText="position:fixed;left:18px;bottom:18px;z-index:85;background:#0f2440;color:#fff;border-radius:999px;padding:7px 14px;font:600 12.5px Inter,system-ui,sans-serif;box-shadow:0 6px 18px rgba(15,23,42,.25);display:none"; d.textContent="↻ Actualizando con la Hoja de Google…"; document.body.appendChild(d); }
+    d.style.display=nAct?"block":"none"; }
+  // carga instantánea: muestra lo último que se vio en esta pestaña y lo actualiza por detrás
+  async function conCache(accion,alLlegar){
+    const c=await MA.listo, k="gsc_"+String(c.email||"").toLowerCase()+"_"+accion; let tenia=false;
+    try{ const v=sessionStorage.getItem(k); if(v){ tenia=true; alLlegar(JSON.parse(v),true); } }catch(e){}
+    actualizando(true);
+    try{ const d=await llamar(accion); try{ sessionStorage.setItem(k,JSON.stringify(d)); }catch(e){} alLlegar(d,false); return d; }
+    catch(e){ e.tenia=tenia; throw e; }
+    finally{ actualizando(false); }
+  }
+  function olvidar(){ try{ Object.keys(sessionStorage).filter(k=>k.startsWith("gsc_")).forEach(k=>sessionStorage.removeItem(k)); }catch(e){} }
+  return {url,llamar,pantalla,avisoDemo,fija:!!FIJA,desconectar:()=>ls.set(K,""),id,conCache,actualizando,olvidar};
+})();
+</script>

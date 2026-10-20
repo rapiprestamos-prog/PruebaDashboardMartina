@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resumen gerencial — M&amp;A Capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#fff; --surface-2:#f0f3f8; --border:#dde3ec; --grid:#edf1f6;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#7d889a;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --warn:#9a6b0f;
+  --c1:#2a62a0; --c2:#0d9488; --c3:#b7821c;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 6px 18px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button{font:inherit}
+.hidden{display:none!important}
+.wrap{max-width:1320px;margin:0 auto;padding:18px 24px 50px}
+/* encabezado */
+.hero{position:relative;overflow:hidden;border-radius:18px;padding:26px 30px;color:#fff;background:linear-gradient(115deg,#0f2440 0%,#1b3a5c 55%,#0f5560 100%);box-shadow:0 10px 30px rgba(15,36,64,.22)}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,#e3c27a,#b98b2f 60%,transparent)}
+.hero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.hero .k a{color:inherit;text-decoration:none}.hero .k a:hover{color:#fff}
+.hero h1{margin:6px 0 4px;font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:32px;letter-spacing:.2px}
+.hero h1 i{color:var(--gold);font-style:italic}
+.hero .sub{color:#c9d5e4;font-size:13.5px}
+.hero .acc{position:absolute;right:26px;top:24px;display:flex;gap:8px}
+.hbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-weight:600;font-size:13px;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.16)} .hbtn.pri{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+@media (max-width:820px){.hero .acc{position:static;margin-top:14px}}
+/* puntos de atención */
+.aten{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:16px 0 4px}
+.at{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:12px;padding:11px 13px;box-shadow:var(--shadow);font-size:13px;line-height:1.45;color:var(--text-2)}
+.at b{color:var(--text)} .at .ic{font-size:16px;line-height:1.2}
+.at.bad{border-left-color:var(--bad)} .at.warn{border-left-color:#d49b2a} .at.good{border-left-color:var(--good)} .at.info{border-left-color:var(--c1)}
+/* secciones */
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.sec-ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+.sec-h h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.2px}
+.sec-h .src{font-size:12px;color:var(--muted);margin-top:1px}
+.sec-h .go{margin-left:auto;color:var(--teal);font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap}
+.sec-h .go:hover{text-decoration:underline}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.pad{padding:16px 18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold-d)}
+.kpi .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi .v{font-size:24px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.kpi .d{font-size:12px;color:var(--text-2);margin-top:2px}
+.up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}
+.g2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:1000px){.g2,.g3{grid-template-columns:1fr}}
+.ch-t{font-weight:700;font-size:14px;margin:0 0 2px}
+.ch-s{font-size:12px;color:var(--muted);margin-bottom:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.box{position:relative;height:250px}
+.lst{list-style:none;margin:0;padding:0}
+.lst li{display:flex;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--grid);font-size:13px}
+.lst li:last-child{border-bottom:0}
+.lst .f{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;min-width:92px}
+.lst .t{flex:1;min-width:0}.lst .t div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lst .t small{color:var(--muted);font-size:11.5px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);white-space:nowrap}
+.tag.ok{background:#e9f6ef;border-color:#bfe3cf;color:var(--good)}.tag.rev{background:#fdf6e6;border-color:#f0dcaa;color:var(--warn)}.tag.bad{background:#fbeceb;border-color:#efc4c0;color:var(--bad)}
+.vacio{padding:26px 18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55}
+.vacio b{display:block;color:var(--text);font-size:14.5px;margin-bottom:4px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;margin-top:10px}
+.spin{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid #dbe3ee;border-top-color:var(--navy);animation:sp .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.nota{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+.mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.mini div{background:var(--surface-2);border-radius:10px;padding:9px 11px}.mini b{display:block;font-size:19px;font-variant-numeric:tabular-nums}.mini span{font-size:11px;color:var(--muted);font-weight:600}
+.mini .bad b{color:var(--bad)}.mini .rev b{color:var(--warn)}.mini .ok b{color:var(--good)}
+.resumen{margin-top:14px;border-left:4px solid var(--gold-d)}
+.resumen .k2{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-d);font-weight:800;margin-bottom:6px}
+.resumen p{margin:0;font-size:14.5px;line-height:1.7;color:var(--text-2)} .resumen p b{color:var(--text)}
+table.rk{width:100%;border-collapse:collapse;font-size:13px}
+table.rk th{text-align:right;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+table.rk th:first-child,table.rk td:first-child{text-align:left}
+table.rk td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.rk tr:last-child td{border-bottom:0} table.rk tfoot td{font-weight:800;border-top:1px solid var(--border)}
+.barra{display:inline-block;height:6px;border-radius:3px;background:var(--c1);vertical-align:middle;margin-right:6px;opacity:.85}
+.ind{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ind div{background:var(--surface-2);border-radius:10px;padding:10px 12px}.ind b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.ind span{font-size:11.5px;color:var(--muted);font-weight:600}
+.ind small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.hb{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:6px 0}.hb .n{width:130px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .b{flex:1;height:10px;background:var(--grid);border-radius:5px;overflow:hidden}.hb .b i{display:block;height:100%;border-radius:5px;background:var(--c1)}
+.hb .v{width:46px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.sub-t{font-weight:700;font-size:13.5px;margin:14px 0 4px}
+.kpis.k4{grid-template-columns:repeat(4,minmax(0,1fr))}@media (max-width:900px){.kpis.k4{grid-template-columns:1fr 1fr}}
+#motor{position:absolute;width:1200px;height:800px;left:-99999px;top:0;border:0;visibility:hidden}
+@media print{
+  body{background:#fff}.hero .acc,.sec-h .go,#maHdr,.btn{display:none!important}
+  .card,.kpi,.at{box-shadow:none;break-inside:avoid}.sec{break-inside:avoid-page}
+  .hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<!--MA_AUTH-->
+<script>MA.iniciar({modulo:"martina",titulo:"Resumen gerencial"});</script>
+<div class="wrap">
+  <header class="hero">
+    <div class="k">M&amp;A Capital · Resumen gerencial</div>
+    <h1>Panorama del <i>grupo</i></h1>
+    <div class="sub" id="heroSub">Reuniendo la información de cada área…</div>
+    <div class="acc"><button class="hbtn" id="btnAct">↻ Actualizar</button><button class="hbtn pri" id="btnImp">🖨 Imprimir / PDF</button></div>
+  </header>
+
+  <div class="aten" id="aten"></div>
+  <div class="card pad resumen hidden" id="narr"><div class="k2">Resumen ejecutivo</div><p id="narrTxt"></p></div>
+
+  <!-- Finanzas -->
+  <section class="sec">
+    <div class="sec-h"><div class="sec-ic">💼</div><div><h2>Finanzas · Pantera Real Estate Fund</h2><div class="src" id="finSrc">Reportería del mes · carpeta de OneDrive</div></div><a class="go" href="pantera.html">Abrir reportería →</a></div>
+    <div id="fin"><div class="card vacio"><span class="spin"></span> Leyendo la carpeta…</div></div>
+  </section>
+
+  <!-- Portafolio -->
+  <section class="sec">
+    <div class="sec-h"><div class="sec-ic">🏢</div><div><h2>Portafolio</h2><div class="src" id="porSrc">Data Room del fondo</div></div><a class="go" href="pantera.html#mapa">Abrir mapa →</a></div>
+    <div id="por"><div class="card vacio"><span class="spin"></span> Cargando el portafolio…</div></div>
+  </section>
+
+  <div class="g2" style="margin-top:0">
+    <!-- Legal -->
+    <section class="sec">
+      <div class="sec-h"><div class="sec-ic">⚖️</div><div><h2>Legal</h2><div class="src" id="legSrc">Última lectura del Agente Legal</div></div><a class="go" href="legal.html">Abrir Agente Legal →</a></div>
+      <div id="leg"><div class="card vacio"><span class="spin"></span></div></div>
+    </section>
+    <!-- Equipo -->
+    <section class="sec">
+      <div class="sec-h"><div class="sec-ic">✅</div><div><h2>Equipo · Tareas</h2><div class="src">Seguimiento de tareas</div></div><a class="go" href="tareas.html">Abrir tareas →</a></div>
+      <div id="tar"><div class="card vacio"><span class="spin"></span></div></div>
+    </section>
+  </div>
+  <div class="nota" style="margin-top:22px">Todas las cifras salen de las fuentes indicadas en cada sección. Si una fuente no está disponible, la sección lo dice en vez de mostrar números.</div>
+</div>
+<iframe id="motor" title="Motor de reportería" aria-hidden="true" tabindex="-1"></iframe>
+
+<script>
+const PANTERA_B64="__PANTERA_B64__";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt=v=>v==null||!isFinite(v)?"—":(v<0?"−":"")+"$"+Math.round(Math.abs(v)).toLocaleString("en-US");
+const fmtK=v=>{ if(v==null||!isFinite(v)) return "—"; const a=Math.abs(v), s=v<0?"−":""; return a>=1e6?s+"$"+(a/1e6).toFixed(2)+"M":a>=1e3?s+"$"+Math.round(a/1e3)+"K":s+"$"+Math.round(a); };
+const pct=v=>v==null||!isFinite(v)?"—":(v*100).toFixed(1)+"%";
+const MC=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const hoyISO=()=>{ const h=new Date(); return new Date(Date.UTC(h.getFullYear(),h.getMonth(),h.getDate())).toISOString().slice(0,10); };
+const diasA=iso=>Math.round((Date.parse(iso)-Date.parse(hoyISO()))/864e5);
+const fISO=iso=>new Date(iso+"T12:00:00").toLocaleDateString("es-PA",{day:"numeric",month:"short",year:"numeric"});
+const CH={};
+function grafico(id,cfg){ if(CH[id]) CH[id].destroy(); const el=$(id); if(!el||!window.Chart) return; CH[id]=new Chart(el,cfg); }
+function base(extra){ const grid=css("--grid"), t2=css("--text-2");
+  return Object.assign({responsive:true,maintainAspectRatio:false,animation:{duration:300},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:"#0f1c2e",padding:10,cornerRadius:8,titleFont:{weight:"700"},bodyFont:{size:12.5}}},
+    scales:{x:{grid:{display:false},ticks:{color:t2,font:{size:11.5}},border:{color:grid}},y:{grid:{color:grid},border:{display:false},ticks:{color:t2,font:{size:11.5}}}}},extra||{}); }
+const NARR={};
+function narrar(area,txt){ NARR[area]=txt; const t=["fin","por","leg","tar"].map(k=>NARR[k]).filter(Boolean).join(" ");
+  $("narr").classList.toggle("hidden",!t); $("narrTxt").innerHTML=t; }
+const ALERTAS={};
+function alertas(area,lista){ ALERTAS[area]=lista; const orden=["fin","por","leg","tar"];
+  const todas=orden.flatMap(k=>ALERTAS[k]||[]); const peso={bad:0,warn:1,info:2,good:3}; todas.sort((a,b)=>peso[a.n]-peso[b.n]);
+  $("aten").innerHTML=todas.map(a=>`<div class="at ${a.n}"><span class="ic">${a.n==="bad"?"⚠️":a.n==="warn"?"⏰":a.n==="good"?"✅":"📌"}</span><div>${a.t}</div></div>`).join(""); }
+
+/* ============================ Finanzas: el mismo motor de la Reportería Pantera, invisible ============================ */
+const DB_NAME="carpeta_dashboard_db", STORE="handles", KEY="carpeta";
+const P_KEYS=["pantera_dashboard_ds_v1","martina_pantera_sig"];
+function borrarDatosPantera(){ P_KEYS.forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} }); }
+window.addEventListener("pagehide",borrarDatosPantera);
+function leerHandle(){ return new Promise(res=>{ try{ const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=()=>r.result.createObjectStore(STORE);
+  r.onsuccess=()=>{ try{ const g=r.result.transaction(STORE,"readonly").objectStore(STORE).get(KEY); g.onsuccess=()=>res(g.result||null); g.onerror=()=>res(null); }catch(e){ res(null); } }; r.onerror=()=>res(null); }catch(e){ res(null); } }); }
+const MES_RX=/^(\d{1,2}[\s._-]*)?(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|SETIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)([\s._-]*\d{2,4})?$|^(0?[1-9]|1[0-2])$/;
+const esAnio=s=>/^(19|20)\d{2}$/.test(s);
+const esMes=s=>MES_RX.test(String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim());
+async function* recorrer(dir,ruta){ for await (const [n,h] of dir.entries()){ if(n.startsWith(".")||n.startsWith("~$")) continue;
+  if(h.kind==="directory") yield* recorrer(h,ruta+n+"/"); else if(/\.(xlsx|xlsm|xls)$/i.test(n)) yield {nombre:n,ruta:ruta+n,handle:h}; } }
+function enFecha(ruta,raiz){ let c=String(ruta).split("/").slice(0,-1); if(raiz&&esAnio(raiz)) c=[raiz,...c]; const i=c.findIndex(esAnio); return i>=0&&!!c[i+1]&&esMes(c[i+1]); }
+let HANDLE=null;
+async function finanzas(gesto){
+  const el=$("fin");
+  let h=null;
+  try{ h=await MA.fuente("PruebaDashboard",gesto?{gesto:true}:undefined); }catch(e){}
+  if(!h){ h=await leerHandle();
+    if(h){ try{ let p=await h.queryPermission({mode:"read"}); if(p!=="granted"&&gesto) p=await h.requestPermission({mode:"read"}); if(p!=="granted") h=null; }catch(e){ h=null; } } }
+  if(!h&&gesto&&window.showDirectoryPicker){ try{ h=await window.showDirectoryPicker({mode:"read",id:"martina_onedrive"}); }catch(e){ h=null; } }
+  if(!h){ el.innerHTML=`<div class="card vacio"><b>Falta abrir la carpeta de la reportería</b>Pulsa el botón y elige la carpeta <b>PruebaDashboard</b> de OneDrive (la misma de Pantera Reportería).<br><button class="btn" id="finCon">📂 Abrir carpeta</button></div>`;
+    $("finCon").onclick=()=>finanzas(true); alertas("fin",[]); return; }
+  HANDLE=h; el.innerHTML=`<div class="card vacio"><span class="spin"></span> Leyendo <b style="display:inline">${esc(h.name)}</b> y armando las cifras del mes…</div>`;
+  const files=[]; try{ for await (const f of recorrer(h,"")) if(enFecha(f.ruta,h.name)) files.push(await f.handle.getFile()); }catch(e){ el.innerHTML=`<div class="card vacio"><b>No se pudo leer la carpeta</b>${esc(e.message)}</div>`; return; }
+  if(!files.length){ el.innerHTML=`<div class="card vacio"><b>No hay archivos del mes</b>La carpeta <b style="display:inline">${esc(h.name)}</b> no tiene Excel dentro de carpetas de año y mes (por ejemplo 2026 › AGOSTO).</div>`; return; }
+  try{ const d=await motor(files); pintarFin(d,h.name,files.length); }
+  catch(e){ el.innerHTML=`<div class="card vacio"><b>No se pudieron armar las cifras</b>${esc(e.message||e)}</div>`; }
+}
+function motor(files){
+  return new Promise((res,rej)=>{
+    borrarDatosPantera();
+    const fr=$("motor"); let fase=0; const t=setTimeout(()=>{ limpiar(); rej(new Error("la reportería tardó demasiado")); },90000);
+    const limpiar=()=>{ clearTimeout(t); window.removeEventListener("message",oir); };
+    const oir=ev=>{ if(ev.source!==fr.contentWindow) return; const d=ev.data||{};
+      if(d.type==="PANTERA_READY"){ fase++;
+        if(fase===1){ fr.contentWindow.postMessage({type:"PANTERA_LOAD_FILES",files},"*"); }
+        else { try{ const x=extraer(fr.contentWindow); limpiar(); borrarDatosPantera(); res(x); }catch(e){ limpiar(); rej(e); } } }
+      else if(d.type==="PANTERA_LOADED"&&d.ok===false){ limpiar(); rej(new Error(d.error||"no se reconocieron los archivos")); } };
+    window.addEventListener("message",oir);
+    const bin=atob(PANTERA_B64), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+    fr.srcdoc=new TextDecoder("utf-8").decode(u);
+  });
+}
+// Lee las cifras con las mismas funciones del motor (no se recalcula nada aquí)
+function extraer(w){
+  return w.eval(`(()=>{ const ks=Object.keys(PERIODS).filter(k=>PERIODS[k].has).sort(); if(!ks.length) return null;
+    const out={meses:[],ult:ks[ks.length-1]};
+    ks.forEach(k=>{ const d=datosMes(k,"__ALL__"); if(d) out.meses.push({k,label:PERIODS[k].label,rev:d.m.rev,noi:d.m.noi,net:d.m.net,gop:d.m.gop,cash:d.m.cash,bank:d.m.bank,yrev:d.y.rev,ynoi:d.y.noi,ynet:d.y.net}); });
+    out.soc=inPeriod(out.ult,()=>ents().map(e=>{ const d=datosMes(out.ult,e); return d?{e,rev:d.m.rev,noi:d.m.noi,net:d.m.net,ebitda:d.m.ebitda,bank:d.m.bank,cash:d.m.cash,yrev:d.y.rev,ynet:d.y.net}:null; }).filter(Boolean));
+    const dU=datosMes(out.ult,"__ALL__"); out.mU=dU?dU.m:null; out.yU=dU?dU.y:null;
+    try{ out.val=inPeriod(out.ult,()=>valOf("__ALL__")); out.valDate=VAL_DATE; }catch(e){}
+    return JSON.parse(JSON.stringify(out)); })()`);
+}
+function pintarFin(d,carpeta,n){
+  const el=$("fin");
+  if(!d||!d.meses.length){ el.innerHTML=`<div class="card vacio"><b>Sin balances</b>La reportería no encontró balances en la carpeta.</div>`; return; }
+  const ult=d.meses[d.meses.length-1], ant=d.meses.length>1?d.meses[d.meses.length-2]:null, per=ult.label;
+  $("finSrc").textContent=`${per} · ${n} archivo(s) de la carpeta ${carpeta} · mismas cifras que la Reportería Pantera`;
+  $("heroSub").textContent=`Cierre de ${per.toLowerCase()} · actualizado ${new Date().toLocaleString("es-PA",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}`;
+  const var_=(a,b)=>a==null||b==null||!b?"":`<span class="${a>=b?"up":"dn"}">${a>=b?"▲":"▼"} ${pct(Math.abs((a-b)/b))}</span> vs ${ant.label.split(" ")[0].toLowerCase().slice(0,3)}`;
+  const v=d.val||{}, ltv=v.ev?v.deuda/v.ev:null;
+  el.innerHTML=`<div class="kpis">
+      <div class="kpi"><div class="l">Ingresos del mes</div><div class="v">${fmtK(ult.rev)}</div><div class="d">${ant?var_(ult.rev,ant.rev):""}</div></div>
+      <div class="kpi"><div class="l">NOI del mes</div><div class="v">${fmtK(ult.noi)}</div><div class="d">Margen ${pct(ult.rev?ult.noi/ult.rev:null)}</div></div>
+      <div class="kpi"><div class="l">Utilidad neta del mes</div><div class="v ${ult.net<0?"dn":""}">${fmtK(ult.net)}</div><div class="d">${ant?var_(ult.net,ant.net):""}</div></div>
+      <div class="kpi"><div class="l">Ingresos acumulados ${ult.k.slice(0,4)}</div><div class="v">${fmtK(ult.yrev)}</div><div class="d">Utilidad acumulada ${fmtK(ult.ynet)}</div></div>
+      <div class="kpi"><div class="l">Caja y bancos</div><div class="v">${fmtK(ult.cash)}</div><div class="d">al cierre de ${MC[+ult.k.slice(5,7)-1]}</div></div>
+      ${v.ev?`<div class="kpi"><div class="l">LTV según valuación</div><div class="v">${pct(ltv)}</div><div class="d">Valor ${fmtK(v.ev)} · NAV ${fmtK(v.nav)}${d.valDate&&d.valDate!=="—"?" · al "+esc(d.valDate):""}</div></div>`:""}
+    </div>
+    <div class="g2">
+      <div class="card pad"><p class="ch-t">Ingresos, NOI y utilidad neta por mes</p><div class="ch-s">Consolidado · ${d.meses.length} mes(es) con balance</div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>Ingresos</span><span><i style="background:var(--c2)"></i>NOI</span><span><i style="background:var(--c3)"></i>Utilidad neta</span></div>
+        <div class="box"><canvas id="cFinMes"></canvas></div></div>
+      <div class="card pad"><p class="ch-t">Ingresos del mes por sociedad</p><div class="ch-s">${per}</div><div class="box" style="height:${Math.max(250,d.soc.length*30+40)}px"><canvas id="cFinSoc"></canvas></div></div>
+    </div>`;
+  el.insertAdjacentHTML("beforeend",finAnalisis(d,per));
+  const ms=d.meses.slice(-12), lab=ms.map(m=>MC[+m.k.slice(5,7)-1]+" "+m.k.slice(2,4));
+  const serie=(k,c,l)=>({label:l,data:ms.map(m=>m[k]),borderColor:c,backgroundColor:c,borderWidth:2,pointRadius:ms.length>1?3:5,pointHoverRadius:6,tension:.25,borderRadius:4,maxBarThickness:56});
+  grafico("cFinMes",{type:ms.length>1?"line":"bar",data:{labels:lab,datasets:[serie("rev",css("--c1"),"Ingresos"),serie("noi",css("--c2"),"NOI"),serie("net",css("--c3"),"Utilidad neta")]},
+    options:base({interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.raw)}`}}},scales:{...base().scales,y:{...base().scales.y,ticks:{...base().scales.y.ticks,callback:x=>fmtK(x)}}}})});
+  const so=d.soc.slice().sort((a,b)=>b.rev-a.rev);
+  grafico("cFinSoc",{type:"bar",data:{labels:so.map(s=>s.e),datasets:[{label:"Ingresos",data:so.map(s=>s.rev),backgroundColor:css("--c1"),borderRadius:4,barPercentage:.7,borderSkipped:false}]},
+    options:base({indexAxis:"y",plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:c=>` Ingresos: ${fmt(c.raw)}`}}},scales:{x:{...base().scales.y,ticks:{...base().scales.y.ticks,callback:x=>fmtK(x)}},y:{...base().scales.x}}})});
+  finGraficos(d);
+  const M=d.mU||{};
+  narrar("fin",`En <b>${per.toLowerCase()}</b> el fondo tuvo ingresos por <b>${fmt(ult.rev)}</b>${ant?` (${ult.rev>=ant.rev?"+":"−"}${pct(Math.abs((ult.rev-ant.rev)/(ant.rev||1)))} frente a ${ant.label.split(" ")[0].toLowerCase()})`:""}, un NOI de <b>${fmt(ult.noi)}</b> (margen ${pct(ult.rev?ult.noi/ult.rev:null)}) y una utilidad neta de <b>${fmt(ult.net)}</b>. En lo que va de ${ult.k.slice(0,4)} acumula ingresos por <b>${fmt(ult.yrev)}</b> y utilidad de <b>${fmt(ult.ynet)}</b>${M.cov!=null?`; el NOI cubre <b>${M.cov.toFixed(1)} veces</b> los intereses del mes`:""}.`);
+  const al=[];
+  al.push({n:ult.net>=0?"good":"bad",t:`<b>${per}</b> cierra con utilidad neta de <b>${fmt(ult.net)}</b>${ant?` (${ult.net>=ant.net?"sube":"baja"} frente a ${ant.label.toLowerCase()})`:""}.`});
+  if(ant&&ult.rev<ant.rev) al.push({n:"warn",t:`Los ingresos bajaron <b>${pct((ant.rev-ult.rev)/ant.rev)}</b> frente a ${ant.label.toLowerCase()}.`});
+  alertas("fin",al);
+}
+
+// Del ingreso a la utilidad, indicadores y ranking de sociedades
+function finAnalisis(d,per){
+  const M=d.mU||{}, Y=d.yU||{};
+  const x=v=>v==null||!isFinite(v)?"—":v.toFixed(2)+"x";
+  const deudaPat=M.equity?(M.liab/M.equity):null;
+  const so=d.soc.slice().sort((a,b)=>b.rev-a.rev), tot=so.reduce((t,s)=>t+(s.rev||0),0), max=Math.max(...so.map(s=>s.rev||0),1);
+  const T=k=>so.reduce((t,s)=>t+(s[k]||0),0);
+  return `<div class="g2" style="margin-top:12px">
+      <div class="card pad"><p class="ch-t">Del ingreso a la utilidad · ${esc(per)}</p><div class="ch-s">Consolidado · cómo se llega de los ingresos a la utilidad neta</div><div class="box" style="height:270px"><canvas id="cFinPuente"></canvas></div></div>
+      <div class="card pad"><p class="ch-t">Indicadores del mes</p><div class="ch-s">Calculados con los balances del mes</div>
+        <div class="ind">
+          <div><span>Margen NOI</span><b>${pct(M.noiM)}</b><small>NOI / ingresos</small></div>
+          <div><span>Margen EBITDA</span><b>${pct(M.ebitdaM)}</b><small>EBITDA ${fmtK(M.ebitda)}</small></div>
+          <div><span>Margen neto</span><b>${pct(M.netM)}</b><small>Utilidad / ingresos</small></div>
+          <div><span>Cobertura de intereses</span><b>${x(M.cov)}</b><small>NOI / intereses (${fmtK(M.interes)})</small></div>
+          <div><span>Liquidez corriente</span><b>${x(M.curr)}</b><small>Activo / pasivo corriente</small></div>
+          <div><span>Planilla / ingresos</span><b>${pct(M.plaPct)}</b><small>Planilla ${fmtK(M.pla)}</small></div>
+          <div><span>Deuda bancaria y bonos</span><b>${fmtK(M.bank)}</b><small>Accionistas ${fmtK(M.shl)}</small></div>
+          <div><span>Pasivos / patrimonio</span><b>${x(deudaPat)}</b><small>Patrimonio ${fmtK(M.equity)}</small></div>
+        </div></div>
+    </div>
+    <div class="card pad" style="margin-top:12px"><p class="ch-t">Ranking de sociedades · ${esc(per)}</p><div class="ch-s">Ordenadas por ingresos del mes</div>
+      <div style="overflow-x:auto"><table class="rk"><thead><tr><th>Sociedad</th><th>Ingresos del mes</th><th>% del total</th><th>NOI</th><th>Margen NOI</th><th>Utilidad neta</th><th>Ingresos del año</th><th>Caja</th></tr></thead><tbody>
+      ${so.map(s=>`<tr><td><b>${esc(s.e)}</b></td><td><span class="barra" style="width:${Math.round(60*(s.rev||0)/max)}px"></span>${fmt(s.rev)}</td><td>${pct(tot?s.rev/tot:null)}</td><td>${fmt(s.noi)}</td><td>${pct(s.rev?s.noi/s.rev:null)}</td><td class="${s.net<0?"dn":""}">${fmt(s.net)}</td><td>${fmt(s.yrev)}</td><td>${fmt(s.cash)}</td></tr>`).join("")}
+      </tbody><tfoot><tr><td>Total</td><td>${fmt(tot)}</td><td>100%</td><td>${fmt(T("noi"))}</td><td>${pct(tot?T("noi")/tot:null)}</td><td>${fmt(T("net"))}</td><td>${fmt(T("yrev"))}</td><td>${fmt(T("cash"))}</td></tr></tfoot></table></div></div>`;
+}
+function finGraficos(d){
+  const M=d.mU; if(!M) return;
+  const pasos=[["Ingresos",0,M.rev,"t"],["Gastos operativos",M.rev,M.rev-M.gop,"r"],["NOI",0,M.noi,"t"],["Depreciación",M.noi,M.noi-M.dep,"r"],["Gastos financieros",M.noi-M.dep,M.noi-M.dep-M.fin,"r"],["Otros",M.noi-M.dep-M.fin,M.net,"r"],["Utilidad neta",0,M.net,"n"]];
+  const col={t:css("--c1"),r:"#9aa7b8",n:css("--c3")};
+  grafico("cFinPuente",{type:"bar",data:{labels:pasos.map(p=>p[0]),datasets:[{label:"Monto",data:pasos.map(p=>[Math.min(p[1],p[2]),Math.max(p[1],p[2])]),backgroundColor:pasos.map(p=>col[p[3]]),borderRadius:4,borderSkipped:false,barPercentage:.7}]},
+    options:base({indexAxis:"y",plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:c=>{ const p=pasos[c.dataIndex]; const v=p[3]==="r"?p[2]-p[1]:p[2]; return ` ${p[0]}: ${fmt(v)}`; }}}},
+      scales:{x:{...base().scales.y,ticks:{...base().scales.y.ticks,callback:v=>fmtK(v)}},y:{...base().scales.x}}})});
+}
+
+/* ============================ Portafolio: datos del Data Room (archivo del mapa) ============================ */
+async function portafolio(){
+  const el=$("por");
+  let P=null;
+  try{ const t=await (await fetch("Pantera-Portfolio-Map.html",{cache:"no-cache"})).text(); const i=t.indexOf("window.PORTFOLIO="); const j=t.indexOf("<\/script>",i);
+    P=JSON.parse(t.slice(i+17,j).trim().replace(/;$/,"")); }catch(e){ P=null; }
+  if(!P||!(P.assets||[]).length){ el.innerHTML=`<div class="card vacio"><b>No se pudo cargar el portafolio</b>No se encontró el archivo del mapa del portafolio.</div>`; alertas("por",[]); return; }
+  const A=P.assets, s=k=>A.reduce((t,a)=>t+(+a[k]||0),0);
+  const val=s("value"), deuda=s("debt"), nav=s("nav"), renta=s("monthlyRent"), ltv=val?deuda/val:null;
+  $("porSrc").textContent=`${A.length} activos · ${P.workbook||"Data Room"} · datos del ${P.generatedAt?fISO(P.generatedAt.slice(0,10)):""}`;
+  const por=(k,v)=>{ const m={}; A.forEach(a=>{ const c=a[k]||"Sin dato"; m[c]=(m[c]||0)+(+a[v]||0); }); return Object.entries(m).sort((x,y)=>y[1]-x[1]); };
+  const clase=por("assetClass","value"), inq=por("tenant","monthlyRent").filter(x=>x[0]!=="Sin dato").slice(0,8);
+  const hoyY=new Date().getFullYear(), anios={};
+  A.forEach(a=>(a.leaseEndDates&&a.leaseEndDates.length?a.leaseEndDates:(a.leaseEnd&&/^\d{4}-/.test(a.leaseEnd)?[a.leaseEnd]:[])).forEach(f=>{ const y=+String(f).slice(0,4); if(y>=hoyY&&y<=hoyY+10) anios[y]=(anios[y]||0)+(+a.monthlyRent||0)/(a.leaseEndDates&&a.leaseEndDates.length||1); }));
+  const ay=Object.keys(anios).map(Number).sort();
+  const est={}; A.forEach(a=>est[a.status||"—"]=(est[a.status||"—"]||0)+1);
+  const m2=s("m2"), conCap=A.filter(a=>a.capRate!=null&&a.value), capP=conCap.reduce((t,a)=>t+a.capRate*a.value,0)/(conCap.reduce((t,a)=>t+a.value,0)||1);
+  // WALE: años que faltan para que venzan los contratos, ponderado por la renta
+  let wN=0,wD=0; A.forEach(a=>{ const fs=(a.leaseEndDates||[]).filter(f=>/^\d{4}-\d{2}-\d{2}$/.test(String(f))); if(!fs.length||!a.monthlyRent) return; const r=a.monthlyRent/fs.length; fs.forEach(f=>{ wN+=r*Math.max(0,diasA(f)/365.25); wD+=r; }); });
+  const wale=wD?wN/wD:null;
+  const inqAll=por("tenant","monthlyRent").filter(x=>x[0]!=="Sin dato"), top1=inqAll[0], top5=inqAll.slice(0,5).reduce((t,x)=>t+x[1],0);
+  const pais=por("country","value");
+  el.innerHTML=`<div class="kpis k4">
+      <div class="kpi"><div class="l">Activos</div><div class="v">${A.length}</div><div class="d">${Object.entries(est).map(([k,n])=>`${n} ${esc(k)}`).join(" · ")}</div></div>
+      <div class="kpi"><div class="l">Valor de los activos</div><div class="v">${fmtK(val)}</div><div class="d">Deuda ${fmtK(deuda)}</div></div>
+      <div class="kpi"><div class="l">NAV</div><div class="v">${fmtK(nav)}</div><div class="d">valor − deuda</div></div>
+      <div class="kpi"><div class="l">Renta mensual</div><div class="v">${fmtK(renta)}</div><div class="d">Anual ${fmtK(renta*12)}</div></div>
+      <div class="kpi"><div class="l">WALE</div><div class="v">${wale!=null?wale.toFixed(1)+" años":"—"}</div><div class="d">plazo promedio de contratos, ponderado por renta</div></div>
+      <div class="kpi"><div class="l">Cap rate ponderado</div><div class="v">${pct(capP)}</div><div class="d">${Math.round(m2).toLocaleString("en-US")} m² · ${fmt(m2?renta/m2:null).replace("$","$")}/m² al mes</div></div>
+      <div class="kpi"><div class="l">Concentración de renta</div><div class="v">${pct(top1&&renta?top1[1]/renta:null)}</div><div class="d">${top1?esc(top1[0]):""} · los 5 mayores ${pct(renta?top5/renta:null)}</div></div>
+      <div class="kpi"><div class="l">LTV del Data Room</div><div class="v">${pct(ltv)}</div><div class="d">deuda / valor de los activos</div></div>
+    </div>
+    <div class="g3">
+      <div class="card pad"><p class="ch-t">Valor por tipo de activo</p><div class="ch-s">US$ · ${clase.length} tipos</div><div class="box"><canvas id="cPorClase"></canvas></div></div>
+      <div class="card pad"><p class="ch-t">Renta mensual por inquilino</p><div class="ch-s">Los ${inq.length} principales</div><div class="box"><canvas id="cPorInq"></canvas></div></div>
+      <div class="card pad"><p class="ch-t">Renta mensual cuyos contratos vencen, por año</p><div class="ch-s">Próximos 10 años · según fecha de vencimiento del contrato</div><div class="box"><canvas id="cPorVence"></canvas></div></div>
+    </div>
+    <div class="g2" style="margin-top:12px">
+      <div class="card pad"><p class="ch-t">Activos principales</p><div class="ch-s">Los 10 de mayor valor</div>
+        <div style="overflow-x:auto"><table class="rk"><thead><tr><th>Activo</th><th>Tipo</th><th>Valor</th><th>Renta mensual</th><th>Cap rate</th><th>LTV</th><th>Vence</th></tr></thead><tbody>
+        ${A.slice().sort((a,b)=>(b.value||0)-(a.value||0)).slice(0,10).map(a=>{ const f=(a.leaseEndDates||[]).filter(x=>/^\d{4}-/.test(String(x))).sort()[0]; return `<tr><td><b>${esc(a.name)}</b><div class="nota" style="margin:0">${esc([a.city,a.country].filter(Boolean).join(", "))}</div></td><td>${esc(a.assetClass||"")}</td><td>${fmtK(a.value)}</td><td>${fmtK(a.monthlyRent)}</td><td>${pct(a.capRate)}</td><td>${pct(a.ltv)}</td><td>${f?String(f).slice(0,4):"—"}</td></tr>`; }).join("")}
+        </tbody></table></div></div>
+      <div class="card pad"><p class="ch-t">Valor por país</p><div class="ch-s">US$ · ${pais.length} país(es)</div><div class="box" style="height:${Math.max(160,pais.length*40+40)}px"><canvas id="cPorPais"></canvas></div>
+        <p class="sub-t">Estado de los activos</p>${Object.entries(est).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="hb"><span class="n">${esc(k)}</span><span class="b"><i style="width:${Math.round(100*n/A.length)}%"></i></span><span class="v">${n}</span></div>`).join("")}</div>
+    </div>`;
+  const hbar=(id,pares,lab)=>grafico(id,{type:"bar",data:{labels:pares.map(x=>x[0]),datasets:[{label:lab,data:pares.map(x=>x[1]),backgroundColor:css("--c1"),borderRadius:4,barPercentage:.7,borderSkipped:false}]},
+    options:base({indexAxis:"y",plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:c=>` ${lab}: ${fmt(c.raw)}`}}},scales:{x:{...base().scales.y,ticks:{...base().scales.y.ticks,callback:x=>fmtK(x)}},y:{...base().scales.x}}})});
+  hbar("cPorClase",clase,"Valor"); hbar("cPorInq",inq,"Renta mensual"); hbar("cPorPais",pais,"Valor");
+  narrar("por",`El portafolio suma <b>${A.length} activos</b> valorados en <b>${fmtK(val)}</b>, con renta mensual de <b>${fmtK(renta)}</b>, cap rate ponderado de <b>${pct(capP)}</b>${wale!=null?` y un plazo promedio de contratos (WALE) de <b>${wale.toFixed(1)} años</b>`:""}${top1&&renta?`; el mayor inquilino, ${esc(top1[0])}, aporta el <b>${pct(top1[1]/renta)}</b> de la renta`:""}.`);
+  grafico("cPorVence",{type:"bar",data:{labels:ay.map(String),datasets:[{label:"Renta mensual que vence",data:ay.map(y=>anios[y]),backgroundColor:css("--c2"),borderRadius:4,barPercentage:.7,borderSkipped:false}]},
+    options:base({plugins:{legend:{display:false},tooltip:{...base().plugins.tooltip,callbacks:{label:c=>` Renta mensual que vence: ${fmt(c.raw)}`}}},scales:{...base().scales,y:{...base().scales.y,ticks:{...base().scales.y.ticks,callback:x=>fmtK(x)}}}})});
+  const al=[]; const prox=A.filter(a=>(a.leaseEndDates||[a.leaseEnd]).some(f=>/^\d{4}-\d{2}-\d{2}$/.test(String(f))&&diasA(f)>=0&&diasA(f)<=365));
+  if(prox.length) al.push({n:"warn",t:`<b>${prox.length} contrato(s) de arrendamiento</b> vencen en los próximos 12 meses: ${prox.slice(0,3).map(a=>esc(a.name)).join(", ")}${prox.length>3?"…":""}.`});
+  al.push({n:"info",t:`Portafolio de <b>${A.length} activos</b> por <b>${fmtK(val)}</b>, LTV <b>${pct(ltv)}</b>.`});
+  alertas("por",al);
+}
+
+/* ============================ Legal: resumen de la última lectura del Agente Legal ============================ */
+function legal(){
+  const el=$("leg"); let r=null; try{ r=JSON.parse(localStorage.getItem("agente_legal_resumen")||"null"); }catch(e){}
+  if(!r||!r.fecha){ el.innerHTML=`<div class="card vacio"><b>Todavía sin lectura en esta computadora</b>Abre el <a href="legal.html">Agente Legal</a> y elige la carpeta Legal: al leerla, aquí aparecen los casos, el estado de los expedientes y los vencimientos.</div>`; alertas("leg",[]); return; }
+  $("legSrc").textContent=`Carpeta ${r.carpeta||"Legal"} · leída el ${new Date(r.fecha).toLocaleString("es-PA",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})} en el Agente Legal`;
+  const ven=(r.ven||[]).map(x=>({...x,d:diasA(x.fecha)}));
+  const vencidos=ven.filter(x=>x.d<0&&x.d>=-365), v30=ven.filter(x=>x.d>=0&&x.d<=30), v90=ven.filter(x=>x.d>30&&x.d<=90);
+  const prox=ven.filter(x=>x.d>=-365&&x.d<=90).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,6);
+  const exp=r.exp||{}, ex=Object.values(exp), sum=k=>ex.reduce((t,x)=>t+(x[k]||0),0);
+  el.innerHTML=`<div class="card pad">
+      <div class="mini"><div><b>${(r.casos||[]).length}</b><span>Casos</span></div><div class="bad"><b>${vencidos.length}</b><span>Vencidos (12 m)</span></div><div class="bad"><b>${v30.length}</b><span>Vencen en 30 días</span></div><div class="rev"><b>${v90.length}</b><span>En 31 a 90 días</span></div></div>
+      ${ex.length?`<div class="nota" style="margin:0 0 8px">Expedientes con checklist: <b style="color:var(--good)">${sum("ok")} completos</b> · <b style="color:var(--warn)">${sum("rev")} por revisar</b> · <b style="color:var(--bad)">${sum("bad")} ${sum("bad")===1?"falta":"faltan"}</b></div>`:""}
+      <p class="ch-t" style="margin-top:6px">Próximos vencimientos</p>
+      ${prox.length?`<ul class="lst">${prox.map(x=>`<li><span class="f">${fISO(x.fecha)}</span><span class="t"><div><b>${esc(x.tipo)}</b> · ${esc(x.caso)}</div><small>${esc(x.ruta)}</small></span><span class="tag ${x.d<0?"bad":x.d<=30?"bad":"rev"}">${x.d<0?"Vencido":x.d===0?"Hoy":"En "+x.d+" d"}</span></li>`).join("")}</ul>`
+        :`<div class="vacio" style="padding:14px">Ningún documento vence en los próximos 90 días ni venció en el último año.</div>`}
+      ${(()=>{ const t={}; ven.filter(x=>x.d>=-365).forEach(x=>t[x.tipo]=(t[x.tipo]||0)+1); const e=Object.entries(t).sort((a,b)=>b[1]-a[1]); const mx=Math.max(1,...e.map(x=>x[1]));
+        return e.length?`<p class="sub-t">Fechas de vencimiento por tipo de documento</p>${e.map(([k,n])=>`<div class="hb"><span class="n">${esc(k)}</span><span class="b"><i style="width:${Math.round(100*n/mx)}%"></i></span><span class="v">${n}</span></div>`).join("")}`:""; })()}
+      ${(()=>{ const t={}; (r.casos||[]).forEach(c=>{ const k=c.tipo||"Sin tipo de proceso"; t[k]=(t[k]||0)+1; }); const e=Object.entries(t).sort((a,b)=>b[1]-a[1]); const mx=Math.max(1,...e.map(x=>x[1]));
+        return e.length?`<p class="sub-t">Casos por tipo de proceso</p>${e.map(([k,n])=>`<div class="hb"><span class="n">${esc(k)}</span><span class="b"><i style="width:${Math.round(100*n/mx)}%;background:var(--c2)"></i></span><span class="v">${n}</span></div>`).join("")}`:""; })()}
+    </div>`;
+  narrar("leg",`En Legal hay <b>${(r.casos||[]).length} caso(s)</b>${vencidos.length||v30.length||v90.length?`, con <b>${vencidos.length}</b> documento(s) vencido(s) en el último año y <b>${v30.length+v90.length}</b> por vencer en 90 días`:", sin documentos vencidos ni por vencer en 90 días"}.`);
+  const al=[];
+  if(vencidos.length) al.push({n:"bad",t:`<b>${vencidos.length} documento(s) legal(es) vencido(s)</b> en el último año${vencidos[0]?`, por ejemplo ${esc(vencidos[0].tipo.toLowerCase())} de «${esc(vencidos[0].caso)}»`:""}.`});
+  if(v30.length||v90.length) al.push({n:"warn",t:`<b>${v30.length+v90.length} documento(s) legal(es)</b> vencen en los próximos 90 días${v30.length?` (${v30.length} en 30 días)`:""}.`});
+  if(sum("bad")) al.push({n:"warn",t:`Expedientes: faltan <b>${sum("bad")} documento(s)</b> según los checklists.`});
+  alertas("leg",al);
+}
+
+/* ============================ Equipo: Seguimiento de tareas (Supabase) ============================ */
+async function tareas(){
+  const el=$("tar");
+  let T=[], C=[];
+  try{ const [a,b]=await Promise.all([MA.sb.from("ta_tareas").select("id,titulo,estado,prioridad,responsable,fecha_tentativa,fecha_real,carpeta_id"),MA.sb.from("ta_carpetas").select("id,nombre")]);
+    if(a.error) throw a.error; T=a.data||[]; C=(b&&b.data)||[]; }
+  catch(e){ el.innerHTML=`<div class="card vacio"><b>No se pudieron leer las tareas</b>${esc(e.message||e)}</div>`; alertas("tar",[]); return; }
+  if(!T.length){ el.innerHTML=`<div class="card vacio"><b>Sin tareas registradas</b>Cuando el equipo cargue tareas en Seguimiento de tareas, aquí aparece su avance.</div>`; alertas("tar",[]); return; }
+  const hoy=hoyISO(), ab=T.filter(t=>t.estado!=="Completada"), venc=ab.filter(t=>t.fecha_tentativa&&t.fecha_tentativa<hoy);
+  const sem=ab.filter(t=>t.fecha_tentativa&&t.fecha_tentativa>=hoy&&diasA(t.fecha_tentativa)<=7);
+  const mes=hoy.slice(0,7), comp=T.filter(t=>t.estado==="Completada"&&String(t.fecha_real||"").slice(0,7)===mes);
+  const carp=Object.fromEntries(C.map(c=>[c.id,c.nombre]));
+  const resp={}; ab.forEach(t=>{ const r=t.responsable||"Sin responsable"; resp[r]=resp[r]||{v:0,a:0}; (t.fecha_tentativa&&t.fecha_tentativa<hoy)?resp[r].v++:resp[r].a++; });
+  const rs=Object.entries(resp).sort((x,y)=>(y[1].v+y[1].a)-(x[1].v+x[1].a)).slice(0,8);
+  const lista=venc.concat(sem).sort((a,b)=>a.fecha_tentativa.localeCompare(b.fecha_tentativa)).slice(0,6);
+  const hechas=T.filter(t=>t.estado==="Completada"&&t.fecha_real&&t.fecha_tentativa), aTiempo=hechas.filter(t=>t.fecha_real<=t.fecha_tentativa).length;
+  const proy={}; ab.forEach(t=>{ const k=carp[t.carpeta_id]||"Sin carpeta"; proy[k]=(proy[k]||0)+1; }); const pe=Object.entries(proy).sort((a,b)=>b[1]-a[1]).slice(0,6), pmx=Math.max(1,...pe.map(x=>x[1]));
+  const prio={}; ab.forEach(t=>prio[t.prioridad||"Media"]=(prio[t.prioridad||"Media"]||0)+1);
+  el.innerHTML=`<div class="card pad">
+      <div class="mini"><div><b>${ab.length}</b><span>Abiertas</span></div><div class="bad"><b>${venc.length}</b><span>Vencidas</span></div><div class="rev"><b>${sem.length}</b><span>Vencen en 7 días</span></div><div class="ok"><b>${comp.length}</b><span>Completadas este mes</span></div></div>
+      <p class="ch-t">Tareas abiertas por responsable</p>
+      <div class="legend"><span><i style="background:var(--bad)"></i>Vencidas</span><span><i style="background:var(--c1)"></i>Al día</span></div>
+      <div class="box" style="height:${Math.max(150,rs.length*30+30)}px"><canvas id="cTar"></canvas></div>
+      <p class="ch-t" style="margin-top:12px">Vencidas y de esta semana</p>
+      ${lista.length?`<ul class="lst">${lista.map(t=>{ const d=diasA(t.fecha_tentativa); return `<li><span class="f">${fISO(t.fecha_tentativa)}</span><span class="t"><div><b>${esc(t.titulo)}</b></div><small>${esc(t.responsable||"Sin responsable")}${carp[t.carpeta_id]?" · "+esc(carp[t.carpeta_id]):""}</small></span><span class="tag ${d<0?"bad":"rev"}">${d<0?"Vencida":d===0?"Hoy":"En "+d+" d"}</span></li>`; }).join("")}</ul>`
+        :`<div class="vacio" style="padding:14px">No hay tareas vencidas ni para esta semana.</div>`}
+      <p class="sub-t">Tareas abiertas por proyecto</p>${pe.map(([k,n])=>`<div class="hb"><span class="n">${esc(k)}</span><span class="b"><i style="width:${Math.round(100*n/pmx)}%;background:var(--c2)"></i></span><span class="v">${n}</span></div>`).join("")}
+      <div class="ind" style="margin-top:12px"><div><span>Completadas a tiempo</span><b>${hechas.length?pct(aTiempo/hechas.length):"—"}</b><small>${aTiempo} de ${hechas.length} con fecha real y tentativa</small></div>
+        <div><span>Abiertas de prioridad alta</span><b>${(prio["Crítica"]||0)+(prio["Alta"]||0)}</b><small>${prio["Crítica"]||0} críticas · ${prio["Alta"]||0} altas</small></div></div>
+    </div>`;
+  narrar("tar",`El equipo tiene <b>${ab.length} tarea(s) abierta(s)</b>${venc.length?`, <b>${venc.length}</b> de ellas vencidas`:""}${hechas.length?`, y cumplió a tiempo el <b>${pct(aTiempo/hechas.length)}</b> de las terminadas`:""}.`);
+  grafico("cTar",{type:"bar",data:{labels:rs.map(x=>x[0]),datasets:[{label:"Vencidas",data:rs.map(x=>x[1].v),backgroundColor:css("--bad"),borderRadius:4,borderSkipped:false,barPercentage:.7},{label:"Al día",data:rs.map(x=>x[1].a),backgroundColor:css("--c1"),borderRadius:4,borderSkipped:false,barPercentage:.7}]},
+    options:base({indexAxis:"y",plugins:{legend:{display:false},tooltip:base().plugins.tooltip},scales:{x:{...base().scales.y,stacked:true,ticks:{...base().scales.y.ticks,precision:0}},y:{...base().scales.x,stacked:true}}})});
+  const al=[];
+  if(venc.length) al.push({n:"bad",t:`<b>${venc.length} tarea(s) vencida(s)</b>${rs[0]&&rs[0][1].v?`; ${esc(rs[0][0])} tiene ${rs[0][1].v}`:""}.`});
+  if(sem.length) al.push({n:"warn",t:`<b>${sem.length} tarea(s)</b> vencen en los próximos 7 días.`});
+  if(comp.length) al.push({n:"good",t:`<b>${comp.length} tarea(s) completada(s)</b> este mes.`});
+  alertas("tar",al);
+}
+
+/* ============================ arranque ============================ */
+function todo(gesto){ legal(); tareas(); portafolio(); finanzas(gesto); }
+$("btnAct").onclick=()=>todo(true);
+$("btnImp").onclick=()=>window.print();
+window.addEventListener("beforeprint",()=>Object.values(CH).forEach(c=>c.resize()));
+MA.listo.then(()=>todo(false));
+</script>
+</body>
+</html>

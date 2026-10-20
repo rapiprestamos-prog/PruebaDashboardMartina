@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablero de Notas — M&amp;A Capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f9; --surface:#fff; --surface-2:#f0f3f8; --border:#dde3ec; --grid:#edf1f6;
+  --text:#0f1c2e; --text-2:#44546a; --muted:#7d889a;
+  --navy:#1b3a5c; --navy-d:#0f2440; --teal:#0f6f6e; --gold:#e3c27a; --gold-d:#b98b2f;
+  --good:#1c7a46; --bad:#b03a32; --warn:#9a6b0f;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 6px 18px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,"Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+.wrap{max-width:1420px;margin:0 auto;padding:18px 24px 50px}
+.hero{position:relative;overflow:hidden;border-radius:18px;padding:22px 28px;color:#fff;background:linear-gradient(115deg,#0f2440 0%,#1b3a5c 55%,#0f5560 100%);box-shadow:0 10px 30px rgba(15,36,64,.22)}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,#e3c27a,#b98b2f 60%,transparent)}
+.hero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.hero h1{margin:4px 0 2px;font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:30px}
+.hero h1 i{color:var(--gold)}
+.hero .sub{color:#c9d5e4;font-size:13.5px}
+.hero .acc{position:absolute;right:24px;top:22px;display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-weight:600;font-size:13px;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.16)}.hbtn.pri{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}
+@media (max-width:900px){.hero .acc{position:static;margin-top:12px}}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.chips{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px}
+.chip{border:0;background:none;padding:7px 13px;border-radius:9px;font-weight:600;font-size:13px;color:var(--text-2);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy);color:#fff}
+.inp{padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);outline:none;font-size:13px}
+.inp:focus{border-color:var(--teal)}
+.grow{flex:1;min-width:200px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:13px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn.bad{color:var(--bad)}
+.filtro{display:inline-flex;align-items:center;gap:6px;background:#e8eef7;color:var(--navy);border-radius:999px;padding:5px 6px 5px 12px;font-size:12.5px;font-weight:700}
+.filtro button{border:0;background:var(--navy);color:#fff;border-radius:999px;width:20px;height:20px;cursor:pointer;font-size:11px}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media (max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:12px 14px;box-shadow:var(--shadow);position:relative;overflow:hidden;cursor:pointer}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold-d)}
+.kpi.bad::before{background:var(--bad)}.kpi.ok::before{background:var(--good)}
+.kpi .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi .v{font-size:24px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11.5px;color:var(--text-2)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto}
+.tab{border:0;background:none;padding:10px 14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--gold-d)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.pad{padding:16px 18px}
+.ch-t{font-weight:800;font-size:14px;margin:0 0 2px}.ch-s{font-size:12px;color:var(--muted);margin-bottom:10px}
+.vacio{padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55}
+.vacio>b{display:block;color:var(--text);font-size:14.5px;margin-bottom:4px}
+/* nota rápida */
+.rapida{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;box-shadow:var(--shadow);margin-bottom:14px}
+.rapida textarea{flex:1;border:0;outline:none;resize:none;min-height:42px;font-size:14px;padding:8px}
+.rapida .op{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pt{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer}.pt[aria-pressed="true"]{border-color:var(--navy)}
+/* colores de nota */
+.n-amarillo{background:#fff6cc}.n-rosa{background:#fde4ea}.n-verde{background:#e1f5ea}.n-azul{background:#e2edfb}.n-lila{background:#ece6fb}.n-naranja{background:#ffe8d4}
+/* columnas */
+.cols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(235px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px;align-items:start}
+.colN{background:#e9eef5;border-radius:14px;padding:10px;min-height:260px;display:flex;flex-direction:column;gap:10px;transition:background .15s}
+.colN.sobre{background:#dce6f3;outline:2px dashed #2a62a0}
+.colN-h{display:flex;align-items:center;gap:8px;padding:2px 4px;font-weight:800;font-size:13px}
+.colN-h .n{margin-left:auto;background:#fff;border-radius:999px;padding:1px 9px;font-size:12px;color:var(--text-2)}
+/* muro */
+.muro{columns:270px;column-gap:14px}
+.muro .nt{break-inside:avoid;margin-bottom:14px}
+/* nota */
+.nt{border-radius:4px 14px 14px 14px;padding:14px 14px 10px;box-shadow:0 6px 16px rgba(15,23,42,.08);cursor:grab;position:relative;display:flex;flex-direction:column;transition:transform .12s, box-shadow .12s}
+.nt:hover{transform:translateY(-2px) rotate(-.3deg);box-shadow:0 12px 24px rgba(15,23,42,.12)}
+.nt.arr{opacity:.4}
+.nt.pend{opacity:.7;pointer-events:none}.guardando{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px;display:flex;align-items:center}.guardando .spin{width:12px;height:12px}
+.nt h5{margin:0 22px 6px 0;font-size:14.5px;line-height:1.3}
+.nt .tx{font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.nt .ck{display:flex;gap:7px;align-items:flex-start;margin:2px 0;cursor:pointer}
+.nt .ck input{margin-top:3px;cursor:pointer}.nt .ck.hecho span{text-decoration:line-through;opacity:.55}
+.nt .pr{height:4px;background:rgba(15,28,46,.1);border-radius:3px;overflow:hidden;margin:8px 0 2px}.nt .pr i{display:block;height:100%;background:var(--good)}
+.nt .pie{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:rgba(15,28,46,.62);margin-top:9px}
+.nt .pin{position:absolute;right:10px;top:8px;cursor:pointer;opacity:.25;border:0;background:none;font-size:15px;padding:0}
+.nt .pin.on,.nt:hover .pin{opacity:1}
+.etq{display:inline-block;background:rgba(27,58,92,.1);color:var(--navy);border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:700;cursor:pointer}
+.rec{background:rgba(255,255,255,.65);border-radius:6px;padding:1px 6px;font-weight:700}.rec.hoy{background:#b98b2f;color:#fff}.rec.pas{background:var(--bad);color:#fff}
+/* recordatorios */
+.ag{list-style:none;margin:0;padding:0}.ag li{display:flex;gap:12px;align-items:flex-start;padding:10px 6px;border-bottom:1px solid var(--grid);cursor:pointer}
+.ag li:hover{background:var(--surface-2)}.ag .fe{min-width:86px;font-weight:800;font-size:12.5px}.ag .fe small{display:block;font-weight:600;color:var(--muted)}
+.ag .sw{width:12px;height:12px;border-radius:3px;flex:none;margin-top:4px;border:1px solid rgba(0,0,0,.08)}
+/* guía */
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}@media (max-width:1000px){.g2{grid-template-columns:1fr}}
+.guia{line-height:1.7;font-size:14px;color:var(--text-2)}.guia h3{color:var(--text);font-size:16px;margin:18px 0 6px}.guia h3:first-child{margin-top:0}
+.guia b{color:var(--text)}.guia ul,.guia ol{padding-left:20px;margin:6px 0}
+.prompt{background:#0f1c2e;color:#e6ecf5;border-radius:12px;padding:16px 18px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.6;white-space:pre-wrap;max-height:460px;overflow:auto}
+/* diálogo */
+.bg{position:fixed;inset:0;background:rgba(15,28,46,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;z-index:60;overflow-y:auto}
+.dlg{width:100%;max-width:640px;background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.35)}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}.dlg-h h3{margin:0;font-size:16px}
+.dlg-b{padding:14px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dlg-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--border)}
+.f{display:flex;flex-direction:column;gap:4px}.f.full{grid-column:1/-1}.f>span{font-size:11.5px;font-weight:700;color:var(--text-2)}
+.f textarea{min-height:170px;resize:vertical;line-height:1.5}
+.colores{display:flex;gap:8px}.colores button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer}.colores button[aria-pressed="true"]{border-color:var(--navy)}
+.ayuda{font-size:11.5px;color:var(--muted)}
+.tbn{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 4px}
+.modo{display:inline-flex;gap:4px;background:var(--surface-2);border-radius:10px;padding:3px;margin-bottom:6px;align-self:flex-start}
+.modo button{border:0;background:none;border-radius:8px;padding:6px 12px;font-weight:700;font-size:12.5px;color:var(--text-2);cursor:pointer}
+.modo button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.ckrow{display:flex;align-items:center;gap:8px;margin-bottom:5px}.ckrow input[type=checkbox]{width:18px;height:18px;cursor:pointer;flex:none}
+.ckrow .inp{flex:1;padding:7px 10px}.ckrow .inp.hecho{text-decoration:line-through;color:var(--muted)}
+.ckx{border:0;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px}.ckx:hover{background:#fbeceb;color:var(--bad)}
+.ckrow.pen .inp{min-width:0}.o365{background:#f3f6fb;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.ckmas{width:18px;text-align:center;font-weight:800;color:var(--teal);flex:none}
+.addck{display:flex;gap:6px;margin-top:6px}.addck input{flex:1;border:0;border-bottom:1px dashed rgba(15,28,46,.25);background:transparent;font-size:12.5px;padding:4px 2px;outline:none}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--navy-d);color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;z-index:80}
+.toast.bad{background:var(--bad)}
+.spin{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid #dbe3ee;border-top-color:var(--navy);animation:sp .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media print{.hero .acc,.ctrl,.tabs,#maHdr,.rapida{display:none!important}.nt{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<!--MA_AUTH-->
+<!--GS_CONEXION-->
+<script>MA.iniciar({modulo:"notas",titulo:"Tablero de Notas"});</script>
+<div class="wrap">
+  <header class="hero">
+    <div class="k">M&amp;A Capital · Gestión</div>
+    <h1>Tablero de <i>Notas</i></h1>
+    <div class="sub" id="heroSub">Ideas, acuerdos, pendientes y recordatorios del equipo</div>
+    <div class="acc hidden" id="acc"><button class="hbtn" id="btnHoja">📗 Abrir la hoja</button><button class="hbtn" id="btnXls">⬇ Excel</button><button class="hbtn" id="btnRec" title="Volver a leer la hoja">↻</button><button class="hbtn" id="btnActa">📋 Acta de reunión</button><button class="hbtn pri" id="btnNueva">＋ Nueva nota</button></div>
+  </header>
+  <div id="app"><div class="vacio"><span class="spin"></span> Conectando…</div></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const COLORES=["amarillo","rosa","verde","azul","lila","naranja"];
+const BASE=["Ideas","Por hacer","Acuerdos","Recordatorios"];
+const hoy=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const dias=iso=>Math.round((Date.parse(String(iso).slice(0,10))-Date.parse(hoy()))/864e5);
+const fCorta=iso=>iso?new Date(String(iso).slice(0,10)+"T12:00:00").toLocaleDateString("es-PA",{day:"numeric",month:"short"}):"";
+const fLarga=iso=>iso?new Date(String(iso).slice(0,10)+"T12:00:00").toLocaleDateString("es-PA",{weekday:"long",day:"numeric",month:"long"}):"";
+const nombre=s=>String(s||"").replace(/@.*/,"");
+const etqs=n=>String(n.etiquetas||"").split(/[,;]+/).map(x=>x.trim()).filter(Boolean);
+const fij=n=>String(n.fijada)==="true";
+function toast(t,mal){ const d=document.createElement("div"); d.className="toast"+(mal?" bad":""); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),mal?6000:2400); }
+let RAPIDO="", N=[], TK=[], HOJA="", DEMO=false, YO="", VISTA="columnas", Q="", F={}, COLOR_R="amarillo";
+
+/* ============================ datos ============================ */
+async function cargar(){
+  if(DEMO){ pintar(); return; }
+  try{ await GS.conCache("notas.listar",r=>{ const pend=N.filter(x=>x._pend&&!(r.notas||[]).some(y=>y.id===x.id)); N=(r.notas||[]).concat(pend); TK=r.tareas||[]; HOJA=r.hoja||""; pintar(); }); }
+  catch(e){ if(e.tenia){ toast("No se pudo actualizar: "+e.message+" (se muestra lo último que se vio)",true); return; } $("app").innerHTML=`<div class="card vacio"><b>No se pudo leer la Hoja de Google</b>${esc(e.message)}<br><br><button class="btn" id="reint">Reintentar</button> ${(await MA.listo).rol==="admin"&&!GS.fija?'<button class="btn" id="recon">Cambiar la URL</button>':""}</div>`;
+    $("reint").onclick=cargar; if($("recon")) $("recon").onclick=()=>{ GS.desconectar(); arrancar(); }; }
+}
+async function guardar(n,silencio){
+  n=Object.assign({},n); if(!n.tablero) n.tablero=BASE[0];
+  if(DEMO){ if(!n.id){ n.id="n"+Date.now(); n.creado=new Date().toISOString(); n.autor="ejemplo"; } n.actualizado=new Date().toISOString(); const i=N.findIndex(x=>x.id===n.id); i>=0?N[i]=n:N.push(n); pintar(); return true; }
+  const prev=N.slice();
+  if(!n.id){ n.id=GS.id(); N.push(Object.assign({},n,{_pend:true,autor:YO,creado:new Date().toISOString()})); pintar(); }   // id propio: se ve al instante y nunca se duplica
+  else { const i=N.findIndex(x=>x.id===n.id); if(i>=0){ N[i]=n; pintar(); } }
+  try{ const r=await GS.llamar("notas.guardar",{nota:Object.assign({},n,{_pend:undefined})}); const j=N.findIndex(x=>x.id===r.id); j>=0?N[j]=r:N.push(r); pintar(); if(!silencio) toast("Nota guardada"); return r; }
+  catch(e){ N=prev; pintar(); toast("No se guardó la nota: "+e.message,true); return false; }
+}
+async function borrar(id){
+  if(DEMO){ N=N.filter(x=>x.id!==id); pintar(); return; }
+  try{ await GS.llamar("notas.borrar",{id}); N=N.filter(x=>x.id!==id); pintar(); }catch(e){ toast(e.message,true); }
+}
+
+/* ============================ filtros ============================ */
+function visibles(){ const q=Q.trim().toLowerCase();
+  return N.filter(n=>(!q||[n.titulo,n.texto,n.etiquetas,n.autor,n.tablero].join(" ").toLowerCase().includes(q))
+    &&(!F.color||n.color===F.color)&&(!F.etq||etqs(n).includes(F.etq))&&(!F.mias||String(n.autor||"").toLowerCase()===YO)
+    &&(!F.fijadas||fij(n))&&(!F.tk||n.tarea_id)&&(!F.rec||(n.recordar&&dias(n.recordar)<=0))); }
+const ordenar=ns=>ns.slice().sort((a,b)=>fij(b)-fij(a)||(+a.orden||0)-(+b.orden||0)||String(b.actualizado||b.creado||"").localeCompare(String(a.actualizado||a.creado||"")));
+const tableros=()=>[...new Set(BASE.concat(N.map(n=>n.tablero).filter(Boolean)))];
+
+/* ============================ pantalla ============================ */
+function pintar(){
+  { const rt=$("rTxt"); if(rt&&rt.value.trim()) RAPIDO=rt.value; }
+  $("acc").classList.remove("hidden"); $("btnHoja").classList.toggle("hidden",DEMO||!HOJA);
+  const vs=visibles(), recHoy=N.filter(n=>n.recordar&&dias(n.recordar)<=0).length, prox=N.filter(n=>n.recordar&&dias(n.recordar)>0&&dias(n.recordar)<=7).length;
+  const ck=N.reduce((a,n)=>{ const m=String(n.texto||"").match(/^\s*\[( |x|X)\]/gm)||[]; a.t+=m.length; a.h+=m.filter(x=>/x/i.test(x)).length; return a; },{t:0,h:0});
+  const filtros=[F.color&&["color","Color: "+F.color],F.etq&&["etq","#"+F.etq],F.mias&&["mias","Solo mías"],F.fijadas&&["fijadas","Fijadas"],F.rec&&["rec","Recordatorios de hoy o atrasados"],F.tk&&["tk","Ligadas a tareas"]].filter(Boolean);
+  $("app").innerHTML=`
+    <div class="ctrl">
+      <input class="inp grow" id="q" placeholder="Buscar en notas, etiquetas, autor…" value="${esc(Q)}">
+      <div class="chips">${COLORES.map(c=>`<button class="chip" data-col="${c}" aria-pressed="${F.color===c}" title="Solo ${c}"><span class="pt n-${c}" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border:1px solid rgba(0,0,0,.1)"></span></button>`).join("")}</div>
+      <div class="chips"><button class="chip" data-tg="mias" aria-pressed="${!!F.mias}">Mías</button><button class="chip" data-tg="fijadas" aria-pressed="${!!F.fijadas}">📌 Fijadas</button></div>
+      ${filtros.map(([k,l])=>`<span class="filtro">${esc(l)}<button data-qf="${k}" title="Quitar filtro">✕</button></span>`).join("")}
+    </div>
+    <div class="kpis">
+      <div class="kpi" data-k="todo"><div class="l">Notas</div><div class="v">${N.length}</div><div class="d">${vs.length} en la vista</div></div>
+      <div class="kpi" data-k="fijadas"><div class="l">Fijadas</div><div class="v">${N.filter(fij).length}</div><div class="d">siempre arriba</div></div>
+      <div class="kpi ${recHoy?"bad":""}" data-k="rec"><div class="l">Recordatorios hoy</div><div class="v">${recHoy}</div><div class="d">de hoy o atrasados · ${prox} en 7 días</div></div>
+      <div class="kpi ok" data-k="ck"><div class="l">Casillas hechas</div><div class="v">${ck.t?Math.round(100*ck.h/ck.t)+"%":"—"}</div><div class="d">${ck.h} de ${ck.t} pendientes marcados</div></div>
+      <div class="kpi" data-k="tk"><div class="l">Ligadas a tareas</div><div class="v">${N.filter(n=>n.tarea_id).length}</div><div class="d">de la Bitácora Ejecutiva</div></div>
+    </div>
+    <div class="rapida"><textarea id="rTxt" placeholder="✍ Nota rápida… (Enter para guardar · Shift+Enter nueva línea · empieza una línea con [ ] para hacer una casilla)"></textarea>
+      <div class="op"><select class="inp" id="rTab" style="padding:7px 9px">${tableros().map(t=>`<option>${esc(t)}</option>`).join("")}</select>
+        ${COLORES.map(c=>`<button class="pt n-${c}" data-rc="${c}" aria-pressed="${COLOR_R===c}" title="${c}"></button>`).join("")}<button class="btn pri sm" id="rOk">Agregar</button><button class="btn sm" id="rLista" title="Nueva nota con casillas">☑ Lista</button><button class="btn sm" id="rActa" title="Acta de reunión lista para llenar">📋 Acta</button></div></div>
+    <div class="tabs">${[["columnas","🗂 Columnas"],["muro","🧱 Muro"],["agenda","⏰ Recordatorios"],["guia","💡 Guía y prompt"]].map(([k,l])=>`<button class="tab" data-v="${k}" aria-selected="${VISTA===k}">${l}</button>`).join("")}</div>
+    <div id="vista"></div>`;
+  if(DEMO) GS.avisoDemo($("app"),()=>{ DEMO=false; arrancar(); });
+  { const nEj=N.filter(n=>/^ej-/.test(n.id)).length; if(!DEMO&&nEj){ const w=document.createElement("div"); w.className="gs-demo"; w.innerHTML=`<span>👁 La hoja tiene <b>${nEj} registro(s) de ejemplo</b> (los que dicen «(ejemplo)»): son inventados para ver cómo funciona. Para quitarlos, la administradora ejecuta <b>borrarEjemplos</b> en Apps Script (borra solo los ejemplos).</span>`; $("app").prepend(w); } }
+  const A=$("app");
+  A.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{ VISTA=b.dataset.v; pintar(); });
+  A.querySelectorAll("[data-col]").forEach(b=>b.onclick=()=>{ F.color=F.color===b.dataset.col?"":b.dataset.col; if(!F.color) delete F.color; pintar(); });
+  A.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{ F[b.dataset.tg]=!F[b.dataset.tg]; if(!F[b.dataset.tg]) delete F[b.dataset.tg]; pintar(); });
+  A.querySelectorAll("[data-qf]").forEach(b=>b.onclick=()=>{ delete F[b.dataset.qf]; pintar(); });
+  A.querySelectorAll("[data-k]").forEach(k=>k.onclick=()=>{ const v=k.dataset.k; if(v==="todo") F={}; else if(v==="fijadas") F.fijadas=true; else if(v==="rec"){ F.rec=true; } else if(v==="tk"){ F.tk=true; } pintar(); });
+  A.querySelectorAll("[data-rc]").forEach(b=>b.onclick=()=>{ COLOR_R=b.dataset.rc; A.querySelectorAll("[data-rc]").forEach(x=>x.setAttribute("aria-pressed",x===b)); });
+  $("q").oninput=e=>{ Q=e.target.value; clearTimeout(pintar.t); pintar.t=setTimeout(()=>{ pintar(); const i=$("q"); i.focus(); i.setSelectionRange(i.value.length,i.value.length); },250); };
+  if(RAPIDO){ $("rTxt").value=RAPIDO; }
+  const rapida=async()=>{ const t=$("rTxt").value.trim(); if(!t){ $("rTxt").focus(); $("rTxt").placeholder="✍ Primero escribe la nota aquí y luego pulsa Agregar"; toast("Escribe la nota primero",true); return; }
+    const l=t.split("\n"); const tit=l.length>1&&l[0].length<=70?l.shift():""; RAPIDO=""; $("rTxt").value="";
+    const ok=await guardar({titulo:tit,texto:l.join("\n"),color:COLOR_R,tablero:$("rTab").value,fijada:"false"}); if(ok===false){ RAPIDO=t; pintar(); } };
+  $("rOk").onclick=rapida; $("rActa").onclick=()=>acta(); $("rLista").onclick=()=>editor({tablero:$("rTab").value,color:COLOR_R,titulo:$("rTxt").value.trim().split("\n")[0]},{lista:true}); $("rTxt").onkeydown=e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); rapida(); } };
+  ({columnas:vColumnas,muro:vMuro,agenda:vAgenda,guia:vGuia})[VISTA](vs);
+  $("heroSub").textContent=`${N.length} notas · ${tableros().length} columnas${recHoy?` · ${recHoy} recordatorio(s) para hoy`:""}${DEMO?" · datos de ejemplo":""}`;
+}
+
+/* ---------- una nota ---------- */
+function cuerpo(n){
+  const lineas=String(n.texto||"").split("\n"); let html="", hay=false;
+  lineas.forEach((l,i)=>{ const m=l.match(/^\s*\[( |x|X)\]\s?(.*)$/); if(m){ hay=true; const h=/x/i.test(m[1]); html+=`<label class="ck${h?" hecho":""}" data-i="${i}"><input type="checkbox"${h?" checked":""}><span>${esc(m[2])}</span></label>`; } else html+=esc(l)+"\n"; });
+  const m=String(n.texto||"").match(/^\s*\[( |x|X)\]/gm)||[], h=m.filter(x=>/x/i.test(x)).length;
+  return `<div class="tx">${html.replace(/\n+$/,"")}</div>${hay?`<div class="pr" title="${h} de ${m.length}"><i style="width:${100*h/m.length}%"></i></div>${esActa(n)?"":`<div class="addck"><input placeholder="＋ agregar casilla (Enter)" data-addck></div>`}`:""}`;
+}
+function nota(n){
+  const tk=n.tarea_id&&TK.find(t=>t.id===n.tarea_id), r=n.recordar?dias(n.recordar):null;
+  return `<div class="nt n-${esc(COLORES.includes(n.color)?n.color:"amarillo")}${n._pend?" pend":""}" draggable="${n._pend?"false":"true"}" data-id="${esc(n.id)}">${n._pend?'<span class="guardando"><span class="spin"></span>Guardando…</span>':""}
+    <button class="pin${fij(n)?" on":""}" data-pin title="${fij(n)?"Desfijar":"Fijar arriba"}">📌</button>
+    ${n.titulo?`<h5>${esc(n.titulo)}</h5>`:""}${cuerpo(n)}
+    <div class="pie">${n.recordar?`<span class="rec${r<0?" pas":r===0?" hoy":""}">⏰ ${r===0?"Hoy":fCorta(n.recordar)}</span>`:""}${tk?`<span title="Ligada a la tarea">🔗 ${esc(tk.titulo)}</span>`:""}
+      ${etqs(n).map(x=>`<span class="etq" data-etq="${esc(x)}">#${esc(x)}</span>`).join("")}
+      <span style="margin-left:auto">${esc(nombre(n.autor))}${n.actualizado||n.creado?" · "+fCorta(n.actualizado||n.creado):""}</span></div></div>`;
+}
+function enganchar(V){
+  V.querySelectorAll(".nt").forEach(el=>{ const n=N.find(x=>x.id===el.dataset.id);
+    const ad=el.querySelector("[data-addck]"); if(ad){ ad.onkeydown=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const v=ad.value.trim(); if(!v) return;
+        guardar(Object.assign({},n,{texto:String(n.texto||"").replace(/\s+$/,"")+"\n[ ] "+v}),true); };
+      ad.onmousedown=e=>e.stopPropagation(); }
+    el.onclick=e=>{ if(e.target.closest("[data-addck]")) return; const et=e.target.closest("[data-etq]"); if(et){ F.etq=et.dataset.etq; pintar(); return; }
+      if(e.target.closest("[data-pin]")){ guardar(Object.assign({},n,{fijada:fij(n)?"false":"true"}),true); return; }
+      const ck=e.target.closest(".ck"); if(ck){ e.preventDefault(); const ls=String(n.texto||"").split("\n"), i=+ck.dataset.i; ls[i]=ls[i].replace(/\[( |x|X)\]/,m=>/x/i.test(m)?"[ ]":"[x]"); guardar(Object.assign({},n,{texto:ls.join("\n")}),true); return; }
+      editor(n); };
+    el.ondragstart=e=>{ e.dataTransfer.setData("text/plain",n.id); el.classList.add("arr"); }; el.ondragend=()=>el.classList.remove("arr"); });
+}
+
+/* ---------- vistas ---------- */
+function vColumnas(vs){
+  const tbs=tableros();
+  $("vista").innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><span class="ch-s" style="margin:0">Arrastra las notas de una columna a otra · clic en una nota para editarla · 📌 para fijarla arriba</span><button class="btn sm" id="nCol2">＋ Nueva columna</button></div><div class="cols">${tbs.map(t=>{ const ns=ordenar(vs.filter(n=>(n.tablero||BASE[0])===t));
+    return `<div class="colN" data-t="${esc(t)}"><div class="colN-h">${esc(t)}<span class="n">${ns.length}</span></div>${ns.map(nota).join("")||`<div class="vacio" style="padding:14px">Arrastra notas aquí</div>`}
+      <button class="btn sm" data-add="${esc(t)}" style="justify-content:center;border-style:dashed">＋ Nota en ${esc(t)}</button></div>`; }).join("")}
+    <div class="colN" style="background:none;border:1px dashed #b9c7da;min-height:120px;justify-content:center"><button class="btn" id="nCol">＋ Nueva columna</button></div></div>`;
+  const V=$("vista"); enganchar(V);
+  V.querySelectorAll(".colN[data-t]").forEach(c=>{ c.ondragover=e=>{ e.preventDefault(); c.classList.add("sobre"); }; c.ondragleave=()=>c.classList.remove("sobre");
+    c.ondrop=e=>{ e.preventDefault(); c.classList.remove("sobre"); const n=N.find(x=>x.id===e.dataTransfer.getData("text/plain")); if(n&&(n.tablero||BASE[0])!==c.dataset.t) guardar(Object.assign({},n,{tablero:c.dataset.t}),true); }; });
+  V.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>editor({tablero:b.dataset.add}));
+  $("nCol").onclick=$("nCol2").onclick=()=>{ const t=(prompt("Nombre de la nueva columna:")||"").trim(); if(t) editor({tablero:t}); };
+}
+function vMuro(vs){
+  $("vista").innerHTML=vs.length?`<div class="muro">${ordenar(vs).map(nota).join("")}</div>`:`<div class="card vacio"><b>${N.length?"Ninguna nota coincide con el filtro":"Todavía no hay notas"}</b>${N.length?"Quita filtros o cambia la búsqueda.":"Escribe la primera en «Nota rápida»."}</div>`;
+  enganchar($("vista"));
+}
+function vAgenda(vs){
+  const con=vs.filter(n=>n.recordar).sort((a,b)=>String(a.recordar).localeCompare(String(b.recordar)));
+  const grupos=[["Atrasados",n=>dias(n.recordar)<0],["Hoy",n=>dias(n.recordar)===0],["Próximos 7 días",n=>dias(n.recordar)>0&&dias(n.recordar)<=7],["Más adelante",n=>dias(n.recordar)>7]];
+  $("vista").innerHTML=`<div class="card pad"><p class="ch-t">Recordatorios</p><div class="ch-s">Las notas con fecha de recordatorio. Si está activo el correo de cada mañana, al autor le llega el aviso ese día.</div>
+    ${con.length?grupos.map(([g,f])=>{ const l=con.filter(f); return l.length?`<p class="ch-t" style="margin-top:14px;${g==="Atrasados"?"color:var(--bad)":""}">${g} (${l.length})</p><ul class="ag">${l.map(n=>`<li data-id="${esc(n.id)}"><span class="sw n-${esc(n.color||"amarillo")}"></span><span class="fe">${fCorta(n.recordar)}<small>${esc(fLarga(n.recordar).split(",")[0])}</small></span><span style="flex:1"><b>${esc(n.titulo||String(n.texto||"").split("\n")[0].slice(0,80))}</b><br><span style="font-size:12.5px;color:var(--text-2)">${esc(String(n.texto||"").slice(0,160))}</span></span><span style="font-size:11.5px;color:var(--muted)">${esc(n.tablero||"")}</span></li>`).join("")}</ul>`:""; }).join("")
+      :`<div class="vacio"><b>Sin recordatorios</b>Abre una nota y ponle una fecha en «Recordarme el».</div>`}</div>`;
+  $("vista").querySelectorAll("li[data-id]").forEach(l=>l.onclick=()=>editor(N.find(n=>n.id===l.dataset.id)));
+}
+
+/* ---------- editor ---------- */
+function editor(n,op){
+  if(n&&esActa(n)) return acta(n);
+  n=Object.assign({color:COLOR_R,tablero:BASE[0],fijada:"false"},n||{});
+  const bg=document.createElement("div"); bg.className="bg";
+  bg.innerHTML=`<div class="dlg"><div class="dlg-h"><h3>${n.id?"Editar nota":"Nueva nota"}</h3><button class="btn sm" data-x>Cerrar</button></div>
+    <div class="dlg-b">
+      <label class="f full"><span>Título</span><input class="inp" id="nTit" value="${esc(n.titulo||"")}" placeholder="Opcional"></label>
+      <div class="f full"><span>Nota</span>
+        <div class="modo"><button type="button" data-modo="texto">📝 Texto</button><button type="button" data-modo="lista">☑ Lista con casillas</button></div>
+        <div id="mTexto"><div class="tbn"><button type="button" class="btn sm" data-fm="vi" title="Pone viñetas a la línea o a las líneas marcadas">• Viñetas</button><button type="button" class="btn sm" data-fm="nu" title="Lista numerada">1. Numerada</button><button type="button" class="btn sm" data-fm="no" title="Quita viñetas y números">✕ Quitar formato</button></div>
+          <textarea class="inp" id="nTxt" placeholder="Escribe aquí…">${esc(n.texto||"")}</textarea></div>
+        <div id="mLista" class="hidden"><div id="ckItems"></div>
+          <div class="ckrow nuevo"><span class="ckmas">＋</span><input class="inp" id="ckNuevo" placeholder="Escribe un punto y pulsa Enter para agregar otro"></div>
+          <span class="ayuda">Enter agrega la casilla · ✕ la quita · marca las hechas aquí o con un clic en el tablero.</span></div></div>
+      <div class="f"><span>Color</span><div class="colores">${COLORES.map(c=>`<button type="button" class="n-${c}" data-c="${c}" aria-pressed="${n.color===c}" title="${c}"></button>`).join("")}</div></div>
+      <label class="f"><span>Columna</span><input class="inp" id="nTab" list="lTab" value="${esc(n.tablero||BASE[0])}"><datalist id="lTab">${tableros().map(t=>`<option value="${esc(t)}">`).join("")}</datalist></label>
+      <label class="f"><span>Etiquetas (separadas por coma)</span><input class="inp" id="nEtq" list="lEtq" value="${esc(n.etiquetas||"")}"><datalist id="lEtq">${[...new Set(N.flatMap(etqs))].map(x=>`<option value="${esc(x)}">`).join("")}</datalist></label>
+      <label class="f"><span>⏰ Recordarme el</span><input class="inp" type="date" id="nRec" value="${esc(String(n.recordar||"").slice(0,10))}"></label>
+      <label class="f full"><span>🔗 Ligada a una tarea de la Bitácora</span><select class="inp" id="nTar"><option value="">— Ninguna —</option>${TK.map(t=>`<option value="${esc(t.id)}"${t.id===n.tarea_id?" selected":""}>${esc(t.titulo)}</option>`).join("")}</select></label>
+      <label class="f full" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="nPin"${fij(n)?" checked":""}> <span>📌 Fijar arriba</span></label>
+      ${n.autor?`<div class="f full ayuda">Creada por ${esc(n.autor)}${n.creado?" el "+esc(fLarga(n.creado)):""}${n.actualizado?" · última edición "+esc(fCorta(n.actualizado)):""}</div>`:""}
+    </div>
+    <div class="dlg-f">${n.id?`<button class="btn bad" id="nDel" style="margin-right:auto">Eliminar</button><button class="btn" id="nDup">⧉ Duplicar</button>`:""}<button class="btn" id="nOut" title="Abre un correo nuevo en Outlook con esta nota">✉ Outlook</button>${n.tarea_id?"":`<button class="btn" id="nTarea" title="Crea una tarea en la Bitácora con esta nota y las deja ligadas">➜ Crear tarea</button>`}<button class="btn" data-x>Cancelar</button><button class="btn pri" id="nOk">Guardar</button></div></div>`;
+  document.body.appendChild(bg); const g=id=>bg.querySelector("#"+id), cerrar=()=>bg.remove();
+  bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrar); bg.onclick=e=>{ if(e.target===bg) cerrar(); };
+  let color=n.color; bg.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ color=b.dataset.c; bg.querySelectorAll("[data-c]").forEach(x=>x.setAttribute("aria-pressed",x===b)); });
+  let textoFinal=()=>g("nTxt").value;
+  const leer=()=>Object.assign({},n,{titulo:g("nTit").value.trim(),texto:textoFinal(),color,tablero:g("nTab").value.trim()||BASE[0],etiquetas:etqs({etiquetas:g("nEtq").value}).join(", "),recordar:g("nRec").value,tarea_id:g("nTar").value,fijada:g("nPin").checked?"true":"false"});
+  g("nOk").onclick=()=>{ const o=leer(); if(!o.titulo&&!o.texto.trim()){ (modo==="lista"?g("ckNuevo"):g("nTxt")).focus(); return; } cerrar(); guardar(o); };
+  if(g("nDel")) g("nDel").onclick=()=>{ if(confirm("¿Eliminar esta nota?")){ cerrar(); borrar(n.id); } };
+  g("nOut").onclick=()=>{ const o=leer(); outlook([],o.titulo||"Nota",(o.titulo?o.titulo+"\n\n":"")+o.texto); };
+  if(g("nTarea")) g("nTarea").onclick=async()=>{ const o=leer(); if(!o.titulo&&!o.texto.trim()) return; const b=g("nTarea"); b.disabled=true; b.textContent="Creando…";
+    const tid=await crearTarea({titulo:o.titulo||o.texto.trim().split("\n")[0].replace(/^\s*(\[( |x|X)\]\s?|•\s?|\d+[.)]\s?)/,"").slice(0,120),descripcion:o.texto,etiquetas:o.etiquetas,limite:o.recordar||""});
+    if(!tid){ b.disabled=false; b.textContent="➜ Crear tarea"; return; } cerrar(); guardar(Object.assign(o,{tarea_id:tid}),true); toast("✓ Tarea creada en la Bitácora y ligada a la nota"); };
+  if(g("nDup")) g("nDup").onclick=()=>{ const o=leer(); ["id","creado","autor","actualizado"].forEach(k=>delete o[k]); o.titulo=(o.titulo||"Nota")+" (copia)"; cerrar(); guardar(o); };
+  // ---- modo texto / lista con casillas ----
+  const ta=g("nTxt"), PRE=/^\s*(\[( |x|X)\]\s?|•\s?|\d+[.)]\s?)/, CK=/^\s*\[( |x|X)\]\s?(.*)$/;
+  let modo="texto", items=[];
+  const aItems=t=>String(t||"").split("\n").filter(l=>l.trim()).map(l=>{ const m=l.match(CK); return {h:!!(m&&/x/i.test(m[1])),t:(m?m[2]:l.replace(PRE,"")).trim()}; });
+  const deItems=()=>items.filter(x=>x.t.trim()).map(x=>(x.h?"[x] ":"[ ] ")+x.t.trim()).join("\n");
+  const pintaItems=foco=>{ g("ckItems").innerHTML=items.map((x,i)=>`<div class="ckrow"><input type="checkbox" data-i="${i}"${x.h?" checked":""}><input class="inp${x.h?" hecho":""}" data-t="${i}" value="${esc(x.t)}"><button type="button" class="ckx" data-q="${i}" title="Quitar">✕</button></div>`).join("");
+    g("ckItems").querySelectorAll("[data-i]").forEach(c=>c.onchange=()=>{ items[c.dataset.i].h=c.checked; pintaItems(); });
+    g("ckItems").querySelectorAll("[data-t]").forEach(inp=>{ inp.oninput=()=>items[inp.dataset.t].t=inp.value;
+      inp.onkeydown=e=>{ const i=+inp.dataset.t;
+        if(e.key==="Enter"){ e.preventDefault(); items.splice(i+1,0,{h:false,t:""}); pintaItems(i+1); }
+        else if(e.key==="Backspace"&&!inp.value){ e.preventDefault(); items.splice(i,1); pintaItems(i>0?i-1:"nuevo"); } }; });
+    g("ckItems").querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{ items.splice(+b.dataset.q,1); pintaItems(); });
+    if(foco==="nuevo") g("ckNuevo").focus(); else if(foco!=null){ const f=g("ckItems").querySelector(`[data-t="${foco}"]`); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } } };
+  g("ckNuevo").onkeydown=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const v=g("ckNuevo").value.trim(); if(!v) return; items.push({h:false,t:v}); g("ckNuevo").value=""; pintaItems("nuevo"); };
+  const ponerModo=m=>{ if(m===modo) return;
+    if(m==="lista"){ items=aItems(ta.value); pintaItems(items.length?null:"nuevo"); if(items.length) g("ckNuevo").focus(); }
+    else { const pend=g("ckNuevo").value.trim(); if(pend){ items.push({h:false,t:pend}); g("ckNuevo").value=""; } ta.value=deItems(); ta.focus(); }
+    modo=m; g("mTexto").classList.toggle("hidden",m!=="texto"); g("mLista").classList.toggle("hidden",m!=="lista");
+    bg.querySelectorAll("[data-modo]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.modo===m)); };
+  bg.querySelectorAll("[data-modo]").forEach(b=>b.onclick=()=>ponerModo(b.dataset.modo));
+  const lineas=String(n.texto||"").split("\n").filter(l=>l.trim());
+  bg.querySelectorAll("[data-modo]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.modo==="texto"));
+  if((lineas.length&&lineas.every(l=>CK.test(l)))||(op&&op.lista)) ponerModo("lista");
+  textoFinal=()=>{ if(modo==="lista"){ const pend=g("ckNuevo").value.trim(); if(pend){ items.push({h:false,t:pend}); g("ckNuevo").value=""; } return deItems(); } return ta.value; };
+  bg.querySelectorAll("[data-fm]").forEach(b=>b.onclick=()=>{
+    const v=ta.value, a=v.lastIndexOf("\n",ta.selectionStart-1)+1, fin=v.indexOf("\n",Math.max(ta.selectionEnd-(ta.selectionEnd>ta.selectionStart&&v[ta.selectionEnd-1]==="\n"?1:0),ta.selectionStart)), z=fin<0?v.length:fin;
+    let k=0; const ls=v.slice(a,z).split("\n").map(l=>{ const t=l.replace(PRE,""); if(b.dataset.fm==="no") return t; if(!t.trim()&&l.trim()==="") return l; k++;
+      return (b.dataset.fm==="vi"?"• ":k+". ")+t; });
+    const nuevo=ls.join("\n"); ta.value=v.slice(0,a)+nuevo+v.slice(z); ta.focus(); ta.setSelectionRange(a,a+nuevo.length); });
+  ta.addEventListener("keydown",e=>{ if(e.key!=="Enter"||e.shiftKey) return;
+    const v=ta.value, p=ta.selectionStart, a=v.lastIndexOf("\n",p-1)+1, linea=v.slice(a,p), m=linea.match(PRE); if(!m) return;
+    e.preventDefault();
+    if(!linea.replace(PRE,"").trim()){ ta.value=v.slice(0,a)+v.slice(p); ta.setSelectionRange(a,a); return; }
+    let pre=/^\s*\[/.test(m[0])?"[ ] ":/•/.test(m[0])?"• ":(parseInt(m[0])+1)+". ";
+    ta.value=v.slice(0,p)+"\n"+pre+v.slice(ta.selectionEnd); ta.setSelectionRange(p+1+pre.length,p+1+pre.length); });
+  (n.id?g("nTxt"):g("nTit")).focus();
+}
+
+/* ---------- Office 365: Outlook, Teams y Word ---------- */
+const correos=s=>String(s||"").split(/[,;\s]+/).map(x=>x.trim()).filter(x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x));
+function copiar(t){ try{ navigator.clipboard.writeText(t); }catch(e){} }
+function outlook(para,asunto,cuerpo){
+  // Outlook de Office 365 en el navegador; el texto completo también queda copiado por si es muy largo
+  copiar(cuerpo); const max=1600, b=cuerpo.length>max?cuerpo.slice(0,max)+"\n…(texto completo copiado: pégalo con Ctrl+V)":cuerpo;
+  window.open("https://outlook.office.com/mail/deeplink/compose?to="+encodeURIComponent(para.join(";"))+"&subject="+encodeURIComponent(asunto)+"&body="+encodeURIComponent(b),"_blank");
+  toast("Se abrió Outlook · el texto también quedó copiado");
+}
+function agendaOutlook(para,asunto,ini,fin,cuerpo){
+  window.open("https://outlook.office.com/calendar/deeplink/compose?subject="+encodeURIComponent(asunto)+"&startdt="+encodeURIComponent(ini)+"&enddt="+encodeURIComponent(fin)+"&to="+encodeURIComponent(para.join(";"))+"&body="+encodeURIComponent(cuerpo.slice(0,1500)),"_blank"); }
+function agendaTeams(para,asunto,ini,fin,cuerpo){
+  window.open("https://teams.microsoft.com/l/meeting/new?subject="+encodeURIComponent(asunto)+"&startTime="+encodeURIComponent(ini)+"&endTime="+encodeURIComponent(fin)+"&attendees="+encodeURIComponent(para.join(","))+"&content="+encodeURIComponent(cuerpo.slice(0,1200)),"_blank"); }
+function word(nombre,html){
+  const doc=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#0f1c2e}h1{font-family:Georgia,serif;color:#1b3a5c;font-size:20pt;margin:0 0 4pt}h2{color:#1b3a5c;font-size:12.5pt;border-bottom:1pt solid #e3c27a;padding-bottom:2pt;margin:14pt 0 6pt}td,th{border:1pt solid #cfd8e3;padding:4pt 6pt;font-size:10.5pt}th{background:#1b3a5c;color:#fff;text-align:left}table{border-collapse:collapse;width:100%}.k{color:#b98b2f;font-weight:bold;letter-spacing:1pt;font-size:9pt}</style></head><body>${html}</body></html>`;
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["\ufeff"+doc],{type:"application/msword"})); a.download=nombre.replace(/\//g,"-").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\w .-]+/g," - ").replace(/\s+/g," ").trim()+".doc"; document.body.appendChild(a); a.click(); a.remove();
+  toast("Se descargó el Word · ábrelo y guárdalo en OneDrive o SharePoint si quieres"); }
+
+/* ---------- Bitácora: crear tarea desde una nota o un acta ---------- */
+async function crearTarea(o){
+  const t=Object.assign({id:GS.id(),estado:"Pendiente",prioridad:"Media",avance:0,responsable:"",proyecto:"",inicio:new Date().toISOString().slice(0,10)},o);
+  if(DEMO){ TK.push({id:t.id,titulo:t.titulo}); return t.id; }
+  try{ const r=await GS.llamar("notas.crearTarea",{tarea:t}); TK.push({id:r.id,titulo:r.titulo}); return r.id; }
+  catch(e){ toast("No se creó la tarea: "+e.message,true); return null; }
+}
+
+/* ---------- Acta de reunión ---------- */
+const ACTA={fecha:"📅 Fecha:",lugar:"📍 Lugar:",asis:"👥 Asistentes:",temas:"🗒 Temas:",acu:"✅ Acuerdos:",pen:"☐ Pendientes:",prox:"➡ Próxima reunión:"};
+const esActa=n=>etqs(n).includes("acta")&&String(n.texto||"").includes(ACTA.asis);
+const fISO=d=>d?d.split("-").reverse().join("/"):"";
+const aISO=t=>{ const m=String(t||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:""; };
+function actaTexto(a){
+  const L=[`${ACTA.fecha} ${fISO(a.fecha)}${a.hora?" · "+a.hora:""}`,`${ACTA.lugar} ${a.lugar||""}`,`${ACTA.asis} ${a.asis||""}`,ACTA.temas];
+  String(a.temas||"").split("\n").filter(x=>x.trim()).forEach(x=>L.push("• "+x.replace(/^•\s?/,"").trim()));
+  L.push(ACTA.acu); a.acu.filter(x=>x.trim()).forEach(x=>L.push("• "+x.trim()));
+  L.push(ACTA.pen); a.pen.filter(x=>x.t.trim()).forEach(x=>L.push(`${x.h?"[x]":"[ ]"} ${x.t.trim()}${x.r?" — "+x.r.trim():""}${x.f?" — "+fISO(x.f):""}${x.bit?" (en Bitácora)":""}`));
+  L.push(`${ACTA.prox} ${a.prox?fISO(a.prox.slice(0,10))+(a.prox.length>10?" "+a.prox.slice(11,16):""):""}`);
+  return L.join("\n");
+}
+function actaLeer(n){
+  const a={titulo:String(n.titulo||"").replace(/^Acta:\s*/,"").replace(/\s·\s\d{1,2}\/\d{1,2}\/\d{4}$/,""),fecha:"",hora:"",lugar:"",asis:"",temas:"",acu:[],pen:[],prox:""};
+  let sec=""; String(n.texto||"").split("\n").forEach(l=>{
+    if(l.startsWith(ACTA.fecha)){ const v=l.slice(ACTA.fecha.length).trim(); a.fecha=aISO(v); const h=v.match(/(\d{1,2}:\d{2})/); a.hora=h?h[1].padStart(5,"0"):""; sec=""; }
+    else if(l.startsWith(ACTA.lugar)){ a.lugar=l.slice(ACTA.lugar.length).trim(); sec=""; }
+    else if(l.startsWith(ACTA.asis)){ a.asis=l.slice(ACTA.asis.length).trim(); sec=""; }
+    else if(l.startsWith(ACTA.temas)) sec="temas"; else if(l.startsWith(ACTA.acu)) sec="acu"; else if(l.startsWith(ACTA.pen)) sec="pen";
+    else if(l.startsWith(ACTA.prox)){ const v=l.slice(ACTA.prox.length).trim(), d=aISO(v), h=v.match(/(\d{1,2}:\d{2})/); a.prox=d?d+(h?"T"+h[1].padStart(5,"0"):"T09:00"):""; sec=""; }
+    else if(sec==="temas"&&l.trim()) a.temas+=(a.temas?"\n":"")+l.replace(/^•\s?/,"").trim();
+    else if(sec==="acu"&&l.trim()) a.acu.push(l.replace(/^•\s?/,"").trim());
+    else if(sec==="pen"&&l.trim()){ const m=l.match(/^\s*\[( |x|X)\]\s?(.*)$/); let t=(m?m[2]:l).trim(); const bit=/\(en Bitácora\)\s*$/.test(t); t=t.replace(/\s*\(en Bitácora\)\s*$/,"");
+      const p=t.split(" — "); const f=p.length>2?aISO(p[2]):(p.length===2&&aISO(p[1])?aISO(p[1]):""); a.pen.push({h:!!(m&&/x/i.test(m[1])),t:p[0],r:p.length>1&&!(p.length===2&&f)?p[1]:"",f,bit}); } });
+  return a;
+}
+function acta(n){
+  n=Object.assign({color:"azul",tablero:"Actas",fijada:"false",etiquetas:"acta"},n||{});
+  const hoy0=hoy(), a=n.id?actaLeer(n):{titulo:"",fecha:hoy0,hora:"",lugar:"",asis:"",temas:"",acu:[],pen:[],prox:""};
+  const gente=[...new Set(N.flatMap(x=>correos(esActa(x)?actaLeer(x).asis:"")))];
+  const bg=document.createElement("div"); bg.className="bg";
+  bg.innerHTML=`<div class="dlg" style="max-width:760px"><div class="dlg-h"><h3>📋 ${n.id?"Acta de reunión":"Nueva acta de reunión"}</h3><button class="btn sm" data-x>Cerrar</button></div>
+    <div class="dlg-b">
+      <label class="f full"><span>Reunión</span><input class="inp" id="aTit" value="${esc(a.titulo)}" placeholder="Ej.: Comité de inversiones, Seguimiento Fondo II…"></label>
+      <label class="f"><span>📅 Fecha</span><input class="inp" type="date" id="aFec" value="${esc(a.fecha)}"></label>
+      <label class="f"><span>🕘 Hora</span><input class="inp" type="time" id="aHor" value="${esc(a.hora)}"></label>
+      <label class="f full"><span>📍 Lugar o enlace de Teams</span><input class="inp" id="aLug" value="${esc(a.lugar)}"></label>
+      <label class="f full"><span>👥 Asistentes (correos de Office 365 o nombres, separados por coma)</span><input class="inp" id="aAsi" list="lGente" value="${esc(a.asis)}" placeholder="nombre@myacapital.com, …"><datalist id="lGente">${gente.map(x=>`<option value="${esc(x)}">`).join("")}</datalist></label>
+      <label class="f full"><span>🗒 Temas tratados (uno por línea)</span><textarea class="inp" id="aTem" style="min-height:70px">${esc(a.temas)}</textarea></label>
+      <div class="f full"><span>✅ Acuerdos</span><div id="aAcu"></div><div class="ckrow nuevo"><span class="ckmas">＋</span><input class="inp" id="aAcuN" placeholder="Escribe un acuerdo y pulsa Enter"></div></div>
+      <div class="f full"><span>☐ Pendientes (quién y para cuándo)</span><div id="aPen"></div><div class="ckrow nuevo"><span class="ckmas">＋</span><input class="inp" id="aPenN" placeholder="Escribe un pendiente y pulsa Enter"></div></div>
+      <label class="f"><span>➡ Próxima reunión</span><input class="inp" type="datetime-local" id="aPro" value="${esc(a.prox)}"></label>
+      <label class="f"><span>Columna</span><input class="inp" id="aTab" list="lTab2" value="${esc(n.tablero||"Actas")}"><datalist id="lTab2">${tableros().concat(["Actas"]).filter((x,i,v)=>v.indexOf(x)===i).map(t=>`<option value="${esc(t)}">`).join("")}</datalist></label>
+      <div class="f full o365"><span>Office 365</span><div class="tbn">
+        <button type="button" class="btn sm" id="aOut" title="Abre un correo en Outlook para los asistentes con el acta">✉ Enviar por Outlook</button>
+        <button type="button" class="btn sm" id="aCal" title="Crea la próxima reunión en el calendario de Outlook">📅 Próxima en Outlook</button>
+        <button type="button" class="btn sm" id="aTea" title="Crea la próxima reunión de Teams">👥 Próxima en Teams</button>
+        <button type="button" class="btn sm" id="aDoc" title="Descarga el acta en Word">⬇ Word</button>
+        <button type="button" class="btn sm" id="aBit" title="Crea en la Bitácora una tarea por cada pendiente">➜ Pendientes a la Bitácora</button></div>
+        <span class="ayuda">Se abre Outlook o Teams de tu cuenta de Office 365 con todo listo; tú lo revisas y lo envías. Solo reciben el correo los asistentes escritos con su correo.</span></div>
+    </div>
+    <div class="dlg-f">${n.id?`<button class="btn bad" id="aDel" style="margin-right:auto">Eliminar</button>`:""}<button class="btn" data-x>Cancelar</button><button class="btn pri" id="aOk">Guardar acta</button></div></div>`;
+  document.body.appendChild(bg); const g=id=>bg.querySelector("#"+id), cerrar=()=>bg.remove();
+  bg.querySelectorAll("[data-x]").forEach(b=>b.onclick=cerrar); bg.onclick=e=>{ if(e.target===bg) cerrar(); };
+  let acu=a.acu.slice(), pen=a.pen.map(x=>Object.assign({},x));
+  const nombres=[...new Set(correos(g("aAsi").value).concat(String(g("aAsi").value).split(",").map(x=>x.trim()).filter(Boolean)))];
+  const pAcu=f=>{ g("aAcu").innerHTML=acu.map((x,i)=>`<div class="ckrow"><span class="ckmas">•</span><input class="inp" data-ai="${i}" value="${esc(x)}"><button type="button" class="ckx" data-aq="${i}">✕</button></div>`).join("");
+    g("aAcu").querySelectorAll("[data-ai]").forEach(inp=>{ inp.oninput=()=>acu[inp.dataset.ai]=inp.value; inp.onkeydown=e=>{ const i=+inp.dataset.ai; if(e.key==="Enter"){ e.preventDefault(); acu.splice(i+1,0,""); pAcu(i+1); } else if(e.key==="Backspace"&&!inp.value){ e.preventDefault(); acu.splice(i,1); pAcu(); g("aAcuN").focus(); } }; });
+    g("aAcu").querySelectorAll("[data-aq]").forEach(b=>b.onclick=()=>{ acu.splice(+b.dataset.aq,1); pAcu(); });
+    if(f!=null){ const x=g("aAcu").querySelector(`[data-ai="${f}"]`); if(x) x.focus(); } };
+  const pPen=f=>{ const asis=String(g("aAsi").value).split(",").map(x=>x.trim()).filter(Boolean);
+    g("aPen").innerHTML=pen.map((x,i)=>`<div class="ckrow pen"><input type="checkbox" data-ph="${i}"${x.h?" checked":""}><input class="inp${x.h?" hecho":""}" data-pt="${i}" value="${esc(x.t)}" placeholder="Pendiente"><input class="inp" data-pr="${i}" list="lAsis" value="${esc(x.r||"")}" placeholder="Responsable" style="max-width:170px"><input class="inp" type="date" data-pf="${i}" value="${esc(x.f||"")}" style="max-width:150px">${x.bit?'<span title="Ya está en la Bitácora" style="font-size:12px">🗂</span>':""}<button type="button" class="ckx" data-pq="${i}">✕</button></div>`).join("")+`<datalist id="lAsis">${asis.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`;
+    g("aPen").querySelectorAll("[data-ph]").forEach(c=>c.onchange=()=>{ pen[c.dataset.ph].h=c.checked; pPen(); });
+    g("aPen").querySelectorAll("[data-pt]").forEach(inp=>{ inp.oninput=()=>pen[inp.dataset.pt].t=inp.value; inp.onkeydown=e=>{ const i=+inp.dataset.pt; if(e.key==="Enter"){ e.preventDefault(); pen.splice(i+1,0,{h:false,t:"",r:"",f:""}); pPen(i+1); } else if(e.key==="Backspace"&&!inp.value){ e.preventDefault(); pen.splice(i,1); pPen(); g("aPenN").focus(); } }; });
+    g("aPen").querySelectorAll("[data-pr]").forEach(inp=>inp.oninput=()=>pen[inp.dataset.pr].r=inp.value);
+    g("aPen").querySelectorAll("[data-pf]").forEach(inp=>inp.onchange=()=>pen[inp.dataset.pf].f=inp.value);
+    g("aPen").querySelectorAll("[data-pq]").forEach(b=>b.onclick=()=>{ pen.splice(+b.dataset.pq,1); pPen(); });
+    if(f!=null){ const x=g("aPen").querySelector(`[data-pt="${f}"]`); if(x) x.focus(); } };
+  pAcu(); pPen();
+  g("aAcuN").onkeydown=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const v=g("aAcuN").value.trim(); if(!v) return; acu.push(v); g("aAcuN").value=""; pAcu(); g("aAcuN").focus(); };
+  g("aPenN").onkeydown=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const v=g("aPenN").value.trim(); if(!v) return; pen.push({h:false,t:v,r:"",f:""}); g("aPenN").value=""; pPen(); g("aPenN").focus(); };
+  g("aAsi").onchange=()=>pPen();
+  const datos=()=>{ const pa=g("aAcuN").value.trim(), pp=g("aPenN").value.trim(); if(pa){ acu.push(pa); g("aAcuN").value=""; pAcu(); } if(pp){ pen.push({h:false,t:pp,r:"",f:""}); g("aPenN").value=""; pPen(); }
+    return {titulo:g("aTit").value.trim(),fecha:g("aFec").value,hora:g("aHor").value,lugar:g("aLug").value.trim(),asis:g("aAsi").value.trim(),temas:g("aTem").value,acu,pen,prox:g("aPro").value}; };
+  const nota=()=>{ const d=datos(); return Object.assign({},n,{titulo:"Acta: "+(d.titulo||"Reunión")+(d.fecha?" · "+fISO(d.fecha):""),texto:actaTexto(d),tablero:g("aTab").value.trim()||"Actas",etiquetas:[...new Set(["acta"].concat(etqs(n)))].join(", "),recordar:d.prox?d.prox.slice(0,10):(n.recordar||"")}); };
+  const asunto=d=>"Acta: "+(d.titulo||"Reunión")+(d.fecha?" · "+fISO(d.fecha):"");
+  g("aOk").onclick=()=>{ const o=nota(); cerrar(); guardar(o); };
+  if(g("aDel")) g("aDel").onclick=()=>{ if(confirm("¿Eliminar esta acta?")){ cerrar(); borrar(n.id); } };
+  g("aOut").onclick=()=>{ const d=datos(); outlook(correos(d.asis),asunto(d),actaTexto(d).replace(/\[ \] /g,"☐ ").replace(/\[x\] /gi,"☑ ")); };
+  const proxIni=d=>{ if(!d.prox){ toast("Pon la fecha y hora de la próxima reunión",true); g("aPro").focus(); return null; } const i=new Date(d.prox); return [i.toISOString(),new Date(i.getTime()+3600e3).toISOString()]; };
+  g("aCal").onclick=()=>{ const d=datos(), r=proxIni(d); if(r) agendaOutlook(correos(d.asis),"Seguimiento: "+(d.titulo||"Reunión"),r[0],r[1],"Pendientes de la reunión del "+fISO(d.fecha)+":\n"+d.pen.filter(x=>!x.h).map(x=>"• "+x.t+(x.r?" — "+x.r:"")).join("\n")); };
+  g("aTea").onclick=()=>{ const d=datos(), r=proxIni(d); if(r) agendaTeams(correos(d.asis),"Seguimiento: "+(d.titulo||"Reunión"),r[0],r[1],"Pendientes: "+d.pen.filter(x=>!x.h).map(x=>x.t).join("; ")); };
+  g("aDoc").onclick=()=>{ const d=datos(), li=a=>a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"<p>—</p>";
+    word(asunto(d),`<div class="k">M&amp;A CAPITAL · ACTA DE REUNIÓN</div><h1>${esc(d.titulo||"Reunión")}</h1>
+      <table><tr><th style="width:25%">Fecha</th><td>${esc(fISO(d.fecha))}${d.hora?" · "+esc(d.hora):""}</td></tr><tr><th>Lugar</th><td>${esc(d.lugar)}</td></tr><tr><th>Asistentes</th><td>${esc(d.asis)}</td></tr></table>
+      <h2>Temas tratados</h2>${li(String(d.temas).split("\n").filter(x=>x.trim()))}<h2>Acuerdos</h2>${li(d.acu.filter(x=>x.trim()))}
+      <h2>Pendientes</h2>${d.pen.filter(x=>x.t.trim()).length?`<table><tr><th>Estado</th><th>Pendiente</th><th>Responsable</th><th>Fecha</th></tr>${d.pen.filter(x=>x.t.trim()).map(x=>`<tr><td>${x.h?"☑ Hecho":"☐"}</td><td>${esc(x.t)}</td><td>${esc(x.r||"")}</td><td>${esc(fISO(x.f||""))}</td></tr>`).join("")}</table>`:"<p>—</p>"}
+      <h2>Próxima reunión</h2><p>${d.prox?esc(fISO(d.prox.slice(0,10))+" "+d.prox.slice(11,16)):"—"}</p>`); };
+  g("aBit").onclick=async()=>{ const d=datos(), lista=d.pen.filter(x=>x.t.trim()&&!x.h&&!x.bit); if(!lista.length){ toast("No hay pendientes nuevos para pasar a la Bitácora",true); return; }
+    const b=g("aBit"); b.disabled=true; let k=0;
+    for(const x of lista){ b.textContent=`Creando ${++k} de ${lista.length}…`; const id=await crearTarea({titulo:x.t.trim(),responsable:x.r||"",limite:x.f||"",proyecto:d.titulo||"",descripcion:"De la reunión «"+(d.titulo||"Reunión")+"» del "+fISO(d.fecha)+(x.r?". Responsable: "+x.r:""),etiquetas:"acta"}); if(id) x.bit=true; }
+    b.disabled=false; b.textContent="➜ Pendientes a la Bitácora"; pPen(); const o=nota(); guardar(o,true); n=o; toast(`✓ ${lista.filter(x=>x.bit).length} tarea(s) creadas en la Bitácora`); };
+  g(n.id?"aTem":"aTit").focus();
+}
+
+/* ---------- guía ---------- */
+const PROMPT=`Actúa como desarrollador senior de Google Apps Script y diseñador de producto.
+Quiero un "Tablero de Notas" para el equipo de M&A Capital, conectado a la misma Hoja de cálculo de Google que la Bitácora Ejecutiva.
+
+DATOS (pestaña Notas, fila 1 = encabezados):
+id, titulo, texto, color (amarillo/rosa/verde/azul/lila/naranja), fijada, tarea_id, autor, creado, actualizado, tablero (columna), etiquetas, recordar (fecha), orden
+
+SERVIDOR (Codigo.gs, aplicación web):
+- doPost recibe JSON {accion, token, ...}: notas.listar (devuelve notas y las tareas abiertas para ligarlas), notas.guardar, notas.borrar.
+- Verifica la sesión del usuario (token de Supabase) y que tenga el módulo "notas".
+- avisoDiario (disparador 7 a. m.): además de las tareas, envía a cada autor sus notas con recordatorio de hoy.
+
+PÁGINA (HTML + JS, estilo M&A: azul marino y dorado, notas tipo post-it):
+- Nota rápida arriba: Enter guarda, la primera línea corta se usa como título, se elige columna y color.
+- Vistas: Columnas (arrastrar notas entre columnas, crear columnas nuevas), Muro (todas como un corcho), Recordatorios (atrasados, hoy, próximos 7 días, más adelante).
+- Casillas: líneas que empiezan con [ ] se vuelven casillas que se marcan con un clic y muestran barra de avance.
+- Fijar, colores, etiquetas clicables, ligar a una tarea, convertir en tarea (notas.crearTarea), duplicar, búsqueda, filtros por color, "mías" y fijadas.
+- Acta de reunión: formulario con fecha, hora, lugar/Teams, asistentes, temas, acuerdos y pendientes (responsable y fecha); se guarda como nota en la columna Actas. Botones Office 365: correo en Outlook (outlook.office.com/mail/deeplink/compose), próxima reunión en el calendario de Outlook o en Teams, descarga en Word y pendientes como tareas de la Bitácora.
+- Lo nuevo lleva un id creado en la página: si Google reintenta el pedido, se actualiza la misma fila y nunca se duplica.
+- Indicadores: total, fijadas, recordatorios de hoy, % de casillas hechas, ligadas a tareas. Exportar a Excel.
+- Nunca inventar datos: si la hoja está vacía, mostrarlo vacío.`;
+function vGuia(){
+  $("vista").innerHTML=`<div class="g2">
+    <div class="card pad guia">
+      <h3>¿Para qué sirve?</h3>
+      <p>Es el <b>corcho digital del equipo</b>: ideas, acuerdos de reuniones, pendientes rápidos y recordatorios, ordenados en columnas y con colores, como notas adhesivas. Todo queda guardado en la Hoja de Google, compartido con el equipo.</p>
+      <ul><li><b>Nota rápida:</b> escribe y presiona Enter. Listo.</li>
+        <li><b>Columnas:</b> Ideas, Por hacer, Acuerdos, Recordatorios… y las que crees. Arrastra las notas de una a otra.</li>
+        <li><b>Casillas:</b> empieza una línea con <b>[ ]</b> y se vuelve una casilla; se marca con un clic y la nota muestra su avance.</li>
+        <li><b>Recordatorios:</b> pon una fecha y la nota aparece en «Recordatorios»; con el correo de cada mañana activado, le llega al autor ese día.</li>
+        <li><b>Ligada a tareas:</b> una nota puede ir pegada a una tarea de la Bitácora Ejecutiva, o convertirse en tarea con <b>➜ Crear tarea</b>.</li>
+        <li><b>📋 Acta de reunión:</b> formulario listo (fecha, lugar o Teams, asistentes, temas, acuerdos y pendientes con responsable y fecha). Con Office 365: <b>✉ Enviar por Outlook</b> a los asistentes, <b>📅 Próxima en Outlook</b> o <b>👥 en Teams</b>, <b>⬇ Word</b> y <b>➜ Pendientes a la Bitácora</b>.</li>
+        <li><b>Carga instantánea:</b> al volver a la página se ve al momento lo último y se actualiza solo por detrás.</li></ul>
+      <h3>Cómo hacerlo funcionar</h3>
+      <ol><li>Usa la misma Hoja de Google y el mismo Apps Script de la Bitácora Ejecutiva (ya incluye las notas).</li>
+        <li>Si cambiaste el código, en Apps Script: Implementar › Gestionar implementaciones › editar › Versión nueva.</li>
+        <li>Da a cada persona el módulo «Tablero de Notas» en Usuarios y permisos.</li>
+        <li>Opcional: ejecutar <b>instalarAvisoDiario</b> para los correos de las 7 a. m.</li></ol>
+    </div>
+    <div class="card pad"><p class="ch-t">Prompt del proyecto</p><div class="ch-s">Sirve para pedirle a una IA que lo amplíe o lo vuelva a construir igual</div>
+      <div class="prompt" id="prompt"></div><button class="btn" id="copiaP" style="margin-top:10px">📋 Copiar prompt</button></div></div>`;
+  $("prompt").textContent=PROMPT;
+  $("copiaP").onclick=async e=>{ try{ await navigator.clipboard.writeText(PROMPT); e.target.textContent="✓ Copiado"; }catch(x){} };
+}
+
+/* ============================ ejemplo ============================ */
+function ejemplo(){
+  const d=n=>{ const x=new Date(Date.parse(hoy()+"T12:00:00")+n*864e5); return x.toISOString().slice(0,10); }, a=n=>new Date(Date.now()+n*864e5).toISOString();
+  TK=[{id:"e0",titulo:"Conciliar bancos de agosto"},{id:"e2",titulo:"Revisar certificado del Registro Público"}];
+  N=[{id:"n1",titulo:"Acuerdos reunión lunes",texto:"[x] Cerrar conciliaciones antes del jueves\n[ ] Pedir certificado RP actualizado\n[ ] Revisar flujo con Martina",color:"amarillo",fijada:"true",tablero:"Acuerdos",etiquetas:"reunión",autor:"ana.perez@ejemplo.com",creado:a(-1)},
+     {id:"n2",titulo:"Idea",texto:"Agregar al informe mensual el comparativo de cap rate por activo.",color:"azul",fijada:"false",tablero:"Ideas",etiquetas:"informes",autor:"luis.gomez@ejemplo.com",creado:a(-3)},
+     {id:"n3",titulo:"Pendiente con el banco",texto:"Confirmar fecha de firma de la carta de aprobación.",color:"rosa",fijada:"false",tablero:"Recordatorios",tarea_id:"e2",recordar:d(0),etiquetas:"banco",autor:"omayra@ejemplo.com",creado:a(-2)},
+     {id:"n4",titulo:"",texto:"Llamar al avaluador por la Finca 45678",color:"naranja",fijada:"false",tablero:"Por hacer",recordar:d(2),autor:"carlos.diaz@ejemplo.com",creado:a(-1)},
+     {id:"n5",titulo:"Para el cierre",texto:"[ ] Estados de cuenta\n[ ] Planilla\n[x] Facturas de proveedores",color:"verde",fijada:"false",tablero:"Por hacer",tarea_id:"e0",etiquetas:"cierre",autor:"luis.gomez@ejemplo.com",creado:a(-4)},
+     {id:"n6",titulo:"Visita a Local 3",texto:"El inquilino pidió revisar el aire acondicionado antes de renovar.",color:"lila",fijada:"false",tablero:"Recordatorios",recordar:d(-1),etiquetas:"inquilinos",autor:"carlos.diaz@ejemplo.com",creado:a(-5)}];
+}
+
+/* ============================ arranque ============================ */
+$("btnNueva").onclick=()=>editor({});
+$("btnActa").onclick=()=>acta();
+$("btnRec").onclick=()=>cargar();
+$("btnHoja").onclick=()=>{ if(HOJA) window.open(HOJA,"_blank"); };
+$("btnXls").onclick=()=>{ const ws=XLSX.utils.json_to_sheet(ordenar(visibles()).map(n=>({Columna:n.tablero||"",Título:n.titulo||"",Nota:n.texto||"",Color:n.color||"",Etiquetas:n.etiquetas||"",Recordar:n.recordar||"",Fijada:fij(n)?"Sí":"",Tarea:(TK.find(t=>t.id===n.tarea_id)||{}).titulo||"",Autor:n.autor||"",Creada:String(n.creado||"").slice(0,10)})));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Notas"); XLSX.writeFile(wb,"Tablero de Notas - "+hoy()+".xlsx"); };
+function arrancar(){
+  $("acc").classList.add("hidden");
+  F={}; Q=""; N=[]; TK=[]; HOJA=""; VISTA="columnas";
+  MA.listo.then(c=>YO=(c.email||"").toLowerCase());
+  if(DEMO){ ejemplo(); pintar(); return; }
+  if(!GS.url()){ GS.pantalla($("app"),{titulo:"Conectar el Tablero de Notas",descripcion:"Notas del equipo tipo post-it, en columnas, con casillas y recordatorios.",demo:()=>{ DEMO=true; arrancar(); },listo:arrancar}); return; }
+  $("app").innerHTML=`<div class="card vacio"><span class="spin"></span> Leyendo la Hoja de Google… <span style="display:block;font-size:12px;margin-top:4px">puede tardar unos segundos</span></div>`; cargar();
+}
+MA.listo.then(arrancar);
+</script>
+</body>
+</html>
