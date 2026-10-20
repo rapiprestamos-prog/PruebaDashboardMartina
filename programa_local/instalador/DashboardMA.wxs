@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Dashboard M&amp;A" Language="1034" Codepage="1252" Version="1.1.0"
+           Manufacturer="Dashboard M&amp;A" UpgradeCode="6A3F2C1E-8B47-4D2A-9E51-3C7B0D94A2F6">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perUser"
+             Description="Dashboard M&amp;A - programa local" Comments="Lee las carpetas de OneDrive para el Dashboard M&amp;A" />
+    <MajorUpgrade DowngradeErrorMessage="Ya hay una versión más nueva instalada." />
+    <Media Id="1" Cabinet="app.cab" EmbedCab="yes" />
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="ProgramsDir" Name="Programs">
+          <Directory Id="INSTALLDIR" Name="DashboardMA" />
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="MenuDir" Name="Dashboard M&amp;A" />
+      </Directory>
+      <Directory Id="DesktopFolder" />
+      <Directory Id="StartupFolder" />
+    </Directory>
+
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="Programa" Guid="1F0B6C2A-3D4E-4A5B-8C9D-0E1F2A3B4C5D">
+        <File Id="exeFile" Name="DashboardMA.exe" Source="DashboardMA.exe" />
+        <RemoveFolder Id="QuitarInstall" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\DashboardMA" Name="programa" Type="string" Value="[INSTALLDIR]" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="MenuDir">
+      <Component Id="Menu" Guid="2A1C7D3B-4E5F-4B6C-9D0E-1F2A3B4C5D6E">
+        <Shortcut Id="MenuAbrir" Name="Dashboard M&amp;A" Description="Abrir el Dashboard M&amp;A" Target="[INSTALLDIR]DashboardMA.exe" WorkingDirectory="INSTALLDIR" />
+        <Shortcut Id="MenuDetener" Name="Detener Dashboard M&amp;A" Description="Detiene el programa local" Target="[INSTALLDIR]DashboardMA.exe" Arguments="--detener" WorkingDirectory="INSTALLDIR" />
+        <RemoveFolder Id="QuitarMenu" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\DashboardMA" Name="menu" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="Escritorio" Guid="3B2D8E4C-5F6A-4C7D-8E1F-2A3B4C5D6E7F">
+        <Shortcut Id="EscAbrir" Name="Dashboard M&amp;A" Description="Abrir el Dashboard M&amp;A" Target="[INSTALLDIR]DashboardMA.exe" WorkingDirectory="INSTALLDIR" />
+        <RegistryValue Root="HKCU" Key="Software\DashboardMA" Name="escritorio" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="StartupFolder">
+      <Component Id="Inicio" Guid="4C3E9F5D-6A7B-4D8E-9F2A-3B4C5D6E7F80">
+        <Shortcut Id="InicioFondo" Name="Dashboard M&amp;A" Description="Arranca el Dashboard M&amp;A al iniciar Windows" Target="[INSTALLDIR]DashboardMA.exe" Arguments="--fondo" WorkingDirectory="INSTALLDIR" />
+        <RegistryValue Root="HKCU" Key="Software\DashboardMA" Name="inicio" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="Todo" Title="Dashboard M&amp;A" Level="1">
+      <ComponentRef Id="Programa" />
+      <ComponentRef Id="Menu" />
+      <ComponentRef Id="Escritorio" />
+      <ComponentRef Id="Inicio" />
+    </Feature>
+
+    <!-- al desinstalar: detener el programa antes de borrar el archivo; al instalar: abrir el dashboard -->
+    <CustomAction Id="Detener" FileKey="exeFile" ExeCommand="--detener" Execute="immediate" Return="ignore" />
+    <CustomAction Id="Abrir" FileKey="exeFile" ExeCommand="" Execute="immediate" Return="asyncNoWait" />
+    <InstallExecuteSequence>
+      <Custom Action="Detener" After="CostFinalize">Installed</Custom>
+      <Custom Action="Abrir" After="InstallFinalize">NOT REMOVE</Custom>
+    </InstallExecuteSequence>
+  </Product>
+</Wix>

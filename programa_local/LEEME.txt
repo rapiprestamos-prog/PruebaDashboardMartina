@@ -20,3 +20,11 @@ Dónde se cambia cada cosa (codigo/main.go):
   buscar()  dónde busca (OneDrive y carpetas del usuario) y cuántas carpetas revisa
 Compilar (Go 1.22+):  GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H=windowsgui" -o DashboardMA.exe .
 Si se cambia el código, revisar que el .exe siga sin abrir otros programas (powershell, reg, taskkill).
+
+Instalador (DashboardMA_Instalar.msi), para este usuario y sin administrador:
+  Instala en %LOCALAPPDATA%\Programs\DashboardMA, crea los accesos "Dashboard M&A" (Escritorio y menú Inicio),
+  "Detener Dashboard M&A" (menú Inicio) y el arranque con Windows (carpeta Inicio, --fondo).
+  Desinstalar: Configuración → Aplicaciones → Dashboard M&A → Desinstalar (detiene el programa y quita todo;
+  quedan los datos en %LOCALAPPDATA%\DashboardMA).
+  Rearmar (Linux, msitools/wixl):  iconv -f utf-8 -t windows-1252 DashboardMA.wxs > w.wxs && wixl -o DashboardMA_Instalar.msi w.wxs
+  (DashboardMA.exe compilado debe estar en la misma carpeta). Para una versión nueva subir Version="..." en el .wxs.
