@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="windows-1252"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="Dashboard M&amp;A" Language="1034" Codepage="1252" Version="1.1.0"
+  <Product Id="*" Name="Dashboard M&amp;A" Language="1034" Codepage="1252" Version="1.2.0"
            Manufacturer="Dashboard M&amp;A" UpgradeCode="6A3F2C1E-8B47-4D2A-9E51-3C7B0D94A2F6">
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perUser"
              Description="Dashboard M&amp;A - programa local" Comments="Lee las carpetas de OneDrive para el Dashboard M&amp;A" />
