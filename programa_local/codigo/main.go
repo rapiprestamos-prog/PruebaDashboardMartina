@@ -133,6 +133,15 @@ func buscar() map[string]string {
 			*lista = append(*lista, d)
 		}
 	}
+	// primero: la carpeta donde está el programa y la de arriba (carpetas locales en cualquier disco)
+	var fase0 []string
+	if yo, err := os.Executable(); err == nil {
+		d := filepath.Dir(yo)
+		agregar(&fase0, d)
+		if p := filepath.Dir(d); p != d && len(p) > 3 {
+			agregar(&fase0, p)
+		}
+	}
 	for _, v := range []string{"OneDriveCommercial", "OneDrive", "OneDriveConsumer"} {
 		if d := os.Getenv(v); d != "" {
 			agregar(&fase1, d)
@@ -196,7 +205,10 @@ func buscar() map[string]string {
 			}
 		}
 	}
-	recorrer(fase1, 7)
+	recorrer(fase0, 3)
+	if !juntas(cands) {
+		recorrer(fase1, 7)
+	}
 	if !juntas(cands) {
 		recorrer(fase2, 4)
 	}

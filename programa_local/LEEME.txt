@@ -1,5 +1,6 @@
 DASHBOARD M&A · PROGRAMA LOCAL (DashboardMA.exe)
 
+Busca primero junto al programa (carpetas locales en cualquier disco), después en OneDrive.
 Qué hace: corre escondido en la PC, sirve el dashboard en http://localhost:8765 (trae las páginas de GitHub,
 con copia por si no hay internet) y entrega las carpetas de OneDrive PruebaDashboard, Contabilidad y Legal
 (las busca solo) para leer y guardar, sin permisos del navegador.
